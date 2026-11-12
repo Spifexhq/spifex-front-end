@@ -189,7 +189,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <SidePanelFooter
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <p className="text-[12px] text-gray-600 hidden md:block">{t("modal.shortcuts")}</p>
+              <p className="text-xs text-gray-600 hidden md:block">{t("modal.shortcuts")}</p>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
                 <Button
@@ -218,7 +218,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h3 className="text-[15px] font-semibold text-gray-900">{t("confirmDiscard.title")}</h3>
-                <p className="mt-1 text-[12px] text-gray-600">{t("confirmDiscard.message")}</p>
+                <p className="mt-1 text-xs text-gray-600">{t("confirmDiscard.message")}</p>
               </div>
 
               <div
@@ -245,7 +245,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
                 <h3 className="text-[15px] font-semibold text-amber-800">{warning.title}</h3>
-                <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
+                <p className="mt-1 text-xs text-amber-700">{warning.message}</p>
               </div>
 
               <div

@@ -5,6 +5,7 @@
   "previewError": "Details konnten nicht geladen werden.",
   "previewRetry": "Erneut versuchen",
   "previewLoading": "Vorschau wird geladen…",
+  "loading": "Wird geladen",
   "title": "Persönliche Einstellungen",
   "header.settings": "Einstellungen",
   "header.personal": "Persönlich",
@@ -31,6 +32,8 @@
   "toast.updateError": "Persönliche Daten konnten nicht aktualisiert werden.",
   "input": {
     "clear": "Leeren",
+    "clearAmount": "Betrag leeren",
+    "clearPercentage": "Prozentsatz leeren",
     "hidePassword": "Passwort ausblenden",
     "showPassword": "Passwort anzeigen",
     "openDatePicker": "Kalender öffnen",

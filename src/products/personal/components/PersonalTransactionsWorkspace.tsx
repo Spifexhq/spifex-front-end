@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, RotateCcw, Trash2, X } from "lucide-react";
@@ -16,6 +15,7 @@ import FinancialActivityTable, { type FinancialActivityRecord, type FinancialAct
 import SettlementModal from "@/shared/financial/settlements/SettlementModal";
 import type { SettlementTarget } from "@/shared/financial/settlements/SettlementModal";
 import Button from "@/shared/ui/Button";
+import SelectionBar from "@/shared/ui/SelectionBar";
 import { usePersonalReadRevision } from "../hooks/usePersonalReadRevision";
 import { personalApi } from "../services/api";
 import { allPersonal, readonlyWorkspace } from "../services/personalData";
@@ -163,29 +163,29 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
     ? { duration: 0 }
     : { type: "spring" as const, stiffness: 420, damping: 36, mass: 0.7 };
 
-  return createPortal(<AnimatePresence>{records.length > 0 && <motion.aside role="region" aria-label={t("financeEntries:selectionActions")} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: reduced ? 0 : .15 }} className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[9000] w-[calc(100vw-24px)] max-w-3xl -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4">
+  return <SelectionBar open={records.length > 0} label={t("financeEntries:selectionActions")} className="max-w-3xl">
 
-    {isMobile && <button ref={handleRef} type="button" disabled={pending || busy} aria-expanded={!collapsed} aria-controls={bodyId} aria-label={t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")} onClick={() => setCollapsed(value => !value)} className="group -mt-1 mb-1.5 flex min-h-9 w-full flex-col items-center justify-center gap-1.5 rounded-lg py-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50">
+    {isMobile && <button ref={handleRef} type="button" disabled={pending || busy} aria-expanded={!collapsed} aria-controls={bodyId} aria-label={t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")} onClick={() => setCollapsed(value => !value)} className="group -mt-1 mb-1.5 flex min-h-9 w-full flex-col items-center justify-center gap-1.5 rounded-lg py-1 text-gray-500 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
       <span aria-hidden className="h-1 w-9 rounded-full bg-gray-200 transition-colors group-hover:bg-gray-300"/>
-      <span aria-hidden className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.06em]">{t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")}<motion.span animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: reduced ? 0 : .2 }} className="inline-flex"><ChevronDown size={11}/></motion.span></span>
+      <span aria-hidden className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.06em]">{t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")}<motion.span animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: reduced ? 0 : .2 }} className="inline-flex"><ChevronDown size={13} aria-hidden="true" /></motion.span></span>
     </button>}
 
-    <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold text-gray-900">{t("financeEntries:selected", { count: records.length })}</p><div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500"><span>{t("financeEntries:income")} <b className="font-medium text-emerald-700">{formatCurrency(totals.income / 100, currency)}</b></span><span>{t("financeEntries:expense")} <b className="font-medium text-rose-700">{formatCurrency(totals.expense / 100, currency)}</b></span><span>{t("financeEntries:net")} <b className="font-medium text-gray-900">{formatCurrency((totals.income - totals.expense) / 100, currency)}</b></span></div></div><button type="button" disabled={busy} aria-label={t("financeEntries:clearSelection")} title={t("financeEntries:clearSelection")} onClick={onClear} className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-800"><X size={15}/></button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold text-gray-900">{t("financeEntries:selected", { count: records.length })}</p><div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500"><span>{t("financeEntries:income")} <b className="font-medium text-emerald-700">{formatCurrency(totals.income / 100, currency)}</b></span><span>{t("financeEntries:expense")} <b className="font-medium text-rose-700">{formatCurrency(totals.expense / 100, currency)}</b></span><span>{t("financeEntries:net")} <b className="font-medium text-gray-900">{formatCurrency((totals.income - totals.expense) / 100, currency)}</b></span></div></div><button type="button" disabled={busy} aria-label={t("financeEntries:clearSelection")} title={t("financeEntries:clearSelection")} onClick={onClear} className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-800"><X size={15} aria-hidden="true" /></button></div>
 
     <motion.div id={bodyId} ref={bodyRef} initial={false} animate={bodyCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }} transition={bodyTransition} className="overflow-hidden" aria-hidden={bodyCollapsed || undefined}>
       <AnimatePresence mode="wait" initial={false}>
         {confirm ? <motion.div key="confirm" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} role="group" aria-label={confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })} onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); } }} onAnimationComplete={() => { if (!pending && !bodyCollapsed) cancelRef.current?.focus({ preventScroll: true }); }} className="mt-3 space-y-3 border-t border-gray-100 pt-3">
           <p role="status" className="text-xs leading-5 text-gray-700">{confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })}</p>
-          <div className="flex flex-wrap justify-end gap-2"><Button ref={cancelRef} size="sm" variant="outline" disabled={pending || busy} onClick={cancel}>{t("financeEntries:cancel")}</Button><Button size="sm" variant="danger" disabled={pending || busy} isLoading={pending} onClick={async () => { setPending(true); setError(""); try { if (confirm === "delete") await onDelete?.(pendingEntries); else await onReverse?.(records.flatMap(row => "value_date" in row.source ? [row.source] : [])); setConfirm(null); onClear(); } catch (cause) { setError(cause instanceof Error ? cause.message : t("personal:error")); } finally { setPending(false); } }} className="gap-1.5">{confirm === "delete" ? <Trash2 size={13}/> : <RotateCcw size={13}/>} {confirm === "delete" ? t("financeEntries:delete") : t("personal:reverseActivity")}</Button></div>
+          <div className="flex flex-wrap justify-end gap-2"><Button ref={cancelRef} size="sm" variant="outline" disabled={pending || busy} onClick={cancel}>{t("financeEntries:cancel")}</Button><Button size="sm" variant="danger" disabled={pending || busy} isLoading={pending} onClick={async () => { setPending(true); setError(""); try { if (confirm === "delete") await onDelete?.(pendingEntries); else await onReverse?.(records.flatMap(row => "value_date" in row.source ? [row.source] : [])); setConfirm(null); onClear(); } catch (cause) { setError(cause instanceof Error ? cause.message : t("personal:error")); } finally { setPending(false); } }} className="gap-1.5">{confirm === "delete" ? <Trash2 size={13} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />} {confirm === "delete" ? t("financeEntries:delete") : t("personal:reverseActivity")}</Button></div>
         </motion.div> : <motion.div key="actions" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} onAnimationComplete={() => { if (!restoreFocus.current) return; const target = restoreFocus.current === "delete" ? deleteRef.current : reverseRef.current; restoreFocus.current = null; target?.focus({ preventScroll: true }); }} className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
-          {basis === "outstanding" && onSettle && <Button size="sm" variant="outlineBlack" disabled={busy} onClick={() => onSettle(records.map(row => row.id))} className="gap-1.5"><Check size={13}/>{t("financeEntries:settle")}</Button>}
-          {basis === "outstanding" && onDelete && <Button ref={deleteRef} size="sm" variant="outline" disabled={busy || !canDeleteSelection} onClick={() => { setError(""); setConfirm("delete"); }} className="gap-1.5"><Trash2 size={13}/>{t("financeEntries:delete")}</Button>}
-          {basis === "settled" && onReverse && <Button ref={reverseRef} size="sm" variant="outline" disabled={busy} onClick={() => { setError(""); setConfirm("reverse"); }} className="gap-1.5"><RotateCcw size={13}/>{t("personal:reverseActivity")}</Button>}
+          {basis === "outstanding" && onSettle && <Button size="sm" variant="outlineBlack" disabled={busy} onClick={() => onSettle(records.map(row => row.id))} className="gap-1.5"><Check size={13} aria-hidden="true" />{t("financeEntries:settle")}</Button>}
+          {basis === "outstanding" && onDelete && <Button ref={deleteRef} size="sm" variant="outline" disabled={busy || !canDeleteSelection} onClick={() => { setError(""); setConfirm("delete"); }} className="gap-1.5"><Trash2 size={13} aria-hidden="true" />{t("financeEntries:delete")}</Button>}
+          {basis === "settled" && onReverse && <Button ref={reverseRef} size="sm" variant="outline" disabled={busy} onClick={() => { setError(""); setConfirm("reverse"); }} className="gap-1.5"><RotateCcw size={13} aria-hidden="true" />{t("personal:reverseActivity")}</Button>}
         </motion.div>}
       </AnimatePresence>
       {error && <p className="w-full text-right text-xs text-rose-700" role="alert">{error}</p>}
     </motion.div>
-  </motion.aside>}</AnimatePresence>, document.body);
+  </SelectionBar>;
 }
 
 function ActivityTable({ basis, items, loading, mutating, error, pager, currency, readOnly, onInspect, onEdit, onSettle, onDeleted, onSelectionBusy }: {
@@ -275,6 +275,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
 export default function PersonalTransactionsWorkspace({ basis = "outstanding" }: { basis?: Basis }) {
   const { t } = useTranslation("personal");
   const auth = useAuthContext();
+  const access = usePersonalAccess();
   const workspace = auth.organization?.organization;
   const currency = workspace?.currency || "EUR";
   const readOnly = readonlyWorkspace(workspace?.lifecycle);
@@ -328,6 +329,12 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
   }, [basis, params, setParams]);
   const refresh = useCallback(() => { setRevision(value => value + 1); setPanelRevision(value => value + 1); }, []);
   const refreshPanel = useCallback(() => setPanelRevision(value => value + 1), []);
+  const reverseActivity = useCallback(async (item: PersonalSettledActivity) => {
+    if (item.transfer_id) await personalApi.remove("transfers", item.transfer_id);
+    else if (item.entry_id) await personalApi.reverseSettlement(item.entry_id, item.id);
+    else throw new Error(t("error"));
+    refresh();
+  }, [refresh, t]);
   const edit = (item: PersonalTransaction) => setDialog({ kind: "transactions", record: item });
   const openSettlement = useCallback((items: PersonalTransaction[]) => {
     if (!items.length) { setBusy(false); return; }
@@ -359,7 +366,7 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
       </FinancialActivityPanel>
     </div>
     <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setEntryPreview(null); openSettlement([item as PersonalTransaction]); }} onContribute={() => {}}/>
-    <PersonalSettledActivityPreview item={activityPreview} currency={currency} onClose={() => setActivityPreview(null)}/>
+    <PersonalSettledActivityPreview item={activityPreview} currency={currency} onClose={() => setActivityPreview(null)} onReverse={!readOnly && (activityPreview?.transfer_id ? access.can(PERSONAL_PERMISSION.deleteTransfer) : access.can(PERSONAL_PERMISSION.reverseSettlement)) ? reverseActivity : undefined}/>
     {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}:${dialog.transactionKind || ""}`} kind={dialog.kind} record={dialog.record} currency={currency} transactionKind={dialog.transactionKind} onClose={() => setDialog(null)} onSaved={refresh}/>}
     <SettlementModal isOpen={settlementOpen} onClose={() => { setSettlementOpen(false); setSelected([]); setBusy(false); }} onSave={() => { setSettlementOpen(false); setSelected([]); setBusy(false); refresh(); }} selectedEntries={selectedForSettlement} banksData={settlementBanks} adapter={settlementAdapter}/>
     {basis === "settled" && busy && <span className="sr-only" role="status">{t("loading")}</span>}

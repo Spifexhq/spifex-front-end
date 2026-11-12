@@ -460,7 +460,7 @@ const SignUp = () => {
         <header className="flex items-center justify-between mb-8">
           <a
             href="https://www.spifex.com/"
-            className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
+            className="inline-flex items-center gap-2 rounded-lg"
           >
             <img
               src={logoBlack}
@@ -501,7 +501,7 @@ const SignUp = () => {
                     {/* STEP 1 */}
                     <div
                       hidden={step !== 1}
-                      className={`space-y-4 transition-opacity duration-300 ${
+                      className={`space-y-4 transition-opacity duration-220 motion-reduce:transition-none ${
                         step === 1
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none absolute inset-0"
@@ -567,7 +567,7 @@ const SignUp = () => {
                     {/* STEP 2 */}
                     <div
                       hidden={step !== 2}
-                      className={`space-y-4 transition-opacity duration-300 ${
+                      className={`space-y-4 transition-opacity duration-220 motion-reduce:transition-none ${
                         step === 2
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none absolute inset-0"
@@ -649,7 +649,7 @@ const SignUp = () => {
                     {/* STEP 3 */}
                     <div
                       hidden={step !== 3}
-                      className={`space-y-4 transition-opacity duration-300 ${
+                      className={`space-y-4 transition-opacity duration-220 motion-reduce:transition-none ${
                         step === 3
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none absolute inset-0"

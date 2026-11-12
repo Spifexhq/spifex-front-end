@@ -1,8 +1,10 @@
 import React, { forwardRef, useCallback, useId, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import classNames from "classnames";
 
 import type { AmountInputProps, InputVariant, InputSize } from "./Input.types";
 import { INPUT_MESSAGE_TONE, INPUT_SIZE } from "./sizes";
+import RequiredMark from "./RequiredMark";
 
 import { formatCurrency, formatMajorNumber, toCanonicalMajorString } from "@/lib/currency/formatCurrency";
 
@@ -11,16 +13,16 @@ const NAV_KEYS = new Set(["Tab", "ArrowLeft", "ArrowRight", "Home", "End"]);
 
 const VARIANT: Record<InputVariant, string> = {
   default: "border-gray-300",
-  outlined: "border-2 border-gray-300 focus-visible:ring-0",
+  outlined: "border-2 border-gray-300",
   filled: "bg-gray-50 border border-transparent focus:border-gray-300",
 };
 
 const BASE =
-  "w-full max-w-full min-w-0 text-gray-900 outline-none transition-colors duration-150 " +
+  "w-full max-w-full min-w-0 text-gray-900 transition-colors duration-150 " +
   "placeholder:text-gray-400 border bg-white " +
-  "hover:bg-gray-50 focus:bg-gray-50 focus-visible:ring-1 focus-visible:ring-gray-300 " +
+  "hover:bg-gray-50 focus:bg-gray-50 " +
   "disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed " +
-  "disabled:hover:bg-gray-100 disabled:focus:bg-gray-100 disabled:focus-visible:ring-0";
+  "disabled:hover:bg-gray-100 disabled:focus:bg-gray-100";
 
 function digitsOnly(v: string) {
   return String(v ?? "").replace(/\D/g, "");
@@ -83,6 +85,8 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
     ...rest
   } = props;
 
+  const { t } = useTranslation("common");
+
   const resolvedValueType = valueType ?? "string";
   const isNumberMode = resolvedValueType === "number";
   const rawValue = value as unknown;
@@ -129,7 +133,7 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
     sz.inputBox,
     rightPadClass,
     VARIANT[variant] ?? VARIANT.default,
-    errorMessage && "border-red-500 focus:border-red-500 focus-visible:ring-red-200"
+    errorMessage && "border-red-500 focus:border-red-500"
   );
 
   const emitEmpty = useCallback(() => {
@@ -246,6 +250,7 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
             className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
           >
             {label}
+            {props.required ? <RequiredMark /> : null}
           </label>
 
           {labelChip ? (
@@ -301,10 +306,10 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
               onClick={() => emitEmpty()}
               onMouseDown={(ev) => ev.preventDefault()}
               className={classNames(
-                "pointer-events-auto rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
+                "pointer-events-auto rounded hover:bg-gray-100",
                 sz.trailingBtnPad
               )}
-              aria-label="Clear amount"
+              aria-label={t("input.clearAmount")}
               tabIndex={-1}
               disabled={isLoading || disabled}
             >

@@ -1,5 +1,4 @@
 /* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 /* Estilos Universais */
@@ -25,10 +24,10 @@
   --accentDangerHover: #f42626;
   --accentDangerPressed: #c62020;
   --accentDangerDisabled: #d03e3e;
-    /* === Success === */
-  --accentSuccess: #16A34A;
-  --accentSuccessHover: #22C55E;
-  --accentSuccessPressed: #15803D;
+  /* === Success === */
+  --accentSuccess: #15803D;
+  --accentSuccessHover: #166534;
+  --accentSuccessPressed: #14532D;
   --accentSuccessDisabled: #86EFAC;
 
   /* === Warning === */
@@ -43,23 +42,57 @@
   --accentInfoPressed: #0284C7;
   --accentInfoDisabled: #7DD3FC;
 
-  --white: #ffffff;
   --black: #202020;
-  --color1: #f2f2f2;
-  --color2: #e4e4e4;
-  --color3: #f9f9f9;
-  --color4: #3D3D40;
-  --color5: #006919;
-  --color6: #740000;
-  --standardBorder: 0.5px solid #d6d6d6;
-  --border2: 1px solid #ececec;
+  --controlBorder: 1px solid #d6d6d6;
+
+  /* Checkbox: dark checked state is intentional; it reads better than orange. */
+  --checkboxBorder: #cbd5e1;
+  --checkboxChecked: #1e293b;
+  --checkboxCheck: #ffffff;
+  --checkboxHoverShadow: 0 0 2px rgb(15 23 42 / 0.2);
+
+  /* Geometry, elevation, layering and motion tokens (Phase 1.4). */
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --radius-floating: 12px;
+  --shadow-floating: 0 8px 32px #26334d20;
+  --z-navbar: 30;
+  --z-sidebar: 40;
+  --z-modal: 10030;
+  --z-popover: 10060;
+  --z-toast: 15000;
+  --motion-tooltip: 120ms;
+  --motion-micro: 150ms;
+  --motion-standard: 180ms;
+  --motion-layout: 220ms;
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
 }
 
-* {
-  font-family: var(--font) !important;
+html {
+  font-family: var(--font);
 }
 
-*, *:focus, *:focus-visible {
+/*
+ * Keyboard focus: keep the visible indicator on form inputs only.
+ * Buttons and links intentionally do not render an outline.
+ */
+:where(input, select, textarea):focus-visible {
+  outline: 1px solid #9ca3af;
+  outline-offset: 1px;
+}
+
+/* Checkboxes and radios keep their own state styling, not the input outline. */
+:where(input[type="checkbox"], input[type="radio"]):focus-visible {
+  outline: none !important;
+}
+
+/* Date segments form one composite control; the wrapper owns the focus state. */
+:where(input[data-date-slot]):focus-visible {
+  outline: none !important;
+}
+
+/* Buttons, links and other non-input controls do not render focus outlines. */
+:where(a, button, summary, [role="button"], [tabindex]:not(input):not(select):not(textarea)):focus-visible {
   outline: none !important;
 }
 
@@ -70,25 +103,6 @@
 *::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 10px;
-}
-
-button[class*="inline-flex"] {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-button[class*="inline-flex"]:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-button[class*="inline-flex"]:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-@layer utilities {
-  .standard-border { border: var(--standardBorder); }
 }
 
 @keyframes shimmer {

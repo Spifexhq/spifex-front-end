@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SidePanel, { SidePanelDetails } from "@/components/Modal/SidePanel";
+import Button from "@/shared/ui/Button";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { PersonalSettledActivity } from "../types";
 
-export default function PersonalSettledActivityPreview({ item, currency, onClose }: {
-  item: PersonalSettledActivity | null; currency: string; onClose(): void;
+export default function PersonalSettledActivityPreview({ item, currency, onClose, onReverse }: {
+  item: PersonalSettledActivity | null; currency: string; onClose(): void; onReverse?(item: PersonalSettledActivity): Promise<void>;
 }) {
   const { t } = useTranslation("personal");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   if (!item) return <SidePanel isOpen={false} title="" onClose={onClose}><></></SidePanel>;
   const transfer = item.kind === "transfer";
   const fields = [
@@ -27,8 +32,9 @@ export default function PersonalSettledActivityPreview({ item, currency, onClose
     ]),
     { label: t("status"), value: t("settled") },
   ];
-  return <SidePanel isOpen title={item.description || t("untitledTransaction")} eyebrow={t(transfer ? "transfer" : "settlement")} onClose={onClose}>
+  return <SidePanel isOpen title={item.description || t("untitledTransaction")} eyebrow={t(transfer ? "transfer" : "settlement")} onClose={onClose} footer={onReverse ? <Button variant="outline" isLoading={busy} disabled={busy} onClick={() => { setBusy(true); setError(""); void onReverse(item).then(onClose).catch(cause => setError(apiErrorMessage(cause, t("error")))).finally(() => setBusy(false)); }}>{t("reverseActivity")}</Button> : undefined}>
     <SidePanelDetails fields={fields}/>
+    {error && <p role="alert" className="mt-4 text-xs text-red-700">{error}</p>}
     {!transfer && item.notes && <section className="mt-6"><h3 className="mb-2 text-xs font-semibold text-gray-800">{t("notes")}</h3><p className="whitespace-pre-wrap text-sm leading-6 text-gray-600">{item.notes}</p></section>}
   </SidePanel>;
 }

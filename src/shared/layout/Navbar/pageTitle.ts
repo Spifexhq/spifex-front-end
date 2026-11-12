@@ -32,7 +32,11 @@ export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
     "/settings/manage-formats": { titleKey: "settingsSidebar:items.personal", to: "/settings/personal" },
     "/settings/limits": { titleKey: "settingsSidebar:items.billing", to: "/settings/billing" },
   };
-  return parents[pathname] ? [parents[pathname], { titleKey }] : [{ titleKey }];
+  if (parents[pathname]) return [parents[pathname], { titleKey }];
+  if (pathname.startsWith("/settings/") && titleKey !== "navbar:pages.settings") {
+    return [{ titleKey: "navbar:pages.settings", to: "/settings/personal" }, { titleKey }];
+  }
+  return [{ titleKey }];
 }
 export function getSettingsDescriptionKey(pathname: string): string {
   const [, , page, tab] = pathname.split("/");

@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
+import Card from "@/shared/ui/Card";
 import Snackbar from "@/shared/ui/Snackbar";
 
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -206,11 +207,11 @@ const OrganizationSettings: React.FC = () => {
 
   if (!isOwner) {
     return (
-      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+      <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 ">
+          <Card as="div" padding="compact">
             <p className="text-[13px] text-gray-700">{t("errors.ownerOnly")}</p>
-          </div>
+          </Card>
         </div>
       </main>
     );
@@ -227,7 +228,7 @@ const OrganizationSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+      <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">
           
 
@@ -324,7 +325,7 @@ const OrganizationSettings: React.FC = () => {
 
               <SectionCard title={t("section.currency")}>
                 <div className="px-4 py-3">
-                  <p className="text-[12px] text-gray-700">{t("description.currency")}</p>
+                  <p className="text-xs text-gray-700">{t("description.currency")}</p>
                   <div className="mt-3">
                     <Button variant="outline" onClick={handleCurrencyNavigation} disabled={isSubmitting}>
                       {t("btn.manageCurrency")}

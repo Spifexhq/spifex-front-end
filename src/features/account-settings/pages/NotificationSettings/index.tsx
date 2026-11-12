@@ -18,6 +18,8 @@ import Snackbar from "@/shared/ui/Snackbar";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the pointer row mirrors the focusable switch. */
+
 import { api } from "@/core/api/requests";
 
 import type { NotificationCategory, NotificationPreference } from "@/models/auth/notifications";
@@ -90,7 +92,7 @@ const CategoryRow: React.FC<{
         <p className="text-[13px] font-medium text-gray-900">
           {t(meta.labelKey)}
         </p>
-        <p className="mt-1 text-[12px] text-gray-600">
+        <p className="mt-1 text-xs text-gray-600">
           {t(meta.descriptionKey)}
         </p>
       </div>
@@ -106,7 +108,6 @@ const CategoryRow: React.FC<{
           onChange={(e) => onToggle(category, e.target.checked)}
           disabled={disabled}
           size="sm"
-          colorClass="defaultColor"
           aria-label={t(meta.labelKey)}
         />
       </div>
@@ -222,7 +223,7 @@ const NotificationSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+      <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">
           {/* Header card */}
           
@@ -275,7 +276,7 @@ const NotificationSettings: React.FC = () => {
                   </span>
                 </div>
                 <div className="px-4 py-3 space-y-2">
-                  <p className="text-[12px] text-gray-700">
+                  <p className="text-xs text-gray-700">
                     {t("sidebar.description")}
                   </p>
                   <p className="text-[11px] text-gray-500">

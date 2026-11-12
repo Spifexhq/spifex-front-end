@@ -683,7 +683,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     !areDepartmentsValid;
 
   const renderTabs = () => (
-    <nav role="tablist" aria-label={t("entriesModal:header.entry")} className="flex gap-[3px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-lg border border-[#e8ebf0] bg-[#f5f7fa] p-[3px]">
+    <div role="tablist" aria-label={t("entriesModal:header.entry")} className="flex gap-[3px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-lg border border-[#e8ebf0] bg-[#f5f7fa] p-[3px]">
       {TAB_LIST.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -710,7 +710,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           </button>
         );
       })}
-    </nav>
+    </div>
   );
 
   const renderTabContent = () => {
@@ -801,7 +801,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       eyebrow={t("entriesModal:header.entry")} description={isFinancialLocked ? (formattedLastSettledOn ? t("entriesModal:settledInfo", { date: formattedLastSettledOn }) : t("entriesModal:guidance.financialLocked")) : t("entriesModal:guidance.intro")}
       closeLabel={t("entriesModal:aria.close")} onClose={attemptClose} busy={isSubmitting} loading={Boolean(isLoadingEntry) || sourcesLoading || relatedLoading} onSubmit={handleSubmit} formId={IDS.form} tabs={renderTabs()}
       footer={<>            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <p className="text-[12px] text-gray-600 hidden md:block">
+              <p className="text-xs text-gray-600 hidden md:block">
                 {formData.details.amount > "" ? (
                   <>
                     {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount)}</b>
@@ -809,7 +809,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 ) : (
                   <>{t("entriesModal:footer.enterValue")}</>
                 )}
-                <span className="ml-3 text-gray-400">{t("entriesModal:footer.shortcuts")}</span>
+                <span className="ml-3 text-gray-500">{t("entriesModal:footer.shortcuts")}</span>
               </p>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
@@ -842,7 +842,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 <h2 id="close-confirm-title" className="text-[15px] font-semibold text-gray-900">
                   {t("entriesModal:confirmDiscard.title")}
                 </h2>
-                <p id="close-confirm-desc" className="mt-1 text-[12px] text-gray-600">
+                <p id="close-confirm-desc" className="mt-1 text-xs text-gray-600">
                   {t("entriesModal:confirmDiscard.message")}
                 </p>
               </div>
@@ -882,7 +882,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 <h2 id="warn-title" className="text-[15px] font-semibold text-amber-800">
                   {warning.title}
                 </h2>
-                <p id="warn-desc" className="mt-1 text-[12px] text-amber-700">
+                <p id="warn-desc" className="mt-1 text-xs text-amber-700">
                   {warning.message}
                 </p>
               </div>

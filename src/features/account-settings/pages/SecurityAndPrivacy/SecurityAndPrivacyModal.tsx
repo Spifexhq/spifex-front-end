@@ -158,14 +158,14 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
                   {pwData.new_password && !pwValidation.isValid && (
                     <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
                       {pwValidation.message ? (
-                        <div className="text-[12px] text-gray-800">{pwValidation.message}</div>
+                        <div className="text-xs text-gray-800">{pwValidation.message}</div>
                       ) : (
-                        <div className="text-[12px] text-gray-800">{t("toast.weakPassword")}</div>
+                        <div className="text-xs text-gray-800">{t("toast.weakPassword")}</div>
                       )}
                     </div>
                   )}
 
-                  {pwSameAsCurrent && <p className="text-[12px] text-red-600">{t("toast.samePassword")}</p>}
+                  {pwSameAsCurrent && <p className="text-xs text-red-600">{t("toast.samePassword")}</p>}
 
                   <Input
                     kind="text"
@@ -182,7 +182,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
                     onDragOver={(e) => e.preventDefault()}
                   />
 
-                  {pwMismatch && <p className="text-[12px] text-red-600">{t("toast.passwordMismatch")}</p>}
+                  {pwMismatch && <p className="text-xs text-red-600">{t("toast.passwordMismatch")}</p>}
                 </>
               ) : modalMode === "email" ? (
                 <>
@@ -224,7 +224,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
               ) : (
                 <>
                   <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                    <div className="text-[12px] text-gray-800">
+                    <div className="text-xs text-gray-800">
                       {twoFactorIntentEnabled ? t("modal.twoFactorEnableHelp") : t("modal.twoFactorDisableHelp")}
                     </div>
                   </div>

@@ -12,6 +12,8 @@ export function Menu({ roleLabel, items, onClose, onAfterAction, emptyLabel, anc
   const [active, setActive] = useState(() => items.findIndex(item => !("sep" in item)));
   useEffect(() => { const frame = requestAnimationFrame(() => refs.current[active]?.focus()); return () => cancelAnimationFrame(frame); }, [active]);
   return <Popover anchorRef={anchorRef} align={align} onClose={onClose} className="w-56" role="menu" ariaLabel={roleLabel}>
+    {/* Roving focus container; the menu role lives on the Popover. */}
+    {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
     <div aria-label={roleLabel} onKeyDown={event => {
       if (event.key === "Escape") { event.preventDefault(); onClose(); anchorRef.current?.querySelector("button")?.focus(); }
       if (event.key !== "ArrowDown" && event.key !== "ArrowUp" && event.key !== "Home" && event.key !== "End") return;

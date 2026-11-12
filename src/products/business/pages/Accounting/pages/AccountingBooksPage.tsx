@@ -207,7 +207,7 @@ const AccountingBooksPage: React.FC = () => {
         <SidePanelForm recordLabel={t("footer.book", "Book")} recordName={form.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500"> {t("booksPage.modal.identity", "Identity")}</div>
             </div>
 
             <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
@@ -228,7 +228,7 @@ const AccountingBooksPage: React.FC = () => {
 
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.configuration", "Configuration")}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500"> {t("booksPage.modal.configuration", "Configuration")}</div>
             </div>
 
             <div className="grid gap-4 px-4 py-4 md:grid-cols-2">

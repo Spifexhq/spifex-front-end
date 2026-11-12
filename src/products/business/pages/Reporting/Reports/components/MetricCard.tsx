@@ -1,5 +1,6 @@
 import React from "react";
 
+// DS-024: reporting-only card radius (24px); do not copy into operational UI.
 type Tone = "neutral" | "positive" | "negative";
 
 type Props = {
@@ -17,7 +18,7 @@ const toneClasses: Record<Tone, string> = {
 
 const MetricCard: React.FC<Props> = ({ label, value, hint, tone = "neutral" }) => {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5">
+    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-180 hover:-translate-y-0.5 motion-reduce:transition-none">
       <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>

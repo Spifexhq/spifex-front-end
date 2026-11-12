@@ -39,7 +39,7 @@ const SubscriptionCanceled: React.FC = () => {
         <div className="settings-content ">
           <section className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
             <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 settings-panel-heading">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                 {t("subscription:header.settings", "Settings")}
               </div>
               
@@ -52,7 +52,7 @@ const SubscriptionCanceled: React.FC = () => {
                     ? t("subscription:checkout.canceled.title", "Checkout canceled")
                     : t("subscription:checkout.generic.title", "Checkout update")}
                 </p>
-                <p className="mt-1 text-[12px] text-gray-600">
+                <p className="mt-1 text-xs text-gray-600">
                   {isCanceled
                     ? t(
                         "subscription:checkout.canceled.body",

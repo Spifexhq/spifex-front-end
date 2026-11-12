@@ -15,6 +15,7 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
+import Badge from "@/shared/ui/Badge";
 import Popover from "src/shared/ui/Popover";
 
 import Select from "src/shared/ui/Select/Select";
@@ -538,9 +539,9 @@ const BankSettings: React.FC = () => {
               <div className="flex items-center gap-3">
 
 
-                {isBackgroundSync && (<span className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
+                {isBackgroundSync && (<Badge tone="neutral" variant="outline" size="md" className="backdrop-blur-sm">
                     {t("badge.syncing")}
-                  </span>)}
+                  </Badge>)}
               </div>
             </div></div>
 
@@ -705,7 +706,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftInstitution("")}
               disabled={globalBusy}
             >
@@ -729,7 +730,7 @@ const BankSettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<AccountTypeOption>
                 label={t("filters.accountTypeLabel")}
@@ -750,7 +751,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftAccountTypes([])}
               disabled={globalBusy}
             >
@@ -790,7 +791,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftBranch("")}
               disabled={globalBusy}
             >
@@ -834,7 +835,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftAccountNumber("")}
               disabled={globalBusy}
             >
@@ -874,7 +875,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftIban("")}
               disabled={globalBusy}
             >
@@ -898,7 +899,7 @@ const BankSettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
                 label={t("filters.statusLabel")}
@@ -917,7 +918,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftStatuses([])}
               disabled={globalBusy}
             >

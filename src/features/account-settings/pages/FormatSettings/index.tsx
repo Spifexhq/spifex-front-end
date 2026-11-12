@@ -70,7 +70,7 @@ const Row = ({
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 settings-row">
     <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{label}</p>
       <p className="text-[13px] font-medium text-gray-900 truncate">{value}</p>
     </div>
     {action}
@@ -296,7 +296,7 @@ const FormatSettings: React.FC = () => {
                 <div>
                   
                   
-                  <p className="mt-0.5 text-[12px] text-gray-600">
+                  <p className="mt-0.5 text-xs text-gray-600">
                     {t("header.subtitle")}
                   </p>
                 </div>
@@ -358,7 +358,7 @@ const FormatSettings: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      <p className="mt-1 text-[12px] text-gray-600">
+                      <p className="mt-1 text-xs text-gray-600">
                         {t("date.autoHint", {
                           example: systemDateSample,
                         })}
@@ -391,7 +391,7 @@ const FormatSettings: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      <p className="mt-1 text-[12px] text-gray-600">
+                      <p className="mt-1 text-xs text-gray-600">
                         {t("date.dmyHint", {
                           example: formatSampleDate("DMY_SLASH", today, dateLocale),
                         })}
@@ -428,7 +428,7 @@ const FormatSettings: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      <p className="mt-1 text-[12px] text-gray-600">
+                      <p className="mt-1 text-xs text-gray-600">
                         {baseLang === "en"
                           ? t("date.mdyHint", {
                               example: formatSampleDate("MDY_SLASH", today, dateLocale),
@@ -486,7 +486,7 @@ const FormatSettings: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      <p className="mt-1 text-[12px] text-gray-600">
+                      <p className="mt-1 text-xs text-gray-600">
                         {t("number.autoHint", {
                           example: systemNumberSample,
                         })}
@@ -519,7 +519,7 @@ const FormatSettings: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      <p className="mt-1 text-[12px] text-gray-600">
+                      <p className="mt-1 text-xs text-gray-600">
                         {t("number.euHint", {
                           example: formatSampleNumber("EU", sampleNumberValue),
                         })}
@@ -552,7 +552,7 @@ const FormatSettings: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      <p className="mt-1 text-[12px] text-gray-600">
+                      <p className="mt-1 text-xs text-gray-600">
                         {t("number.usHint", {
                           example: formatSampleNumber("US", sampleNumberValue),
                         })}
@@ -564,7 +564,7 @@ const FormatSettings: React.FC = () => {
 
               {/* Footer actions */}
               <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-                <p className="text-[12px] text-gray-600">
+                <p className="text-xs text-gray-600">
                   {t("footer.preview", {
                     date: effectiveDateSample,
                     number: effectiveNumberSample,

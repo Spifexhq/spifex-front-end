@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Button from "@/shared/ui/Button";
+import { useFeedbackStack } from "@/shared/ui/FeedbackStack";
 
 export type ConfirmToastProps = {
   open: boolean;
@@ -37,6 +38,8 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
 }) => {
   const { t } = useTranslation();
   const reduced = useReducedMotion();
+  const stack = useFeedbackStack();
+  const inStack = Boolean(stack);
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [collapsed, setCollapsed] = useState(false);
   const bodyCollapsed = isMobile && collapsed;
@@ -102,7 +105,7 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
           if (bodyCollapsed) toggleRef.current?.focus({ preventScroll: true });
           else cancelRef.current?.focus({ preventScroll: true });
         }}
-        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[9000] w-[calc(100vw-24px)] max-w-[320px] -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4"
+        className={`${inStack ? "pointer-events-auto" : "fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[15000] -translate-x-1/2 sm:bottom-6"} w-[calc(100vw-24px)] max-w-[320px] rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:p-4`}
       >
         <div className="flex items-start gap-2">
           <p id={descriptionId} className="min-w-0 flex-1 text-xs leading-5 text-gray-700">{text}</p>
@@ -115,10 +118,10 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
             aria-controls={bodyId}
             aria-label={t(collapsed ? "floatingPanel.restore" : "floatingPanel.minimize")}
             title={t(collapsed ? "floatingPanel.restore" : "floatingPanel.minimize")}
-            className="-mr-1.5 -mt-1.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="-mr-1.5 -mt-1.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <motion.span aria-hidden animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: reduced ? 0 : .2 }} className="inline-flex">
-              <ChevronDown size={15}/>
+              <ChevronDown size={15} aria-hidden="true" />
             </motion.span>
           </button>}
         </div>
@@ -148,7 +151,7 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
         </motion.div>
       </motion.div>}
     </AnimatePresence>,
-    document.body
+    stack ?? document.body
   );
 };
 

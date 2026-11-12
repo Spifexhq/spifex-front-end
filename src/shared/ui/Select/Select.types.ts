@@ -5,6 +5,8 @@ export type SelectSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface SelectProps<T> {
   label?: React.ReactNode;
+  errorMessage?: React.ReactNode;
+  required?: boolean;
   items: T[];
   selected: T[];
   onChange: (selected: T[]) => void;

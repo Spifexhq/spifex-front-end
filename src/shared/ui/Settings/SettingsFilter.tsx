@@ -9,9 +9,9 @@ export function SettingsFilter({ label, value, active, expanded, onClick, onClea
     <button type="button" onClick={onClick} disabled={disabled} aria-haspopup="dialog" aria-expanded={expanded} className="settings-filter-trigger">
       <ListFilter size={13} aria-hidden="true" /><span>{label}</span>
       {active && value && <span className="settings-filter-value">{value.replace(/^•\s*/, "")}</span>}
-      <ChevronDown size={12} aria-hidden="true" />
+      <ChevronDown size={13} aria-hidden="true" />
     </button>
-    {active && onClear && <button type="button" disabled={disabled} onClick={onClear} className="settings-filter-clear" aria-label={`${t("input.clear")}: ${label}`}><X size={12} /></button>}
+    {active && onClear && <button type="button" disabled={disabled} onClick={onClear} className="settings-filter-clear" aria-label={`${t("input.clear")}: ${label}`}><X size={13} aria-hidden="true" /></button>}
   </div>;
 }
 export function SettingsClearFilters({ label, onClick, disabled }: { label: string; onClick(): void; disabled?: boolean }) {

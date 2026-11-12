@@ -84,7 +84,7 @@ export default function SidebarNavigation({
             title={collapsed ? t("sidebar.settings") : undefined}
             className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"
           >
-            <Settings2 size={16} className="sidebar-icon" />
+            <Settings2 size={16} className="sidebar-icon" aria-hidden="true" />
             <span className="sidebar-label">
               {t("sidebar.settings")}
             </span>
@@ -97,7 +97,7 @@ export default function SidebarNavigation({
             className="mb-5"
             aria-label={t("sidebar.sections.overview")}
           >
-            <div className="sidebar-section-title text-[11px] font-medium text-gray-400">
+            <div className="sidebar-section-title text-[11px] font-medium text-gray-500">
               <span className="sidebar-label">
                 {t("sidebar.sections.overview")}
               </span>
@@ -161,7 +161,7 @@ export default function SidebarNavigation({
                     }`
                   }
                 >
-                  <Icon size={16} className="sidebar-icon" />
+                  <Icon size={16} className="sidebar-icon" aria-hidden="true" />
                   <span className="sidebar-label">{label}</span>
                 </NavLink>
               );
@@ -182,7 +182,7 @@ export default function SidebarNavigation({
 
           {mode !== "settled" && (
             <section aria-label={t("sidebar.sections.actions")}>
-              <div className="sidebar-section-title text-[11px] font-medium text-gray-400">
+              <div className="sidebar-section-title text-[11px] font-medium text-gray-500">
                 <span className="sidebar-label">
                   {t("sidebar.sections.actions")}
                 </span>

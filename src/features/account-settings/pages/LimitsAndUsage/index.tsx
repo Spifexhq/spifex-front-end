@@ -13,6 +13,7 @@ import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { formatDateTimeFromISO } from "@/lib/date/formatDate";
 import { permissionIcons } from "@/core/permissions/icons";
 import Input from "@/shared/ui/Input";
+import Badge from "@/shared/ui/Badge";
 
 /* --------------------------------- Types ---------------------------------- */
 type LimitsPeriod = "daily" | "weekly" | "monthly" | "lifetime";
@@ -43,25 +44,22 @@ const ToneBadge: React.FC<{
   tone?: "green" | "lime" | "amber" | "orange" | "red" | "gray";
   children: React.ReactNode;
 }> = ({ tone = "gray", children }) => {
-  const tones: Record<string, string> = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    lime: "bg-lime-50 text-lime-700 border-lime-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    orange: "bg-orange-50 text-orange-700 border-orange-200",
-    red: "bg-rose-50 text-rose-700 border-rose-200",
-    gray: "bg-gray-50 text-gray-700 border-gray-200",
-  };
-  return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${tones[tone]} inline-flex items-center`}>
-      {children}
-    </span>
-  );
+  const tones = {
+    green: "success",
+    lime: "lime",
+    amber: "warning",
+    orange: "orange",
+    red: "danger",
+    gray: "neutral",
+  } as const;
+  return <Badge size="md" tone={tones[tone]}>{children}</Badge>;
 };
 
 const Progress: React.FC<{
   pct: number;
   tone: "green" | "lime" | "amber" | "orange" | "red" | "gray";
-}> = ({ pct, tone }) => {
+  label: string;
+}> = ({ pct, tone, label }) => {
   const track = "h-2 w-full rounded-full bg-gray-100";
   const fills: Record<string, string> = {
     green: "bg-emerald-500",
@@ -72,9 +70,16 @@ const Progress: React.FC<{
     gray: "bg-gray-400",
   };
   return (
-    <div className={track} aria-label="usage">
+    <div
+      className={track}
+      role="progressbar"
+      aria-label={label}
+      aria-valuenow={Math.min(100, Math.max(0, pct))}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
       <div
-        className={`h-2 rounded-full ${fills[tone]} transition-[width] duration-300`}
+        className={`h-2 rounded-full ${fills[tone]} transition-[width] duration-220 motion-reduce:transition-none`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
       />
     </div>
@@ -205,13 +210,13 @@ const LimitsAndUsage: React.FC = () => {
     );
 
   return (
-    <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+    <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3"><div>
             
             
-            <p className="text-[12px] text-gray-600">
+            <p className="text-xs text-gray-600">
               {t("header.subtitle")}{" "}
               <span className="font-medium">{data?.plan?.name ?? t("header.planUnknown")}</span>
             </p>
@@ -304,7 +309,7 @@ const LimitsAndUsage: React.FC = () => {
                         }`}
                         aria-hidden="true"
                       >
-                        <Icon className="h-5 w-5 text-gray-700" />
+                        <Icon className="h-5 w-5 text-gray-700" aria-hidden="true" />
                       </div>
 
                       <div className="min-w-0">
@@ -312,7 +317,7 @@ const LimitsAndUsage: React.FC = () => {
                           <div className="text-[13px] font-medium text-gray-900">{label}</div>
                           <ToneBadge tone={st.tone}>{statusText}</ToneBadge>
                         </div>
-                        <div className="text-[12px] text-gray-600">{permission.code}</div>
+                        <div className="text-xs text-gray-600">{permission.code}</div>
                         {description && (
                           <div className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">{description}</div>
                         )}
@@ -350,7 +355,7 @@ const LimitsAndUsage: React.FC = () => {
                   {/* % + progress */}
                   <div className="col-span-2"><span className="settings-cell-label">{t("th.percent")}</span>
                     <div className="mb-1 text-[13px] text-gray-800 tabular-nums">{percentage}%</div>
-                    <Progress pct={percentage} tone={st.tone} />
+                    <Progress pct={percentage} tone={st.tone} label={label} />
                   </div>
                 </div>
               );

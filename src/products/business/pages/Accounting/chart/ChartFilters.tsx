@@ -25,7 +25,7 @@ export default function ChartFilters({ onApply }: { onApply(filters: AccountFilt
     <div className="flex items-end gap-2">
       <div className="min-w-0 flex-1"><Input kind="text" label={t("workspace.searchLabel")} placeholder={t("workspace.searchPlaceholder")} value={draft.search} onChange={event => setDraft(previous => ({ ...previous, search: event.target.value }))} /></div>
       <Button type="submit" variant="outline">{t("workspace.searchLabel")}</Button>
-      <Button type="button" variant="outline" aria-expanded={open} aria-controls="chart-filters" onClick={() => setOpen(!open)}><SlidersHorizontal size={14} /><span className="hidden sm:inline">{t("workspace.filtersTitle")}</span></Button>
+      <Button type="button" variant="outline" aria-expanded={open} aria-controls="chart-filters" onClick={() => setOpen(!open)}><SlidersHorizontal size={15} aria-hidden="true" /><span className="hidden sm:inline">{t("workspace.filtersTitle")}</span></Button>
     </div>
     {open && <div id="chart-filters" className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{controls.map(control => <Select key={control.key} label={control.label} items={control.options} selected={control.options.filter(option => option.value === draft[control.key])} onChange={selected => setDraft(previous => ({ ...previous, [control.key]: selected[0]?.value ?? "" }))} getItemKey={item => item.value} getItemLabel={item => item.label} singleSelect hideCheckboxes />)}</div>

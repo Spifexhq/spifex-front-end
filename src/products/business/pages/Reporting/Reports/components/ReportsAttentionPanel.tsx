@@ -36,7 +36,7 @@ const ReportsAttentionPanel: React.FC<Props> = ({
   return (
     <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
       <div className="mb-4">
-        <p className="text-[12px] font-medium text-gray-900">Attention center</p>
+        <p className="text-xs font-medium text-gray-900">Attention center</p>
         <p className="mt-1 text-[11px] text-gray-500">
           Quick operational signals around overdue and near-term cash movement
         </p>

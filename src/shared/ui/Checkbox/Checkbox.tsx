@@ -6,13 +6,12 @@
  * 
  * Features:
  * - Supports different sizes: small, medium, large
- * - Allows custom colors via CSS modules
  * - Accepts `onClick` and `onChange` handlers
  * - Can be disabled
- * 
+ *
  * Usage:
  * ```tsx
- * <Checkbox checked={true} onClick={handleClick} size="large" colorClass="myCustomColor" />
+ * <Checkbox checked={true} onClick={handleClick} size="large" />
  * ```
  */
 
@@ -26,7 +25,6 @@ const Checkbox: React.FC<CheckboxProps> = ({
   onChange,
   disabled = false,
   size = 'medium',
-  colorClass = 'defaultColor',
   required = false,
   indeterminate = false,
   ...inputProps
@@ -48,7 +46,6 @@ const Checkbox: React.FC<CheckboxProps> = ({
   const inputClasses = [
     styles.checkboxInput,
     sizeClass,
-    styles[colorClass] || '',
     disabled ? styles.disabled : '',
   ]
     .filter(Boolean)

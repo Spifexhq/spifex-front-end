@@ -335,7 +335,7 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
               {showField("timezone") && (
                 <>
                   <div className="flex items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2">
-                    <label className="text-[12px] text-gray-700">{t("modal.useDeviceTz")}</label>
+                    <label className="text-xs text-gray-700">{t("modal.useDeviceTz")}</label>
                     <Checkbox
                       checked={useDeviceTz}
                       onChange={(e) => {
@@ -352,7 +352,6 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
                         }
                       }}
                       size="sm"
-                      colorClass="defaultColor"
                     />
                   </div>
 

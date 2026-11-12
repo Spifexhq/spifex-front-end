@@ -27,8 +27,8 @@ import OverviewSkeleton from "./OverviewSkeleton";
 import OverviewFilters from "./OverviewFilters";
 import OverviewCharts from "@/shared/financial/components/FinancialCharts";
 import OverviewActivity from "./OverviewActivity";
-import { exportSeries, queryFromParams } from "./overviewUtils";
-
+import { exportSeries } from "@/shared/financial/overviewCsv";
+import { queryFromParams } from "./overviewUtils";
 export default function Overview() {
   const { t } = useTranslation("overview");
   const auth = useAuthContext();
@@ -185,9 +185,9 @@ export default function Overview() {
       .join(" ") || t("there");
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-8 lg:px-10">
+    <main className="mx-auto max-w-[1600px] space-y-5 px-4 py-6 sm:px-8 lg:px-10">
       <header>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
           {t(`greetings.${greeting}`, {
             name: displayName,
           })}
@@ -219,7 +219,7 @@ export default function Overview() {
             size="sm"
             onClick={() => setRetry((value) => value + 1)}
           >
-            <RefreshCw size={14} />
+            <RefreshCw size={15} aria-hidden="true" />
             {t("retry")}
           </Button>
         </div>
@@ -229,7 +229,7 @@ export default function Overview() {
         <OverviewSkeleton />
       ) : (
         data && (
-          <div className="space-y-6" aria-busy={loading}>
+          <div className="space-y-5" aria-busy={loading}>
             <div className="flex min-h-5 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
               <span>
                 {formatDateFromISO(data.period.start)} –{" "}
@@ -247,9 +247,8 @@ export default function Overview() {
                 {loading ? (
                   <>
                     <Loader2
-                      size={12}
-                      className="animate-spin motion-reduce:animate-none"
-                    />
+                      size={13}
+                      className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
                     {t("updating")}
                   </>
                 ) : (

@@ -1,2 +1,3 @@
-.workspace-sidebar :is(button, a):focus-visible,
-.workspace-sidebar-focus:focus-visible { outline: 2px solid #9ca3af !important; outline-offset: 2px; }
+/* Focus indicators come from the global rule in src/index.css. */
+/* Do not re-add scoped outline overrides here; they caused the shell and the */
+/* rest of the app to diverge and hid keyboard focus outside this scope. */

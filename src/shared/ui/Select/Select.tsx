@@ -18,6 +18,9 @@ import { useTranslation } from "react-i18next";
 import type { SelectProps } from "./Select.types";
 import { SELECT_SIZE } from "./sizes";
 import Checkbox from "@/shared/ui/Checkbox";
+import RequiredMark from "@/shared/ui/Input/RequiredMark";
+
+/* eslint-disable jsx-a11y/click-events-have-key-events -- option rows are driven by the listbox keyboard handler. */
 
 function cn(...classes: Array<string | undefined | false | null>) {
   return classes.filter(Boolean).join(" ");
@@ -41,6 +44,8 @@ const CLOSE_MS = 150;
 
 function Select<T>({
   label,
+  errorMessage,
+  required = false,
   items,
   selected,
   onChange,
@@ -90,6 +95,7 @@ function Select<T>({
 
   const id = useId();
   const panelId = `${id}-panel`;
+  const errorId = errorMessage ? `${id}-err` : undefined;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -719,14 +725,14 @@ function Select<T>({
             data-filter-owner={settingsUi.owner}
             data-settings-select={settingsUi.settings || undefined}
             className={cn(
-              "fixed overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg data-[settings-select]:[&_:is(button,_input):focus-visible]:[outline:none]! data-[settings-select]:[&_:is(button,_input):focus-visible]:[outline-offset:0] data-[settings-select]:[border-radius:8px]! data-[settings-select]:[box-shadow:0_6px_24px_#26334d20] data-[settings-select]:[font-size:12px] data-[settings-select]:[&_[role=option]]:[min-height:32px] data-[settings-select]:[&_[role=option]]:[font-size:12px] data-[settings-select]:[border-color:#dce1e8] data-[settings-select]:[border-radius:8px] data-[settings-select]:[box-shadow:0_6px_24px_#26334d18] data-[settings-select]:[&_[role=option]:hover]:[background:#f4f6f9]",
-              "origin-top transition-all duration-150 ease-out",
+              "fixed overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg data-[settings-select]:[border-radius:8px]! data-[settings-select]:[box-shadow:0_6px_24px_#26334d20] data-[settings-select]:[font-size:12px] data-[settings-select]:[&_[role=option]]:[min-height:32px] data-[settings-select]:[&_[role=option]]:[font-size:12px] data-[settings-select]:[border-color:#dce1e8] data-[settings-select]:[border-radius:8px] data-[settings-select]:[box-shadow:0_6px_24px_#26334d18] data-[settings-select]:[&_[role=option]:hover]:[background:#f4f6f9]",
+              "origin-top transition-[opacity,translate,scale] duration-150 ease-out motion-reduce:transition-none",
               isOpen
                 ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
                 : "opacity-0 -translate-y-1 scale-[0.985] pointer-events-none"
             )}
             style={{
-              zIndex: 10050,
+              zIndex: 10070,
               left: panelPosition.left,
               width: panelPosition.width,
               top: panelPosition.top,
@@ -740,6 +746,8 @@ function Select<T>({
               aria-labelledby={id}
               aria-label={t("aria.listbox")}
               aria-multiselectable={!effectiveSingleSelect || undefined}
+              aria-required={required || undefined}
+              aria-invalid={!!errorMessage || undefined}
               aria-activedescendant={
                 activeIndex != null && flatItems.length > 0 ? `${id}-opt-${activeIndex}` : undefined
               }
@@ -861,16 +869,27 @@ function Select<T>({
                     ) : groupBy ? (
                       Object.entries(groupedItems).map(([groupName, groupItems]) => (
                         <div key={groupName}>
-                          <div
-                            className={cn(
-                              "font-semibold text-gray-600",
-                              size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]",
-                              !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : ""
-                            )}
-                            onClick={() => handleGroupToggle(groupItems)}
-                          >
-                            {groupName}
-                          </div>
+                          {effectiveSingleSelect ? (
+                            <div
+                              className={cn(
+                                "font-semibold text-gray-600",
+                                size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]"
+                              )}
+                            >
+                              {groupName}
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className={cn(
+                                "w-full text-left font-semibold text-gray-600 cursor-pointer hover:bg-gray-50",
+                                size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]"
+                              )}
+                              onClick={() => handleGroupToggle(groupItems)}
+                            >
+                              {groupName}
+                            </button>
+                          )}
                           {groupItems.map((item) => {
                             const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
                             return idx >= 0 ? renderItem(item, idx) : null;
@@ -894,6 +913,7 @@ function Select<T>({
       {label && (
         <label className={cn("select-none font-semibold text-gray-700", sz.label)} htmlFor={id}>
           {label}
+          {required ? <RequiredMark /> : null}
         </label>
       )}
 
@@ -913,13 +933,16 @@ function Select<T>({
           aria-haspopup="listbox"
           aria-expanded={isRendered}
           aria-controls={panelId}
-          aria-label={t("aria.trigger")}
+          aria-label={label ? undefined : t("aria.trigger")}
+          aria-describedby={errorId}
           className={cn(
-            "group flex w-full items-center justify-between border outline-none transition-colors",
+            "group flex w-full items-center justify-between border transition-colors",
             sz.trigger,
             disabled
               ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-              : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300"
+              : errorMessage
+                ? "border-red-500 bg-white text-gray-800 hover:border-red-500 hover:bg-gray-50"
+                : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
           )}
         >
           <span className="flex min-w-0 items-center gap-2 overflow-hidden text-left">
@@ -962,7 +985,7 @@ function Select<T>({
 
             <svg
               className={cn(
-                "transition-transform duration-200 ease-out",
+                "transition-transform duration-180 ease-out motion-reduce:transition-none",
                 sz.chevron,
                 isOpen ? "rotate-180" : "rotate-0"
               )}
@@ -981,6 +1004,12 @@ function Select<T>({
           </span>
         </button>
       </div>
+
+      {errorMessage ? (
+        <span id={errorId} className="text-[11px] leading-tight text-red-600">
+          {errorMessage}
+        </span>
+      ) : null}
 
       {floatingPanel}
     </div>

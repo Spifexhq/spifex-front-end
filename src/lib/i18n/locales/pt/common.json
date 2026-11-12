@@ -5,6 +5,7 @@
   "previewError": "Não foi possível carregar os detalhes.",
   "previewRetry": "Tentar novamente",
   "previewLoading": "A carregar pré-visualização…",
+  "loading": "A carregar",
   "title": "Configurações Pessoais",
   "header.settings": "Configurações",
   "header.personal": "Pessoais",
@@ -31,6 +32,8 @@
   "toast.updateError": "Erro ao atualizar os dados pessoais.",
   "input": {
     "clear": "Limpar",
+    "clearAmount": "Limpar valor",
+    "clearPercentage": "Limpar percentagem",
     "hidePassword": "Ocultar senha",
     "showPassword": "Mostrar senha",
     "openDatePicker": "Abrir calendário",

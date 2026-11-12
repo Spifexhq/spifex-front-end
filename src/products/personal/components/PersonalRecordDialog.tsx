@@ -5,6 +5,7 @@ import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialo
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import ToggleSwitch from "@/shared/ui/ToggleSwitch";
+import { ErrorState } from "@/shared/ui/State";
 import { Select } from "@/shared/ui/Select";
 import { personalApi } from "@/products/personal/services/api";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
@@ -97,7 +98,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   };
 
   return <FloatingDialog isOpen title={kind === "transactions" && !record && transactionKind ? t(transactionKind === "income" ? "createCreditEntry" : "createDebitEntry") : t(["settle", "contribute", "transfer"].includes(kind) ? kind : record ? "edit" : "create")} description={t(record && kind === "transactions" ? "editDialogHint" : `${kind}DialogHint`)} closeLabel={t("close")} onClose={() => { if (!busy) onClose(); }} onSubmit={save} busy={busy} loading={loading} width={600} height={650} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t("cancel")}</Button><Button type="submit" disabled={busy || loading || optionsFailed} isLoading={busy}>{t("save")}</Button></div>}>
-    {error && <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs leading-6 text-red-700">{error}{optionsFailed && <Button type="button" variant="outline" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button>}</div>}
+    {error && <ErrorState message={error} size="sm" className="mb-5 leading-6" action={optionsFailed ? <Button type="button" variant="outline" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button> : undefined} />}
     {loading ? <DialogSkeleton label={t("loading")} /> : <div className="grid gap-5 sm:grid-cols-2">
       {kind === "transactions" && <>
         <div className="sm:col-span-2">{text("description")}</div>

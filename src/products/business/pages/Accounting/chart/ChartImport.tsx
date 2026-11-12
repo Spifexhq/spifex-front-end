@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import { Building2, FileUser } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
+import Card from "@/shared/ui/Card";
 import Snackbar from "@/shared/ui/Snackbar";
+import Textarea from "@/shared/ui/Input/Textarea";
 import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/core/api/requests";
@@ -66,7 +68,7 @@ const SetupOptionCard = ({
     ].join(" ")}
   >
     <div className="text-[14px] font-semibold">{title}</div>
-    <p className="mt-2 text-[12px] leading-7 text-gray-600">{description}</p>
+    <p className="mt-2 text-xs leading-7 text-gray-600">{description}</p>
   </button>
 );
 
@@ -112,12 +114,12 @@ const ChartImport: React.FC<Props> = ({
       {
         label: t("setup.templatePersonal", "Personal starter template"),
         value: "personal",
-        icon: <FileUser className="h-4 w-4" />,
+        icon: <FileUser className="h-4 w-4" aria-hidden="true" />,
       },
       {
         label: t("setup.templateOrganizational", "Organizational starter template"),
         value: "organizational",
-        icon: <Building2 className="h-4 w-4" />,
+        icon: <Building2 className="h-4 w-4" aria-hidden="true" />,
       },
     ],
     [t]
@@ -190,9 +192,7 @@ const ChartImport: React.FC<Props> = ({
     ? "grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3"
     : "grid grid-cols-1 gap-3 lg:grid-cols-3";
 
-  const modePanelClass = embedded
-    ? "rounded-lg border border-gray-200 bg-white p-4 md:p-5"
-    : "rounded-lg border border-gray-200 bg-white p-4";
+  const modePanelPadding = embedded ? "default" : "compact";
 
   const actionRowClass = embedded
     ? "mt-4 flex justify-end border-t border-gray-200 pt-4"
@@ -222,7 +222,7 @@ const ChartImport: React.FC<Props> = ({
       <section className={embeddedShellClass}>
         {!embedded ? (
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
               {t("setup.setupMethod", "Setup method")}
             </div>
           </div>
@@ -265,7 +265,7 @@ const ChartImport: React.FC<Props> = ({
           </div>
 
           {setupMode === "standard" ? (
-            <div className={modePanelClass}>
+            <Card as="div" padding={modePanelPadding}>
               <div className="max-w-[420px]">
                 <Select<TemplateOption>
                   label={t("setup.templateLabel", "Template")}
@@ -293,14 +293,14 @@ const ChartImport: React.FC<Props> = ({
                     : t("setup.submit", "Configure ledger")}
                 </Button>
               </div>
-            </div>
+            </Card>
           ) : null}
 
           {setupMode === "csv" ? (
-            <div className={modePanelClass}>
+            <Card as="div" padding={modePanelPadding}>
               <div className="space-y-4">
                 <label className="block">
-                  <span className="mb-1.5 block text-[12px] font-semibold text-gray-700">
+                  <span className="mb-1.5 block text-xs font-semibold text-gray-700">
                     {t("setup.fileLabel", "File")}
                   </span>
                   <input
@@ -339,18 +339,18 @@ const ChartImport: React.FC<Props> = ({
                     : t("setup.submit", "Configure ledger")}
                 </Button>
               </div>
-            </div>
+            </Card>
           ) : null}
 
           {setupMode === "manual" ? (
-            <div className={modePanelClass}>
+            <Card as="div" padding={modePanelPadding}>
               <label className="block">
-                <span className="mb-1.5 block text-[12px] font-semibold text-gray-700">
+                <span className="mb-1.5 block text-xs font-semibold text-gray-700">
                   {t("setup.manualLabel", "Rows")}
                 </span>
 
-                <textarea
-                  className="min-h-[240px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-[13px] text-gray-900 outline-none focus:border-gray-400"
+                <Textarea
+                  className="min-h-[240px] font-mono"
                   value={textBlock}
                   onChange={(event) => setTextBlock(event.target.value)}
                   placeholder={t(
@@ -367,7 +367,7 @@ const ChartImport: React.FC<Props> = ({
                     : t("setup.submit", "Configure ledger")}
                 </Button>
               </div>
-            </div>
+            </Card>
           ) : null}
         </div>
       </section>
@@ -390,7 +390,7 @@ const ChartImport: React.FC<Props> = ({
 
   return (
     <main className="min-w-0">
-      <div className="mx-auto max-w-6xl space-y-6">{content}</div>
+      <div className="mx-auto max-w-6xl space-y-5">{content}</div>
     </main>
   );
 };

@@ -5,6 +5,7 @@
   "previewError": "Could not load the record details.",
   "previewRetry": "Try again",
   "previewLoading": "Loading preview…",
+  "loading": "Loading",
   "title": "Personal Settings",
   "header.settings": "Settings",
   "header.personal": "Personal",
@@ -31,6 +32,8 @@
   "toast.updateError": "Failed to update personal data.",
   "input": {
     "clear": "Clear",
+    "clearAmount": "Clear amount",
+    "clearPercentage": "Clear percentage",
     "hidePassword": "Hide password",
     "showPassword": "Show password",
     "openDatePicker": "Open date picker",

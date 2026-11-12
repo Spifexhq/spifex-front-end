@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
+import Badge from "@/shared/ui/Badge";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Select from "src/shared/ui/Select/Select";
@@ -405,12 +406,15 @@ const MemberSettings: React.FC = () => {
   }
 
   const headerBadge = isBackgroundSync ? (
-    <span
+    <Badge
       aria-live="polite"
-      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+      tone="neutral"
+      variant="outline"
+      size="md"
+      className="backdrop-blur-sm"
     >
       {t("badge.syncing")}
-    </span>
+    </Badge>
   ) : null;
 
   const globalBusy = isBackgroundSync  || modalOpen;
@@ -550,7 +554,7 @@ const MemberSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftName("")}
               disabled={globalBusy}
             >
@@ -589,7 +593,7 @@ const MemberSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftEmail("")}
               disabled={globalBusy}
             >
@@ -608,7 +612,7 @@ const MemberSettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<RoleOption>
                 label={t("filters.roleLabel")}
@@ -629,7 +633,7 @@ const MemberSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftRoles([])}
               disabled={globalBusy}
             >
@@ -648,7 +652,7 @@ const MemberSettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<GroupOption>
                 label={t("filters.groupLabel")}
@@ -669,7 +673,7 @@ const MemberSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftGroups([])}
               disabled={globalBusy}
             >

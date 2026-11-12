@@ -27,6 +27,7 @@ import {
 
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
+import Badge from "@/shared/ui/Badge";
 import SidePanel from "@/components/Modal/SidePanel";
 import { api } from "@/api";
 import { fetchAllCursor } from "@/lib/list";
@@ -379,25 +380,25 @@ function extractCollection<T>(input: unknown): T[] {
 function iconForNode(group: NodeGroup) {
   switch (group) {
     case "page":
-      return <PanelRight className="h-4 w-4" />;
+      return <PanelRight className="h-4 w-4" aria-hidden="true" />;
     case "api":
-      return <Database className="h-4 w-4" />;
+      return <Database className="h-4 w-4" aria-hidden="true" />;
     case "entity":
-      return <Box className="h-4 w-4" />;
+      return <Box className="h-4 w-4" aria-hidden="true" />;
     case "status":
-      return <ShieldCheck className="h-4 w-4" />;
+      return <ShieldCheck className="h-4 w-4" aria-hidden="true" />;
     case "data":
-      return <ListTree className="h-4 w-4" />;
+      return <ListTree className="h-4 w-4" aria-hidden="true" />;
   }
 }
 
 function legendIcon(label: string) {
-  if (label.includes("Ledger")) return <FolderTree className="h-4 w-4" />;
-  if (label.includes("Book")) return <ScrollText className="h-4 w-4" />;
-  if (label.includes("Bank")) return <Landmark className="h-4 w-4" />;
-  if (label.includes("Category")) return <Link2 className="h-4 w-4" />;
-  if (label.includes("Journal")) return <FileText className="h-4 w-4" />;
-  return <Network className="h-4 w-4" />;
+  if (label.includes("Ledger")) return <FolderTree className="h-4 w-4" aria-hidden="true" />;
+  if (label.includes("Book")) return <ScrollText className="h-4 w-4" aria-hidden="true" />;
+  if (label.includes("Bank")) return <Landmark className="h-4 w-4" aria-hidden="true" />;
+  if (label.includes("Category")) return <Link2 className="h-4 w-4" aria-hidden="true" />;
+  if (label.includes("Journal")) return <FileText className="h-4 w-4" aria-hidden="true" />;
+  return <Network className="h-4 w-4" aria-hidden="true" />;
 }
 
 function edgePath(from: DiagramNode, to: DiagramNode) {
@@ -1539,10 +1540,10 @@ export default function AccountingCorrelationsPage() {
 
   return (
     <main className="min-w-0">
-      <div className="mx-auto max-w-[2400px] space-y-6">
+      <div className="mx-auto max-w-[2400px] space-y-5">
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.title", "Correlation explorer")}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.title", "Correlation explorer")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
@@ -1583,7 +1584,7 @@ export default function AccountingCorrelationsPage() {
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
             <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.board.title", "Correlation board")}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.board.title", "Correlation board")}</div>
                 <div className="mt-1 text-[13px] font-medium text-gray-900">
                   {t("correlationsPage.board.subtitle", "Wide board with draggable, selectable cards")}
                 </div>
@@ -1597,7 +1598,7 @@ export default function AccountingCorrelationsPage() {
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                     aria-label={t("correlationsPage.aria.filterData", "Filter data")}
                   >
-                    <Filter className="h-4 w-4" />
+                    <Filter className="h-4 w-4" aria-hidden="true" />
                   </button>
                 ) : null}
 
@@ -1607,7 +1608,7 @@ export default function AccountingCorrelationsPage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                   aria-label={t("correlationsPage.aria.centerSelected", "Center selected")}
                 >
-                  <LocateFixed className="h-4 w-4" />
+                  <LocateFixed className="h-4 w-4" aria-hidden="true" />
                 </button>
 
                 <button
@@ -1616,7 +1617,7 @@ export default function AccountingCorrelationsPage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                   aria-label={t("correlationsPage.aria.downloadPng", "Download PNG")}
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4 w-4" aria-hidden="true" />
                 </button>
 
                 <button
@@ -1625,7 +1626,7 @@ export default function AccountingCorrelationsPage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                   aria-label={isExpanded ? t("correlationsPage.aria.collapseChart", "Collapse chart") : t("correlationsPage.aria.expandChart", "Expand chart")}
                 >
-                  {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  {isExpanded ? <Minimize2 className="h-4 w-4" aria-hidden="true" /> : <Maximize2 className="h-4 w-4" aria-hidden="true" />}
                 </button>
 
                 <button
@@ -1634,7 +1635,7 @@ export default function AccountingCorrelationsPage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                   aria-label={t("correlationsPage.aria.zoomOut", "Zoom out")}
                 >
-                  <ZoomOut className="h-4 w-4" />
+                  <ZoomOut className="h-4 w-4" aria-hidden="true" />
                 </button>
 
                 <button
@@ -1643,7 +1644,7 @@ export default function AccountingCorrelationsPage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                   aria-label={t("correlationsPage.aria.zoomIn", "Zoom in")}
                 >
-                  <ZoomIn className="h-4 w-4" />
+                  <ZoomIn className="h-4 w-4" aria-hidden="true" />
                 </button>
 
                 <button
@@ -1656,7 +1657,7 @@ export default function AccountingCorrelationsPage() {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                   aria-label={t("correlationsPage.aria.resetView", "Reset view")}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1679,8 +1680,8 @@ export default function AccountingCorrelationsPage() {
                   }
                 }}
               >
-                <div className="absolute left-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[12px] text-gray-600">
-                  <Move className="h-3.5 w-3.5" />
+                <div className="absolute left-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600">
+                  <Move className="h-3.5 w-3.5" aria-hidden="true" />
                   {t("correlationsPage.board.zoomStatus", "Zoom {{zoom}}% • {{count}} selected rows", { zoom: Math.round(zoom * 100), count: selectedCount })}
                 </div>
 
@@ -1688,7 +1689,7 @@ export default function AccountingCorrelationsPage() {
                   <div className="absolute inset-0 z-10 flex items-center justify-center">
                     <div className="rounded-lg border border-dashed border-gray-300 bg-white px-6 py-6 text-center">
                       <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
-                        <Filter className="h-5 w-5" />
+                        <Filter className="h-5 w-5" aria-hidden="true" />
                       </div>
                       <h3 className="mt-3 text-[14px] font-semibold text-gray-900">{t("correlationsPage.empty.noDataSelectedTitle", "No data selected yet")}</h3>
                       <p className="mt-1 max-w-[360px] text-[13px] leading-6 text-gray-600">
@@ -1780,7 +1781,7 @@ export default function AccountingCorrelationsPage() {
                           });
                         }}
                         className={[
-                          "absolute w-[240px] rounded-lg border px-3 py-3 text-left transition-all select-none",
+                          "absolute w-[240px] rounded-lg border px-3 py-3 text-left transition-[border-color,box-shadow,opacity] motion-reduce:transition-none select-none",
                           groupStyles[node.group],
                           isSelected ? "ring-2 ring-gray-900 shadow-sm" : "hover:border-gray-300",
                           dimmed && !isSelected ? "opacity-55" : "opacity-100",
@@ -1791,12 +1792,12 @@ export default function AccountingCorrelationsPage() {
                           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700">
                             {iconForNode(node.group)}
                           </span>
-                          <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] uppercase tracking-wide text-gray-600">
+                          <Badge tone="neutral" variant="outline" className="uppercase tracking-wide">
                             {node.architectureLabel || translatedGroupLabels[node.group]}
-                          </span>
+                          </Badge>
                         </div>
                         <div className="mt-3 text-[13px] font-semibold text-gray-900">{node.short}</div>
-                        <div className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600">{node.label}</div>
+                        <div className="mt-1 line-clamp-2 text-xs leading-5 text-gray-600">{node.label}</div>
                       </button>
                     );
                   })}
@@ -1808,14 +1809,14 @@ export default function AccountingCorrelationsPage() {
           <aside className={isExpanded ? "space-y-4 xl:col-span-full" : "accounting-inspector space-y-4"}>
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.title", "Inspector")}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.inspector.title", "Inspector")}</div>
               </div>
 
               <div className="space-y-4 px-4 py-4">
                 <div>
                   <div className="flex items-center gap-2 text-gray-700">
-                    {selected ? legendIcon(selected.label) : <Network className="h-4 w-4" />}
-                    <span className="text-[12px] font-medium uppercase tracking-wide">
+                    {selected ? legendIcon(selected.label) : <Network className="h-4 w-4" aria-hidden="true" />}
+                    <span className="text-xs font-medium uppercase tracking-wide">
                       {selected?.architectureLabel || (selected ? translatedGroupLabels[selected.group] : t("correlationsPage.node", "Node"))}
                     </span>
                   </div>
@@ -1828,7 +1829,7 @@ export default function AccountingCorrelationsPage() {
                 </div>
 
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.incoming", "Incoming connections")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.inspector.incoming", "Incoming connections")}</div>
                   <div className="mt-3 space-y-2">
                     {incoming.length ? (
                       incoming.map((edge, index) => {
@@ -1839,14 +1840,14 @@ export default function AccountingCorrelationsPage() {
                           <div key={`${edge.from}-${index}`} className="rounded-md border border-gray-200 bg-white px-3 py-2.5">
                             <div className="flex items-center justify-between gap-3">
                               <span className="text-[13px] font-medium text-gray-900">{source.short}</span>
-                              <span className="text-[12px] text-gray-600">{t(`correlationsPage.edges.${edge.kind}`, edge.kind)}</span>
+                              <span className="text-xs text-gray-600">{t(`correlationsPage.edges.${edge.kind}`, edge.kind)}</span>
                             </div>
-                            {edge.note ? <div className="mt-1 text-[12px] text-gray-600">{edge.note}</div> : null}
+                            {edge.note ? <div className="mt-1 text-xs text-gray-600">{edge.note}</div> : null}
                           </div>
                         );
                       })
                     ) : (
-                      <div className="rounded-md border border-dashed border-gray-300 bg-white px-3 py-4 text-[12px] text-gray-500">
+                      <div className="rounded-md border border-dashed border-gray-300 bg-white px-3 py-4 text-xs text-gray-500">
                         {t("correlationsPage.inspector.noIncoming", "No incoming connections in the current filter.")}
                       </div>
                     )}
@@ -1854,7 +1855,7 @@ export default function AccountingCorrelationsPage() {
                 </div>
 
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.outgoing", "Outgoing connections")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.inspector.outgoing", "Outgoing connections")}</div>
                   <div className="mt-3 space-y-2">
                     {outgoing.length ? (
                       outgoing.map((edge, index) => {
@@ -1865,14 +1866,14 @@ export default function AccountingCorrelationsPage() {
                           <div key={`${edge.to}-${index}`} className="rounded-md border border-gray-200 bg-white px-3 py-2.5">
                             <div className="flex items-center justify-between gap-3">
                               <span className="text-[13px] font-medium text-gray-900">{target.short}</span>
-                              <span className="text-[12px] text-gray-600">{t(`correlationsPage.edges.${edge.kind}`, edge.kind)}</span>
+                              <span className="text-xs text-gray-600">{t(`correlationsPage.edges.${edge.kind}`, edge.kind)}</span>
                             </div>
-                            {edge.note ? <div className="mt-1 text-[12px] text-gray-600">{edge.note}</div> : null}
+                            {edge.note ? <div className="mt-1 text-xs text-gray-600">{edge.note}</div> : null}
                           </div>
                         );
                       })
                     ) : (
-                      <div className="rounded-md border border-dashed border-gray-300 bg-white px-3 py-4 text-[12px] text-gray-500">
+                      <div className="rounded-md border border-dashed border-gray-300 bg-white px-3 py-4 text-xs text-gray-500">
                         {t("correlationsPage.inspector.noOutgoing", "No outgoing connections in the current filter.")}
                       </div>
                     )}
@@ -1894,7 +1895,7 @@ export default function AccountingCorrelationsPage() {
           <div className="space-y-4">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.filters.datasets", "Datasets")}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.filters.datasets", "Datasets")}</div>
               </div>
 
               <div className="space-y-3 px-4 py-4">
@@ -1915,11 +1916,11 @@ export default function AccountingCorrelationsPage() {
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <div className="text-[13px] font-medium text-gray-900">{dataset.label}</div>
-                          <div className="mt-1 text-[12px] leading-5 text-gray-600">{dataset.description}</div>
+                          <div className="mt-1 text-xs leading-5 text-gray-600">{dataset.description}</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[12px] font-medium text-gray-900">{totalForDataset}</div>
-                          <div className="text-[10px] uppercase tracking-wide text-gray-500">{t("correlationsPage.filters.rows", "rows")}</div>
+                          <div className="text-xs font-medium text-gray-900">{totalForDataset}</div>
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.filters.rows", "rows")}</div>
                         </div>
                       </div>
                     </button>
@@ -1930,12 +1931,12 @@ export default function AccountingCorrelationsPage() {
 
             <section className="min-h-[520px] overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.filters.rowSelector", "Row selector")}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("correlationsPage.filters.rowSelector", "Row selector")}</div>
               </div>
 
               <div className="space-y-4 px-4 py-4">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
@@ -1956,9 +1957,12 @@ export default function AccountingCorrelationsPage() {
                         return (
                           <label
                             key={`${row.dataset}-${row.id}`}
+                            htmlFor={`row-${row.dataset}-${row.id}`}
                             className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 hover:bg-gray-50 rounded-lg border border-gray-200 bg-white"
                           >
                             <input
+                              id={`row-${row.dataset}-${row.id}`}
+                              aria-label={row.label}
                               type="checkbox"
                               checked={checked}
                               onChange={() => toggleRow(row.dataset, row.id)}
@@ -1966,8 +1970,8 @@ export default function AccountingCorrelationsPage() {
                             />
                             <div className="min-w-0">
                               <div className="text-[13px] font-medium text-gray-900">{row.label}</div>
-                              <div className="mt-1 text-[12px] leading-5 text-gray-600">{row.sublabel}</div>
-                              <div className="mt-1 text-[10px] uppercase tracking-wide text-gray-500">
+                              <div className="mt-1 text-xs leading-5 text-gray-600">{row.sublabel}</div>
+                              <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                                 {row.dataset}
                               </div>
                             </div>

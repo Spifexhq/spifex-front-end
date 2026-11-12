@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
+import Textarea from "@/shared/ui/Input/Textarea";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
 import { Select } from "src/shared/ui/Select";
@@ -422,11 +423,11 @@ const CategorySettingsPage: React.FC = () => {
           </div>
 
           <label className="block">
-            <span className="mb-2 block text-[12px] font-semibold text-gray-700">{t("modal.metadata")}</span>
-            <textarea
+            <span className="mb-2 block text-xs font-semibold text-gray-700">{t("modal.metadata")}</span>
+            <Textarea
               value={form.metadata_text}
               onChange={(e) => setForm((prev) => ({ ...prev, metadata_text: e.target.value }))}
-              className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-400"
+              className="min-h-[180px] font-mono"
             />
           </label>
 

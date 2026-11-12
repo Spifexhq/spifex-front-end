@@ -34,7 +34,7 @@ const ExpenseBreakdownCard: React.FC<{
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
                   <div
-                    className="h-full rounded-full transition-all duration-300"
+                    className="h-full rounded-full transition-[width] duration-220 motion-reduce:transition-none"
                     style={{ width: `${pct}%`, backgroundColor: row.color }}
                   />
                 </div>

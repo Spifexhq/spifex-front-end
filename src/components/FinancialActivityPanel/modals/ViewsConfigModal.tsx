@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 
 import Button from "@/shared/ui/Button";
 import Switch from "@/shared/ui/Switch";
+import { ErrorState } from "@/shared/ui/State";
 import { Pencil } from "lucide-react";
 
 import { api } from "@/core/api/requests";
@@ -119,7 +120,7 @@ export const ViewsConfigModal: React.FC<{
 
   return (
     <ModalShell busy={busy} title={t("filterBar:configModal.title")} onClose={onClose}>
-      {error && <p role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{error}</p>}
+      {error && <ErrorState message={error} tone="warning" size="sm" className="mb-4 leading-5" />}
       <div className={busy ? "pointer-events-none opacity-60" : ""}>
         <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
           {scopedViews.length === 0 && (

@@ -21,7 +21,8 @@ const LockIcon: React.FC<{ className?: string; title?: string }> = ({ className,
     viewBox="0 0 128 128"
     xmlns="http://www.w3.org/2000/svg"
     role="img"
-    aria-label={title ?? "Locked"}
+    aria-label={title}
+    aria-hidden={title ? undefined : true}
   >
     {title ? <title>{title}</title> : null}
 

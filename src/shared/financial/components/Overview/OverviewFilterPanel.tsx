@@ -1,4 +1,5 @@
 import type { FormEventHandler, ReactNode } from "react";
+import Card from "@/shared/ui/Card";
 
 /** Shared dashboard filter composition used by both product overviews. */
 export default function OverviewFilterPanel({ toolbar, children, onSubmit }: {
@@ -8,8 +9,8 @@ export default function OverviewFilterPanel({ toolbar, children, onSubmit }: {
 }) {
   return <div className="space-y-3">
     {toolbar && <div className="flex flex-wrap items-center justify-between gap-3">{toolbar}</div>}
-    <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
+    <Card as="form" radius="xl" tone="slate" padding="compact" onSubmit={onSubmit} className="flex flex-wrap items-end gap-3">
       {children}
-    </form>
+    </Card>
   </div>;
 }

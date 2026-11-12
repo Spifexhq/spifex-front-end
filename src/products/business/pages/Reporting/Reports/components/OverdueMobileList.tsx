@@ -2,6 +2,7 @@ import React from "react";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 import { TX_CREDIT, TX_DEBIT } from "../helpers";
 
+// DS-024: reporting-only card radius (28px); do not copy into operational UI.
 type Item = {
   id: string;
   dateLabel: string;

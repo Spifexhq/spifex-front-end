@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
+import Textarea from "@/shared/ui/Input/Textarea";
 import { Select } from "src/shared/ui/Select";
 
 import type {
@@ -67,7 +68,7 @@ const FieldGroup = ({
 }) => (
   <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
     <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{title}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{title}</div>
     </div>
     <div className="space-y-4 px-4 py-4">{children}</div>
   </section>
@@ -264,6 +265,8 @@ const LedgerAccountModal: React.FC<Props> = ({
                     )}</>} onClose={onClose} busy={busy}>
 
 
+        {/* Ctrl/Cmd+S submit shortcut; form semantics stay with the native element. */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <form className="settings-modal-form" onSubmit={submit} onKeyDown={event => {
           if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
             event.preventDefault();
@@ -467,13 +470,13 @@ const LedgerAccountModal: React.FC<Props> = ({
                 </div>
 
                 <label className="block">
-                  <span className="mb-2 block text-[12px] font-semibold text-gray-700">
+                  <span className="mb-2 block text-xs font-semibold text-gray-700">
                     {t("modal.metadata", "Metadata (JSON)")}
                   </span>
-                  <textarea
+                  <Textarea
                     value={metadataText}
                     onChange={(e) => setMetadataText(e.target.value)}
-                    className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-400"
+                    className="min-h-[180px] font-mono"
                   />
                 </label>
                 </div>
@@ -490,9 +493,9 @@ const LedgerAccountModal: React.FC<Props> = ({
           <SidePanelFooter
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <p className="hidden text-[12px] text-gray-600 md:block">
+              <p className="hidden text-xs text-gray-600 md:block">
                 {form.name.trim() ? <>{translate("footer.account")} <b>{form.name.trim()}</b></> : <>{translate("footer.enterName")}</>}
-                <span className="ml-3 text-gray-400">{translate("footer.shortcuts")}</span>
+                <span className="ml-3 text-gray-500">{translate("footer.shortcuts")}</span>
               </p>
               <div className="grid grid-cols-2 gap-2 md:ml-auto md:flex md:gap-2">
                 <Button type="button" variant="cancel" onClick={onClose} disabled={busy} className="w-full md:w-auto">{translate("btn.cancel")}</Button>

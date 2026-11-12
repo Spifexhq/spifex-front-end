@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
+// DS-024: reporting-only card radius (28px); do not copy into operational UI.
 type Row = {
   key: string;
   month: string;

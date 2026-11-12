@@ -25,7 +25,7 @@ export default function AccountInsights({ filters, view, onEdit, onDelete }: { f
      </article>)}
    </div>
    {!groups.loading && !groups.error && !groups.items.length && <p className="text-xs text-gray-500">{t("workspace.emptyTitle")}</p>}
-   {(groups.canPrev || groups.canNext) && <div className="flex justify-end gap-1"><Button variant="ghost" size="iconSm" aria-label={common("pagination.previous")} disabled={!groups.canPrev} onClick={() => void groups.prev()}><ChevronLeft size={14}/></Button><Button variant="ghost" size="iconSm" aria-label={common("pagination.next")} disabled={!groups.canNext} onClick={() => void groups.next()}><ChevronRight size={14}/></Button></div>}
+   {(groups.canPrev || groups.canNext) && <div className="flex justify-end gap-1"><Button variant="ghost" size="iconSm" aria-label={common("pagination.previous")} disabled={!groups.canPrev} onClick={() => void groups.prev()}><ChevronLeft size={15} aria-hidden="true" /></Button><Button variant="ghost" size="iconSm" aria-label={common("pagination.next")} disabled={!groups.canNext} onClick={() => void groups.next()}><ChevronRight size={15} aria-hidden="true" /></Button></div>}
  </section>}
 
  <DataTable pager={pager} items={pager.items} onEdit={onEdit} onDelete={onDelete ? async account => { await onDelete(account); await pager.refresh(); if(view === "reporting") await groups.refresh(); } : undefined} emptyLabel={t("workspace.emptyTitle")} editLabel={t("workspace.edit")} columns={[

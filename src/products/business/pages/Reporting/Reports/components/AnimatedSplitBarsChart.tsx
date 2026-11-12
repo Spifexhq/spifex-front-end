@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import SectionCard from "./SectionCard";
+import Badge from "@/shared/ui/Badge";
 import type { SplitBarDatum } from "../helpers";
 import { compactCurrency, fmtMoney } from "../helpers";
 
@@ -798,7 +799,7 @@ const AnimatedSplitBarsChart: React.FC<Props> = ({
             <button
               key={range}
               onClick={() => setActiveRange(range)}
-              className={`rounded-full px-2.5 py-1 text-[11px] transition-all ${
+              className={`rounded-full px-2.5 py-1 text-[11px] transition-colors motion-reduce:transition-none ${
                 activeRange === range
                   ? "bg-gray-900 text-white"
                   : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800"
@@ -828,20 +829,16 @@ const AnimatedSplitBarsChart: React.FC<Props> = ({
 
         <div className="flex items-end gap-2">
           <span
-            className="text-lg font-semibold tabular-nums transition-colors duration-300"
+            className="text-lg font-semibold tabular-nums transition-colors duration-220 motion-reduce:transition-none"
             style={{ color: isUp ? "#0E9384" : "#D92D20" }}
           >
             {fmtMoney(displayNet)}
           </span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-              isUp ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-            }`}
-          >
+          <Badge tone={isUp ? "success" : "danger"} size="md">
             {isUp ? "+" : ""}
             {fmtMoney(displayDiff)}
             {isHovering ? " range" : " period"}
-          </span>
+          </Badge>
         </div>
       </div>
 

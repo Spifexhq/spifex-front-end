@@ -6,6 +6,7 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { getAccess } from "@/lib/tokens";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Button from "@/shared/ui/Button";
+import Card from "@/shared/ui/Card";
 import { useOptionalPersonalAccess } from "@/products/personal/access/PersonalAccessProvider";
 import { resolvePersonalPermission } from "@/products/personal/access/permissions";
 
@@ -127,7 +128,7 @@ export const PermissionMiddleware = ({
               </div>
 
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                   {t("header.settings")}
                 </div>
                 <h1 className="leading-snug text-[16px] font-semibold text-gray-900">
@@ -138,7 +139,7 @@ export const PermissionMiddleware = ({
           </header>
 
           <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <Card as="div" padding="compact">
               <p className="mb-4 text-[13px] text-gray-700">{message}</p>
 
               <div className="flex flex-wrap gap-2">
@@ -160,7 +161,7 @@ export const PermissionMiddleware = ({
                   </Button>
                 )}
               </div>
-            </div>
+            </Card>
           </section>
         </div>
       </main>

@@ -1,4 +1,2 @@
 .app-shell-content { transition: margin-left 220ms cubic-bezier(.22, 1, .36, 1); }
-.app-shell :is(button, a):focus-visible,
-.shell-popover :is(button, a):focus-visible { outline: 2px solid #9ca3af !important; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .app-shell-content { transition: none; } }

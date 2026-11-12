@@ -95,7 +95,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         <span>{bankState.loading ? <SkeletonLine className="h-3 w-20" /> : bankState.error ? t("banksTable:details") : t("kpiCards:panel.accountsCount", { count: bankState.count })}</span>
         <ChevronDown size={13} aria-hidden className={`shrink-0 transition-transform duration-150 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
       </button>
-      <p className="hidden text-[11px] leading-4 text-gray-400 sm:block">{t(bankIds.length ? "banksTable:balanceScope" : "banksTable:allAccountsScope")}</p>
+      <p className="hidden text-[11px] leading-4 text-gray-500 sm:block">{t(bankIds.length ? "banksTable:balanceScope" : "banksTable:allAccountsScope")}</p>
     </div>
     <AnimatePresence initial={false}>
       {expanded && <motion.section id={detailsId} key="bank-details" aria-label={t("banksTable:aria.section")}
@@ -103,10 +103,10 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         transition={{ duration: reduced ? 0 : .16, ease: "easeOut" }}
         className="order-last col-span-full min-w-0 overflow-hidden border-t border-gray-100 bg-gray-50/40">
         <div className="flex items-center justify-between gap-3 px-4 py-2 sm:px-5">
-          <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-700"><Landmark size={14} aria-hidden />{t("banksTable:aria.section")}</h3>
+          <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-700"><Landmark size={15} aria-hidden />{t("banksTable:aria.section")}</h3>
           <button type="button" onClick={() => navigate(manageBanksPath)}
             className="inline-flex items-center gap-1 rounded py-1 text-[11px] font-medium text-gray-600 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
-            {t("banksTable:manage")}<ArrowUpRight size={12} aria-hidden />
+            {t("banksTable:manage")}<ArrowUpRight size={13} aria-hidden />
           </button>
         </div>
         <div className="max-h-[min(11rem,20dvh)] overflow-y-auto overscroll-contain px-4 pb-2 sm:px-5">
@@ -165,7 +165,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
             <div className="relative" ref={viewsMenuRef}>
               <Button variant="ghost" size="sm" className="gap-1.5" aria-label={t("filterBar:buttons.views")} aria-haspopup="menu" aria-expanded={viewsMenuOpen}
                 onClick={() => { setOpenEditor(null); setAddFilterMenuOpen(false); setViewsMenuOpen(value => !value); }}>
-                <Eye size={14} aria-hidden /><span className="hidden sm:inline">{t("filterBar:buttons.views")}</span><ChevronDown size={12} className="hidden sm:block" aria-hidden />
+                <Eye size={15} aria-hidden /><span className="hidden sm:inline">{t("filterBar:buttons.views")}</span><ChevronDown size={13} className="hidden sm:block" aria-hidden />
               </Button>
               {viewsMenuOpen && <Menu anchorRef={viewsMenuRef} roleLabel={t("filterBar:viewsMenu.aria")} align="right"
                 emptyLabel={t("filterBar:viewsMenu.empty")} onClose={() => setViewsMenuOpen(false)}
@@ -173,10 +173,10 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
             </div>
           </PermissionMiddleware>
           <PermissionMiddleware codeName="add_entry_view">
-            <Button variant="ghost" size="iconSm" aria-label={t("filterBar:buttons.saveView")} title={t("filterBar:buttons.saveView")} onClick={() => setSaveModalOpen(true)}><Save size={14} aria-hidden /></Button>
+            <Button variant="ghost" size="iconSm" aria-label={t("filterBar:buttons.saveView")} title={t("filterBar:buttons.saveView")} onClick={() => setSaveModalOpen(true)}><Save size={15} aria-hidden /></Button>
           </PermissionMiddleware>
           <PermissionMiddleware codeName={configPermission}>
-            <Button variant="ghost" size="iconSm" aria-label={t("filterBar:buttons.config")} title={t("filterBar:buttons.config")} onClick={() => setConfigModalOpen(true)}><Settings2 size={14} aria-hidden /></Button>
+            <Button variant="ghost" size="iconSm" aria-label={t("filterBar:buttons.config")} title={t("filterBar:buttons.config")} onClick={() => setConfigModalOpen(true)}><Settings2 size={15} aria-hidden /></Button>
           </PermissionMiddleware>
         </div>
       </div>

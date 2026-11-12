@@ -99,7 +99,7 @@ function ConnectionsPage() {
             </span>
             <span className="min-w-0">
               <span className="block truncate text-[13px] font-medium text-gray-900">{row.client_name}</span>
-              <span className="block truncate text-[11px] text-gray-400">
+              <span className="block truncate text-[11px] text-gray-500">
                 {t("registration", { id: row.application_id.slice(0, 8) })}
               </span>
               <span className="block truncate text-xs text-gray-500">{row.scopes.join(", ")}</span>
@@ -228,14 +228,14 @@ function ConnectionsPage() {
       <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="flex items-start gap-4 p-4 sm:p-5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700">
-            <ShieldCheck size={17} aria-hidden="true" />
+            <ShieldCheck size={18} aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-semibold text-gray-900">{t("how.title")}</h2>
             <p className="mt-1 text-[13px] leading-5 text-gray-600">{t("how.description")}</p>
             <button type="button" onClick={() => void copyEndpoint()} title={t("endpoint.copy")} aria-label={t("endpoint.copy")} className="group mt-3 flex w-full max-w-xl items-center justify-between gap-3 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-left transition-colors hover:border-gray-400 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500 sm:w-auto">
               <span className="min-w-0 truncate font-mono text-sm font-medium text-gray-900">{endpoint}</span>
-              <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-500 group-hover:text-gray-800"><Clipboard size={14} aria-hidden="true" />{t("endpoint.copy")}</span>
+              <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-500 group-hover:text-gray-800"><Clipboard size={15} aria-hidden="true" />{t("endpoint.copy")}</span>
             </button>
             <ol className="mt-4 grid gap-2 text-[13px] text-gray-700 sm:grid-cols-3">
               {["step1", "step2", "step3"].map((step, index) => (
@@ -252,7 +252,7 @@ function ConnectionsPage() {
               className="mt-3 inline-flex min-h-9 items-center gap-1 rounded-md text-sm font-medium text-gray-700 underline decoration-gray-300 underline-offset-4 transition-colors hover:text-gray-950 hover:decoration-gray-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
             >
               {t("how.docs")}
-              <ArrowUpRight size={14} aria-hidden="true" />
+              <ArrowUpRight size={15} aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -286,7 +286,7 @@ function ConnectionsPage() {
             </Button>
           </div>
         ) : (
-          <div className="min-w-0 [&_table]:!text-[13px] [&_th]:!text-[12px] [&_td]:!text-[13px]">
+          <div className="min-w-0 [&_table]:!text-[13px] [&_th]:!text-xs [&_td]:!text-[13px]">
             <DataTable<Row>
               items={rows}
               columns={columns}
@@ -303,7 +303,7 @@ function ConnectionsPage() {
                   onClick={() => setPending(row)}
                   disabled={!row.revocable}
                 >
-                  <Unplug size={14} aria-hidden="true" />
+                  <Unplug size={15} aria-hidden="true" />
                   <span className="ml-1.5">{t("revoke.action")}</span>
                 </Button>
               )}

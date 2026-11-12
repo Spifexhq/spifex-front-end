@@ -30,6 +30,7 @@ import { getEffectiveDateFormat } from "@/lib/date";
 
 import type { DateInputProps, InputVariant, InputSize } from "./Input.types";
 import { DATE_SIZE, INPUT_MESSAGE_TONE } from "./sizes";
+import RequiredMark from "./RequiredMark";
 
 type EffectiveDateCode = "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
 type SegmentBag = { day: string; month: string; year: string };
@@ -517,11 +518,11 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       return (
         <div
           className={classNames(
-            "fixed z-[11000] rounded-md border border-gray-200 bg-white shadow-lg",
+            "fixed z-[10060] rounded-md border border-gray-200 bg-white shadow-lg",
             "max-h-[50vh] overflow-auto",
             placement === "bottom" ? "origin-top" : "origin-bottom",
             sz.popover,
-            "transition-all duration-150 ease-out will-change-transform",
+            "transition-[opacity,translate,scale] duration-150 ease-out will-change-transform motion-reduce:transition-none",
             isCalendarOpen
               ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
               : "opacity-0 -translate-y-1 scale-[0.985] pointer-events-none"
@@ -584,14 +585,13 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
     const errorId = errorMessage ? `${id}-err` : undefined;
 
     const baseContainer =
-      "outline-none transition-colors duration-150 " +
+      "transition-colors duration-150 " +
       "border bg-white hover:bg-gray-50 focus-within:bg-gray-50 " +
-      "focus-within:ring-1 focus-within:ring-gray-300 " +
       "relative flex items-center";
 
     const variantClasses: Record<InputVariant, string> = {
       default: "border-gray-300",
-      outlined: "border-2 border-gray-300 focus-within:ring-0",
+      outlined: "border-2 border-gray-300",
       filled: "bg-gray-50 border border-transparent focus-within:border-gray-300",
     };
 
@@ -599,12 +599,12 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       baseContainer,
       sz.container,
       variantClasses[variant] ?? variantClasses.default,
-      errorMessage && "border-red-500 focus-within:border-red-500 focus-within:ring-red-200",
+      errorMessage && "border-red-500 focus-within:border-red-500",
       className
     );
 
     const slotClasses = classNames(
-      "m-0 min-w-0 shrink-0 appearance-none rounded-sm border-0 bg-transparent p-0 text-center font-normal leading-5 tabular-nums tracking-normal text-slate-700 outline-none placeholder:text-slate-400 focus:bg-slate-200/50 selection:bg-slate-200 selection:text-slate-900 disabled:cursor-not-allowed",
+      "m-0 min-w-0 shrink-0 appearance-none rounded-sm border-0 bg-transparent p-0 text-center font-normal leading-5 tabular-nums tracking-normal text-slate-700 placeholder:text-slate-400 selection:bg-slate-200 selection:text-slate-900 disabled:cursor-not-allowed",
       sz.slot
     );
 
@@ -617,6 +617,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
               className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
             >
               {label}
+              {required ? <RequiredMark /> : null}
             </label>
 
             {labelChip ? (
@@ -644,16 +645,17 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
         <div className="relative w-full min-w-0">
           <div className={containerClasses}>
-            <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden pr-8">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden pr-8">
               <input
                 id={id}
                 ref={slot1Ref}
+                data-date-slot
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
                 disabled={disabled}
                 className={slotClasses}
-                style={{ width: `${slotConfig.slot1.maxLength + 0.5}ch` }}
+                style={{ width: `${slotConfig.slot1.maxLength + 1}ch` }}
                 placeholder={slotConfig.slot1.label}
                 value={slot1}
                 onChange={(e) =>
@@ -662,6 +664,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 onKeyDown={(e) => handleKeyDown(e, undefined, slot2Ref)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                aria-required={required || undefined}
                 aria-invalid={!!errorMessage}
                 aria-describedby={errorId}
                 {...rest}
@@ -669,19 +672,20 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
               <span
                 aria-hidden="true"
-                className={classNames("w-[0.75ch] shrink-0 select-none text-center font-normal leading-5 text-slate-400", sz.sep)}
+                className={classNames("w-[1ch] shrink-0 select-none text-center font-normal leading-5 text-slate-400", sz.sep)}
               >
                 {slotConfig.separator}
               </span>
 
               <input
                 ref={slot2Ref}
+                data-date-slot
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
                 disabled={disabled}
                 className={slotClasses}
-                style={{ width: `${slotConfig.slot2.maxLength + 0.5}ch` }}
+                style={{ width: `${slotConfig.slot2.maxLength + 1}ch` }}
                 placeholder={slotConfig.slot2.label}
                 value={slot2}
                 onChange={(e) =>
@@ -690,29 +694,36 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 onKeyDown={(e) => handleKeyDown(e, slot1Ref, slot3Ref)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                aria-required={required || undefined}
+                aria-invalid={!!errorMessage}
+                aria-describedby={errorId}
               />
 
               <span
                 aria-hidden="true"
-                className={classNames("w-[0.75ch] shrink-0 select-none text-center font-normal leading-5 text-slate-400", sz.sep)}
+                className={classNames("w-[1ch] shrink-0 select-none text-center font-normal leading-5 text-slate-400", sz.sep)}
               >
                 {slotConfig.separator}
               </span>
 
               <input
                 ref={slot3Ref}
+                data-date-slot
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
                 disabled={disabled}
                 className={slotClasses}
-                style={{ width: `${slotConfig.slot3.maxLength + 0.5}ch` }}
+                style={{ width: `${slotConfig.slot3.maxLength + 1}ch` }}
                 placeholder={slotConfig.slot3.label}
                 value={slot3}
                 onChange={(e) => handleSlotChange(3, e.target.value, slotConfig.slot3.maxLength)}
                 onKeyDown={(e) => handleKeyDown(e, slot2Ref, undefined)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                aria-required={required || undefined}
+                aria-invalid={!!errorMessage}
+                aria-describedby={errorId}
               />
             </div>
 

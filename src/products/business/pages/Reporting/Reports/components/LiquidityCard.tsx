@@ -1,6 +1,7 @@
 import React from "react";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
+// DS-024: reporting-only card radius (28px); do not copy into operational UI.
 type Props = {
   consolidatedBalance: number;
   avgMonthlyOutflow: number;
@@ -61,7 +62,7 @@ const LiquidityCard: React.FC<Props> = ({
 
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-slate-900 transition-all duration-500"
+              className="h-full rounded-full bg-slate-900 transition-[width] duration-220 motion-reduce:transition-none"
               style={{ width: `${settlementPct}%` }}
             />
           </div>

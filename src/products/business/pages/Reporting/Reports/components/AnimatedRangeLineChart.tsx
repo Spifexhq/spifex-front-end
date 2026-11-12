@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import SectionCard from "./SectionCard";
+import Badge from "@/shared/ui/Badge";
 import type { ChartRange } from "../helpers";
 import { compactCurrency, fmtMoney } from "../helpers";
 
@@ -707,7 +708,7 @@ const AnimatedRangeLineChart: React.FC<Props> = ({
             <button
               key={range}
               onClick={() => setActiveRange(range)}
-              className={`rounded-full px-2.5 py-1 text-[11px] transition-all ${
+              className={`rounded-full px-2.5 py-1 text-[11px] transition-colors motion-reduce:transition-none ${
                 activeRange === range
                   ? "bg-gray-900 text-white"
                   : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800"
@@ -727,16 +728,11 @@ const AnimatedRangeLineChart: React.FC<Props> = ({
           {fmtMoney(displayValue)}
         </span>
 
-        <div
-          className={`mb-0.5 flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-            isUp ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+        <Badge tone={isUp ? "success" : "danger"} size="md" dot className="mb-0.5">
           {isUp ? "+" : ""}
           {fmtMoney(Math.abs(displayDiff))}
           {isHovering ? " range" : " period"}
-        </div>
+        </Badge>
       </div>
 
       <div className="relative h-[220px] w-full overflow-hidden">
@@ -751,15 +747,15 @@ const AnimatedRangeLineChart: React.FC<Props> = ({
       <div className="mt-3 grid grid-cols-1 gap-3 border-t border-gray-200 pt-3 sm:grid-cols-3">
         <div>
           <div className="text-[13px] font-medium text-gray-900">{stats?.inflow ?? "—"}</div>
-          <div className="mt-0.5 text-[11px] text-gray-400">Inflow</div>
+          <div className="mt-0.5 text-[11px] text-gray-500">Inflow</div>
         </div>
         <div>
           <div className="text-[13px] font-medium text-gray-900">{stats?.outflow ?? "—"}</div>
-          <div className="mt-0.5 text-[11px] text-gray-400">Outflow</div>
+          <div className="mt-0.5 text-[11px] text-gray-500">Outflow</div>
         </div>
         <div>
           <div className="text-[13px] font-medium text-gray-900">{stats?.context ?? "—"}</div>
-          <div className="mt-0.5 text-[11px] text-gray-400">Context</div>
+          <div className="mt-0.5 text-[11px] text-gray-500">Context</div>
         </div>
       </div>
     </SectionCard>

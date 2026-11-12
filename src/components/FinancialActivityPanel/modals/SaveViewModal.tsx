@@ -6,6 +6,7 @@ import Select from "src/shared/ui/Select/Select";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
+import { ErrorState } from "@/shared/ui/State";
 
 import { api } from "@/core/api/requests";
 import type { ApiResponse } from "@/models/Api";
@@ -123,12 +124,12 @@ export const SaveViewModal: React.FC<{
       }}
       maxWidthClass="max-w-md"
     >
-      {error && <p role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{error}</p>}
+      {error && <ErrorState message={error} tone="warning" size="sm" className="mb-4 leading-5" />}
       <div className={busy ? "pointer-events-none opacity-60" : ""}>
         <div className="space-y-4 text-xs text-gray-700">
-          <p className="text-[12px] text-gray-600">{t("filterBar:saveModal.description")}</p>
+          <p className="text-xs text-gray-600">{t("filterBar:saveModal.description")}</p>
 
-          <label className="block space-y-1">
+          <div className="block space-y-1">
             <Input
               kind="text"
               label={t("filterBar:saveModal.name")}
@@ -137,7 +138,7 @@ export const SaveViewModal: React.FC<{
               placeholder={t("filterBar:saveModal.namePlaceholder")}
               disabled={isOverwrite}
             />
-          </label>
+          </div>
 
           <label className="inline-flex items-center gap-2">
             <Checkbox
@@ -156,7 +157,7 @@ export const SaveViewModal: React.FC<{
           </label>
 
           <div className="space-y-2">
-            <div className="font-semibold text-[12px]">{t("filterBar:saveModal.modeTitle")}</div>
+            <div className="font-semibold text-xs">{t("filterBar:saveModal.modeTitle")}</div>
 
             <div className="space-y-1">
               <label className="flex items-center gap-2 cursor-pointer">

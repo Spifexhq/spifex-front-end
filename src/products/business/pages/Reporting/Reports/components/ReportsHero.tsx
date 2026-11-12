@@ -1,6 +1,7 @@
 import React from "react";
 import Button from "@/shared/ui/Button";
 
+// DS-024: reporting-only card radius (28px); do not copy into operational UI.
 type Props = {
   title: string;
   subtitle: string;

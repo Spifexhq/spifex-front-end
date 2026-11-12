@@ -12,44 +12,40 @@
 
 .checkboxInput {
   appearance: none;
-  border: 1px solid #cbd5e1; /* exemplo de cor para o border */
-  background-color: #ffffff;
+  border: 1px solid var(--checkboxBorder);
+  background-color: var(--checkboxCheck);
   border-radius: 4px;
   width: 20px;
   height: 20px;
   margin: 0;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: background-color 0.18s ease-in-out, border-color 0.18s ease-in-out,
+    box-shadow 0.18s ease-in-out;
 }
 
-/* Estilo ao passar o mouse */
 .checkboxInput:hover {
-  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+  box-shadow: var(--checkboxHoverShadow);
 }
 
-/* Estilo ao estar marcado */
 .checkboxInput:checked {
-  background-color: #1e293b; /* cinza-escuro */
-  border-color: #1e293b;
+  background-color: var(--checkboxChecked);
+  border-color: var(--checkboxChecked);
 }
 
-/* Ícone dentro do checkbox */
 .checkIcon {
   position: absolute;
-  color: #ffffff;
+  color: var(--checkboxCheck);
   pointer-events: none;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0; /* escondido quando unchecked */
+  opacity: 0;
 }
 
-/* Ao estar marcado, torna ícone visível */
 .checkboxInput:checked + .checkIcon {
   opacity: 1;
 }
 
-/* Desabilitado */
 .disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -71,15 +67,20 @@
   height: 24px;
 }
 
-.myBlueColor {
-  /* Exemplo de cor customizada */
-  border-color: #007BFF !important;
-  background-color: #E5F0FF !important;
+.checkboxInput:indeterminate {
+  background-color: var(--checkboxChecked);
+  border-color: var(--checkboxChecked);
 }
-.myBlueColor.checkboxInput:checked {
-  background-color: #007BFF !important;
-  border-color: #007BFF !important;
+.checkboxInput:indeterminate + .checkIcon {
+  opacity: 1;
+  height: 2px;
+  width: 8px;
+  background: var(--checkboxCheck);
 }
-.checkboxInput:indeterminate { background-color: #1e293b; border-color: #1e293b; }
-.checkboxInput:indeterminate + .checkIcon { opacity: 1; height: 2px; width: 8px; background: white; }
-.checkboxInput:indeterminate + .checkIcon svg { display: none; }
+.checkboxInput:indeterminate + .checkIcon svg {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkboxInput { transition: none; }
+}

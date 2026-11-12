@@ -1,6 +1,7 @@
 import React from "react";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
+// DS-024: reporting-only card radius (24px); do not copy into operational UI.
 type Bucket = {
   rec: number;
   pay: number;

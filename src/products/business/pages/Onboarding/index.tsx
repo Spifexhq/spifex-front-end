@@ -19,6 +19,7 @@ import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import Badge from "@/shared/ui/Badge";
 import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/core/api/requests";
@@ -62,7 +63,7 @@ const hasAtLeastOneAddressLine = (line1?: string, line2?: string) =>
 
 const MissingFieldNotice = ({ text }: { text: string }) => (
   <div className="mt-1 flex items-center gap-1 text-[11px] text-amber-700">
-    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+    <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
     <span>{text}</span>
   </div>
 );
@@ -88,7 +89,7 @@ const SectionCard = ({
         ) : null}
         <div>
           <h2 className="text-[15px] font-semibold text-[#26344a]">{title}</h2>
-          {subtitle ? <p className="mt-1 text-[12px] text-gray-600">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-1 text-xs text-gray-600">{subtitle}</p> : null}
         </div>
       </div>
     </div>
@@ -131,13 +132,13 @@ const RequirementRow = ({
       <div className="flex items-center gap-2">
         <h3 className="text-[14px] font-semibold text-[#26344a]">{title}</h3>
         {done ? (
-          <span className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+          <Badge tone="success" variant="outline" size="md">
             {t("status.done")}
-          </span>
+          </Badge>
         ) : (
-          <span className="rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-700">
+          <Badge tone="warning" variant="outline" size="md">
             {t("status.required")}
-          </span>
+          </Badge>
         )}
       </div>
       <p className="mt-1 text-[13px] text-gray-600">{description}</p>
@@ -421,7 +422,7 @@ const OnboardingPage: React.FC = () => {
           <SectionCard
             title={t("done.title")}
             subtitle={t("done.subtitle")}
-            icon={<CheckCircle2 className="h-5 w-5" />}
+            icon={<CheckCircle2 className="h-5 w-5" aria-hidden="true" />}
           >
             <div className="flex justify-end">
               <Button onClick={() => navigate("/overview")}>{t("done.cta")}</Button>
@@ -447,7 +448,7 @@ const OnboardingPage: React.FC = () => {
           <div className="flex flex-col gap-6">
             <header className="space-y-5">
               <div><h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t("header.title")}</h1><p className="mt-2 text-sm leading-6 text-slate-500">{t("header.subtitle")}</p></div>
-              <SegmentedControl<StepKey> value={currentStep?.key || "personal"} onChange={key => setStep(steps.findIndex(item => item.key === key))} label={t("header.title")} disabled={savingPersonal || savingOrg} items={steps.map(item => ({ value: item.key, label: <span className="inline-flex items-center gap-2">{item.done && <CheckCircle2 size={13} className="text-emerald-600"/>}{item.label}</span> }))}/>
+              <SegmentedControl<StepKey> value={currentStep?.key || "personal"} onChange={key => setStep(steps.findIndex(item => item.key === key))} label={t("header.title")} disabled={savingPersonal || savingOrg} items={steps.map(item => ({ value: item.key, label: <span className="inline-flex items-center gap-2">{item.done && <CheckCircle2 size={13} className="text-emerald-600" aria-hidden="true" />}{item.label}</span> }))}/>
             </header>
 
             <motion.div key={currentStep?.key} initial={{ opacity: 0, y: reduced ? 0 : 6 }} animate={{ opacity: 1, y: 0 }} transition={{duration: reduced ? 0 : .18}} className="min-w-0">
@@ -455,7 +456,7 @@ const OnboardingPage: React.FC = () => {
                 <SectionCard
                   title={t("personal.title")}
                   subtitle={t("personal.subtitle")}
-                  icon={<UserRound className="h-5 w-5" />}
+                  icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className={missingBlockClass(personalMissing.phone)}>
@@ -597,7 +598,7 @@ const OnboardingPage: React.FC = () => {
                 <SectionCard
                   title={t("organization.title")}
                   subtitle={t("organization.subtitle")}
-                  icon={<Building2 className="h-5 w-5" />}
+                  icon={<Building2 className="h-5 w-5" aria-hidden="true" />}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className={missingBlockClass(orgMissing.timezone)}>
@@ -705,7 +706,7 @@ const OnboardingPage: React.FC = () => {
                     defaultValue:
                       "Complete and activate accounting setup, then configure the cashflow categories used by your organization.",
                   })}
-                  icon={<CreditCard className="h-5 w-5" />}
+                  icon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
                 >
                   <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.65fr] gap-5">
                     <div className="space-y-5">
@@ -717,7 +718,7 @@ const OnboardingPage: React.FC = () => {
                             defaultValue:
                               "Import a standard chart, upload a file, or paste your own chart of accounts.",
                           })}
-                          icon={<CreditCard className="h-4 w-4" />}
+                          icon={<CreditCard className="h-4 w-4" aria-hidden="true" />}
                         />
 
                         <div className="mt-4"><Button variant="outline" onClick={() => navigate("/accounting/setup")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
@@ -733,7 +734,7 @@ const OnboardingPage: React.FC = () => {
                             defaultValue:
                               "At least one active operational category is required so entries can be classified before accounting consumes them.",
                           })}
-                          icon={<ListTree className="h-4 w-4" />}
+                          icon={<ListTree className="h-4 w-4" aria-hidden="true" />}
                         />
 
                         {!categoriesDone ? (
@@ -751,7 +752,7 @@ const OnboardingPage: React.FC = () => {
                                 onClick={() => navigate(CATEGORY_SETTINGS_PATH)}
                               >
                                 <span className="inline-flex items-center gap-2">
-                                  <ListTree className="h-4 w-4" />
+                                  <ListTree className="h-4 w-4" aria-hidden="true" />
                                   <span>
                                     {t("accounting.openCategorySettings", {
                                       defaultValue: "Open category settings",
@@ -762,7 +763,7 @@ const OnboardingPage: React.FC = () => {
 
                               <Button variant="outline" onClick={() => void refreshOnboarding()}>
                                 <span className="inline-flex items-center gap-2">
-                                  <RefreshCcw className="h-4 w-4" />
+                                  <RefreshCcw className="h-4 w-4" aria-hidden="true" />
                                   <span>
                                     {t("accounting.refreshStatus", {
                                       defaultValue: "Refresh status",
@@ -777,7 +778,7 @@ const OnboardingPage: React.FC = () => {
                     </div>
 
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-600">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                         {t("accounting.checklistLabel", { defaultValue: "Checklist" })}
                       </div>
 
@@ -786,13 +787,13 @@ const OnboardingPage: React.FC = () => {
                           done={ledgerDone}
                           title={t("accounting.ledgerTitle", { defaultValue: "Ledger accounts" })}
                           description={t(ledgerDone ? "status.configured" : "status.pending")}
-                          icon={<CreditCard className="h-4 w-4" />}
+                          icon={<CreditCard className="h-4 w-4" aria-hidden="true" />}
                         />
                         <RequirementRow
                           done={categoriesDone}
                           title={t("accounting.categoriesTitle", { defaultValue: "Cashflow categories" })}
                           description={t(categoriesDone ? "status.configured" : "status.pending")}
-                          icon={<ListTree className="h-4 w-4" />}
+                          icon={<ListTree className="h-4 w-4" aria-hidden="true" />}
                         />
                       </div>
                     </div>

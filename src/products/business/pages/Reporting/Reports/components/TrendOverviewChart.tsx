@@ -385,7 +385,7 @@ const TrendOverviewChart: React.FC<Props> = ({
     <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
       <div className="flex flex-col gap-3">
         <div>
-          <p className="text-[12px] font-medium text-gray-900">{title}</p>
+          <p className="text-xs font-medium text-gray-900">{title}</p>
           {subtitle ? <p className="mt-1 text-[11px] text-gray-500">{subtitle}</p> : null}
         </div>
 
@@ -398,7 +398,7 @@ const TrendOverviewChart: React.FC<Props> = ({
               <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${summaryClass}`}>
                 {displayDiff >= 0 ? "+" : ""}{formatCurrency(displayDiff)} {isHovering ? "range" : "period"}
               </span>
-              <span className="text-[11px] text-gray-400">{unit}</span>
+              <span className="text-[11px] text-gray-500">{unit}</span>
             </div>
           </div>
 
@@ -407,10 +407,10 @@ const TrendOverviewChart: React.FC<Props> = ({
               <button
                 key={range}
                 onClick={() => setActiveRange(range)}
-                className={`text-xs px-3 py-1 rounded-full border transition-all duration-150 ${
+                className={`text-xs px-3 py-1 rounded-full border transition-colors duration-150 motion-reduce:transition-none ${
                   activeRange === range
                     ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-transparent text-gray-400 border-transparent hover:text-gray-800 hover:bg-gray-100"
+                    : "bg-transparent text-gray-500 border-transparent hover:text-gray-800 hover:bg-gray-100"
                 }`}
               >
                 {range}
@@ -429,9 +429,9 @@ const TrendOverviewChart: React.FC<Props> = ({
         </div>
 
         <div className="grid grid-cols-1 gap-3 border-t border-gray-200 pt-3.5 sm:grid-cols-3">
-          {stats?.volume && <div><div className="text-[13px] font-medium text-gray-900">{stats.volume}</div><div className="text-[11px] text-gray-400 mt-0.5">Inflows</div></div>}
-          {stats?.openInterest && <div><div className="text-[13px] font-medium text-gray-900">{stats.openInterest}</div><div className="text-[11px] text-gray-400 mt-0.5">Outflows</div></div>}
-          {stats?.expires && <div><div className="text-[13px] font-medium text-gray-900">{stats.expires}</div><div className="text-[11px] text-gray-400 mt-0.5">Runway</div></div>}
+          {stats?.volume && <div><div className="text-[13px] font-medium text-gray-900">{stats.volume}</div><div className="text-[11px] text-gray-500 mt-0.5">Inflows</div></div>}
+          {stats?.openInterest && <div><div className="text-[13px] font-medium text-gray-900">{stats.openInterest}</div><div className="text-[11px] text-gray-500 mt-0.5">Outflows</div></div>}
+          {stats?.expires && <div><div className="text-[13px] font-medium text-gray-900">{stats.expires}</div><div className="text-[11px] text-gray-500 mt-0.5">Runway</div></div>}
         </div>
       </div>
     </section>

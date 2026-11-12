@@ -5,6 +5,7 @@
   "previewError": "Impossible de charger les détails.",
   "previewRetry": "Réessayer",
   "previewLoading": "Chargement de l’aperçu…",
+  "loading": "Chargement",
   "title": "Paramètres personnels",
   "header.settings": "Paramètres",
   "header.personal": "Personnel",
@@ -31,6 +32,8 @@
   "toast.updateError": "Échec de la mise à jour des données personnelles.",
   "input": {
     "clear": "Effacer",
+    "clearAmount": "Effacer le montant",
+    "clearPercentage": "Effacer le pourcentage",
     "hidePassword": "Masquer le mot de passe",
     "showPassword": "Afficher le mot de passe",
     "openDatePicker": "Ouvrir le calendrier",

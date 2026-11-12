@@ -35,6 +35,9 @@ export interface SnackbarProps {
   /** Pausar o autoHide ao passar o mouse. Default: true */
   pauseOnHover?: boolean;
 
+  /** Erros permanecem abertos até serem dispensados. Default: true */
+  persistOnError?: boolean;
+
   /** Fechar ao clicar no próprio snackbar. Default: false */
   dismissOnClick?: boolean;
 

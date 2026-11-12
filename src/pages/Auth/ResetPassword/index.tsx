@@ -112,9 +112,9 @@ const ResetPassword: React.FC = () => {
           {p1 && !pwValidation.isValid && (
             <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               {pwValidation.message ? (
-                <div className="text-[12px] text-slate-800">{pwValidation.message}</div>
+                <div className="text-xs text-slate-800">{pwValidation.message}</div>
               ) : (
-                <div className="text-[12px] text-slate-800">{t("weakPassword")}</div>
+                <div className="text-xs text-slate-800">{t("weakPassword")}</div>
               )}
             </div>
           )}
@@ -130,7 +130,7 @@ const ResetPassword: React.FC = () => {
           />
 
           {pwMismatch && (
-            <p className="text-[12px] text-red-600">{t("passwordsDontMatch")}</p>
+            <p className="text-xs text-red-600">{t("passwordsDontMatch")}</p>
           )}
 
           <Button

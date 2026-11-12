@@ -15,6 +15,7 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
+import Badge from "@/shared/ui/Badge";
 
 import Select from "src/shared/ui/Select/Select";
 import Popover from "src/shared/ui/Popover";
@@ -490,9 +491,9 @@ const ProjectSettings: React.FC = () => {
               <div className="flex items-center gap-3">
 
 
-                {isBackgroundSync && (<span className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
+                {isBackgroundSync && (<Badge tone="neutral" variant="outline" size="md" className="backdrop-blur-sm">
                     {t("badge.syncing")}
-                  </span>)}
+                  </Badge>)}
               </div>
             </div></div>
 
@@ -626,7 +627,7 @@ const ProjectSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftCode("")}
               disabled={globalBusy}
             >
@@ -669,7 +670,7 @@ const ProjectSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftSearch("")}
               disabled={globalBusy}
             >
@@ -693,7 +694,7 @@ const ProjectSettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<TypeOption>
                 label={t("filters.typeLabel", { defaultValue: "Type" })}
@@ -716,7 +717,7 @@ const ProjectSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftTypes([])}
               disabled={globalBusy}
             >
@@ -740,7 +741,7 @@ const ProjectSettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
                 label={t("filters.statusLabel", { defaultValue: "Status" })}
@@ -759,7 +760,7 @@ const ProjectSettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftStatuses([])}
               disabled={globalBusy}
             >

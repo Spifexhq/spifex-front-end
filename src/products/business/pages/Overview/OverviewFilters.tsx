@@ -33,7 +33,7 @@ export default function OverviewFilters({ query, options, onChange, onExport, lo
       onChange={basis => onChange({ ...query, basis, bank_id: undefined })} />
     <div className="flex flex-wrap items-center gap-2">
       {[7, 30, 90].map(days => <Button key={days} variant="ghost" size="sm" onClick={() => onChange({ ...query, ...periodPreset(days) })}>{t("lastDays", { count: days })}</Button>)}
-      <Button variant="outline" size="sm" onClick={onExport} disabled={!exportable || loading}><Download size={14} />{t("export")}</Button>
+      <Button variant="outline" size="sm" className="inline-flex items-center gap-2" onClick={onExport} disabled={!exportable || loading}><Download size={15} aria-hidden="true" />{t("export")}</Button>
     </div>
   </>} onSubmit={event => { event.preventDefault(); onChange(draft); }}>
     <div className="min-w-36 flex-1"><Input size="sm" kind="date" label={t("from")} value={draft.start_date} max={draft.end_date} onValueChange={value => setDraft(previous => ({ ...previous, start_date: value }))} required /></div>

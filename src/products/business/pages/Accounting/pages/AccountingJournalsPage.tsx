@@ -2,6 +2,7 @@ import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useAccountingSource } from "@/products/business/hooks/useAccountingRecords";
 import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import DataTable from "@/shared/ui/DataTable";
+import Card from "@/shared/ui/Card";
 import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm, SidePanelDetails } from "@/components/Modal/SidePanel";
@@ -301,7 +302,7 @@ const AccountingJournalsPage: React.FC = () => {
           <SidePanelForm recordLabel={t("footer.journal", "Journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.headerSection", "Journal header")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
@@ -361,7 +362,7 @@ const AccountingJournalsPage: React.FC = () => {
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
                   <Button
                     type="button"
                     variant="outline"
@@ -478,24 +479,24 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-4 rounded-lg border border-gray-200 bg-white">
+            <Card as="section" padding="default">
               <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.debit / 100).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.creditTotal", "Credit total")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.creditTotal", "Credit total")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.credit / 100).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.balance", "Balance")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.balance", "Balance")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">
                     {balanced ? t("journalsPage.modal.balanced", "Balanced") : t("journalsPage.modal.unbalanced", "Unbalanced")}
                   </div>
                 </div>
               </div>
-            </section>
+            </Card>
 
             <div className="flex items-center justify-end gap-2">
               <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>

@@ -10,6 +10,8 @@ import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { formatCurrency } from "@/lib";
 import { readonlyWorkspace } from "@/products/personal/services/personalData";
 import Button from "@/shared/ui/Button";
+import Card from "@/shared/ui/Card";
+import Badge from "@/shared/ui/Badge";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 
 const dateLabel = (value: string | null | undefined, locale: string) => value ? new Date(value).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" }) : "";
@@ -83,11 +85,11 @@ export default function ProductBillingSettings() {
     : status === "past_due" ? t("callout.pastDue.body") : status === "incomplete" ? t("callout.incomplete.body") : status === "unpaid" ? t("callout.unpaid.body") : status === "canceled" ? t(subscription?.subscription?.ended_at ? "callout.canceled.bodyEnded" : "callout.canceled.bodyNoAccess", { date: dateLabel(subscription?.subscription?.ended_at, i18n.language) }) : t("callout.none.body");
   const statusTitle = status === "active" ? t("callout.active.title") : status === "trialing" ? t("callout.trialing.title") : status === "past_due" ? t("callout.pastDue.title") : status === "incomplete" ? t("callout.incomplete.title") : status === "unpaid" ? t("callout.unpaid.title") : status === "canceled" ? t("callout.canceled.title") : t("callout.none.title");
   return <div className="space-y-5">
-    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <Card className="overflow-hidden" padding="none">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4"><div className="flex min-w-0 items-center gap-3"><h2 className="text-sm font-semibold text-gray-900">{t("section.withPlan")}</h2><span className={`rounded-full border px-2 py-1 text-[10px] font-medium ${statusTone}`}>{t(`status.${status}`, t("status.unknown"))}</span></div></div>
       <div className={`mx-4 my-3 rounded-md border-l-4 px-4 py-3 ${statusTone}`}><p className="text-[13px] font-medium">{statusTitle}</p><p className="mt-1 text-xs leading-5">{subscriptionBody}</p>{subscription?.subscription && !subscription?.has_access && !isCanceled && <p className="mt-1 text-xs">{t("current.noAccessHint")}</p>}</div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 text-[13px] text-gray-600"><span>{currentPlan ? <>{t(isCanceled ? "current.lastPlan" : "current.youAreOn")} <strong className="font-semibold text-gray-900">{currentPlan.name}</strong></> : t("current.noActive")}{isCanceled ? endedDate && <> <span className="mx-1">·</span>{t("current.endedOn")} {dateLabel(endedDate, i18n.language)}</> : periodDate && <> <span className="mx-1">·</span>{subscription?.subscription?.cancel_at_period_end ? t("current.cancelAt") : t("current.renews")} {dateLabel(periodDate, i18n.language)}</>}</span>{subscription?.subscription && canManage && canManageCurrentSubscription && <Button variant="outline" disabled={busy || readOnly} onClick={() => void portal()}>{t("btn.manage")}</Button>}</div>
-    </section>
+    </Card>
     {error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}<Button size="xs" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("personal:retry")}</Button></div>}
     {!canManage && <p className="text-xs text-gray-500">{t("errors.ownerOnly")}</p>}
     <div className="grid gap-4 lg:grid-cols-3">{plans.map(plan => {
@@ -95,12 +97,12 @@ export default function ProductBillingSettings() {
       const isCurrent = plan.code === billing.current && Boolean(subscription?.has_access);
       const activeSubscription = status === "active" || status === "trialing" || status === "past_due" || status === "incomplete" || status === "unpaid";
       const actionLabel = isCurrent ? t("btn.current") : activeSubscription ? t("btn.changeInPortal") : t("btn.subscribe");
-      return <section key={plan.code} className="flex min-h-44 flex-col rounded-lg border border-gray-200 bg-white p-5">
-        <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>{isCurrent && <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700">{t("btn.current")}</span>}</div>
+      return <Card key={plan.code} padding="default" className="flex min-h-44 flex-col">
+        <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>{isCurrent && <Badge tone="success">{t("btn.current")}</Badge>}</div>
         <p className="mt-4 text-xl font-semibold tracking-tight text-gray-900">{plan.tier === "free" ? t("personal:free") : price ? <>{formatCurrency(price.amount_minor / 100, price.currency)}<span className="ml-1 text-xs font-normal text-gray-500">{t(price.billing_interval === "year" ? "personal:perYear" : "personal:perMonth")}</span></> : t("personal:notAvailable")}</p>
         {plan.description && <p className="mt-3 text-xs leading-5 text-gray-500">{plan.description}</p>}
         {plan.tier !== "free" && <Button className="mt-auto self-start" variant={isCurrent || activeSubscription ? "outline" : "primary"} disabled={busy || readOnly || !canManage || !price || isCurrent} onClick={() => activeSubscription && (status === "active" || status === "trialing") ? void portal(plan, price) : activeSubscription ? void portal() : void checkout(plan)}>{price ? actionLabel : t("personal:notAvailable")}</Button>}
-      </section>;
+      </Card>;
     })}</div>
     <p className="text-xs leading-5 text-gray-500">{t("personal:billingHint")}</p>
   </div>;

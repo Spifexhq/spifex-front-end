@@ -272,7 +272,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   return (
     <FloatingDialog isOpen={isOpen} width={720} height={590} title={t("header.title")} eyebrow={t("header.kind")} description={t("guidance.intro")} closeLabel={t("actions.close")} onClose={attemptClose} busy={isSubmitting} loading={loadingBanks} onSubmit={handleSubmit} formRef={formRef}
       footer={<>            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="text-[12px] text-gray-600 hidden md:block">
+              <div className="text-xs text-gray-600 hidden md:block">
                 {formData.amount > "" ? (
                   <>
                     {t("footer.value")} <b>{formatCurrency(formData.amount)}</b>
@@ -297,7 +297,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 ) : (
                   <>{t("hints.fillToSave")}</>
                 )}
-                <span className="ml-3 text-gray-400">{t("hints.shortcuts")}</span>
+                <span className="ml-3 text-gray-500">{t("hints.shortcuts")}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
@@ -316,7 +316,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 <h2 className="text-[15px] font-semibold text-gray-900">
                   {t("confirmDiscard.title", { defaultValue: "Discard changes?" })}
                 </h2>
-                <p className="mt-1 text-[12px] text-gray-600">
+                <p className="mt-1 text-xs text-gray-600">
                   {t("confirmDiscard.message", {
                     defaultValue: "You have unsaved changes. Do you want to discard them?",
                   })}
@@ -342,7 +342,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
             <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
                 <h2 className="text-[15px] font-semibold text-amber-800">{warning.title}</h2>
-                <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
+                <p className="mt-1 text-xs text-amber-700">{warning.message}</p>
               </div>
               <div
                 className="px-5 py-4 flex justify-end"
@@ -417,7 +417,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                   title={t("actions.swap")}
                   aria-label={t("actions.swap")}
                 >
-                  <ArrowLeftRight size={16} className="mr-2" />{t("actions.swap")}
+                  <ArrowLeftRight size={16} className="mr-2" aria-hidden="true" />{t("actions.swap")}
                 </Button>
               </div>
 
@@ -434,7 +434,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               />
 
               {showSameBankWarning && (
-                <p className="md:col-span-2 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                <p className="md:col-span-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                   {t("warnings.sameBank")}
                 </p>
               )}

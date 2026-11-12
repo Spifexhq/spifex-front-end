@@ -54,7 +54,7 @@ const Row = ({
     }`}
   >
     <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{label}</p>
       <p className="text-[13px] font-medium text-gray-900 truncate">{value}</p>
     </div>
     {action}

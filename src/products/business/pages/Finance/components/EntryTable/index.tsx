@@ -83,7 +83,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
       loadMore={pager.loading}
       onRetry={() => void pager.refresh()}
     />
-    <EntryPreview entry={preview} onClose={() => setPreview(null)} onEdit={canEdit ? onEdit : undefined} onSettle={!settled && allowed("add_settled_entries") && onSettle ? entry => onSettle([entry]) : undefined}/>
+    <EntryPreview entry={preview} onClose={() => setPreview(null)} onEdit={canEdit ? onEdit : undefined} onRevert={settled && allowed("delete_settled_entries") ? async entry => { await api.deleteSettledEntry(entryId(entry)); onChanged?.(); } : undefined} onSettle={!settled && allowed("add_settled_entries") && onSettle ? entry => onSettle([entry]) : undefined}/>
   </>;
 });
 

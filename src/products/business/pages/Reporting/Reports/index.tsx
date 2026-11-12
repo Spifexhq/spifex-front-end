@@ -216,10 +216,10 @@ const ReportsPage: React.FC = () => {
       <main className="w-full">
         <TopProgress active={isBusy} variant="top" topOffset={64} />
 
-        <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-4 sm:px-5 md:space-y-6 md:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-6 sm:px-5 md:space-y-6 md:px-8 lg:px-10">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h1 className="text-xl font-semibold md:text-2xl">{t("title")}</h1>
+              <h1 className="text-2xl font-semibold">{t("title")}</h1>
               <p className="mt-1 text-sm text-gray-500">{periodLabel}</p>
             </div>
 

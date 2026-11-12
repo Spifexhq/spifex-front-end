@@ -1,4 +1,4 @@
-import { Suspense, Children, isValidElement, useEffect, useId, type ReactNode, type RefObject } from "react";
+import { Suspense, Children, isValidElement, useId, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 import { SidePanelFrame, SidePanelHeader } from "./SidePanelFrame";
@@ -58,17 +58,6 @@ export default function SidePanel({
   const generatedId = useId();
   const titleId = `side-panel-${generatedId.replace(/:/g, "")}`;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      event.preventDefault();
-      if (!busy) onClose();
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose, busy]);
-
   const nodes = Children.toArray(children);
   const isForm = nodes.some(node => isValidElement(node) && (node.type === SidePanelForm || node.type === "form"));
   const editing = mode === "edit" || isForm;
@@ -79,16 +68,21 @@ export default function SidePanel({
       labelledBy={titleId}
       className={className}
       dialogRef={dialogRef}
-      onBackdropClose={!editing && !busy ? onClose : undefined}
+      onClose={onClose}
+      closeOnBackdrop={!editing && !busy}
+      busy={busy}
+      overlay={overlay}
+      header={
+        <SidePanelHeader
+          titleId={titleId}
+          title={title}
+          subtitle={subtitle}
+          eyebrow={eyebrow}
+          onClose={onClose}
+          disabled={busy}
+        >{tabs}</SidePanelHeader>
+      }
     >
-      <SidePanelHeader
-        titleId={titleId}
-        title={title}
-        subtitle={subtitle}
-        eyebrow={eyebrow}
-        onClose={onClose}
-        disabled={busy}
-      >{tabs}</SidePanelHeader>
       {editing ? children : (
         <div className="settings-modal-form flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
@@ -105,7 +99,6 @@ export default function SidePanel({
           </footer>
         </div>
       )}
-      {overlay}
     </SidePanelFrame>
   );
 }

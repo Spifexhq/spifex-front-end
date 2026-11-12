@@ -1,3 +1,9 @@
+/*
+ * Rail math (keep in sync with ApplicationShell's md:ml-[72px]/md:ml-[248px]):
+ * expanded 248 = 12 margin + 224 content grid (48 toggle/icon + 176 label) + 12 margin.
+ * collapsed 72 = 12 padding + 6 row offset + 36 icon rail + 6 right breathing + 12 padding.
+ * The 48 + 176 columns stay fixed so labels fade without dragging the icon rail.
+ */
 /* A fixed internal grid prevents label reflow and icon drift as the rail resizes. */
 .sidebar-motion {
   --sidebar-duration: 220ms;

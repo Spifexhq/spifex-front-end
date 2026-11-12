@@ -3,23 +3,13 @@ import * as React from "react";
 
 export type ButtonVariant =
   | "primary"
-  | "secondary"
   | "common"
   | "cancel"
   | "danger"
   | "outline"
   | "outlineBlack"
-  | "link"
-  | "outlinePrimary"
-  | "outlineDanger"
   | "ghost"
-  | "softPrimary"
-  | "muted"
-  | "success"
-  | "warning"
-  | "info"
-  | "dashed"
-  | "gradient";
+  | "muted";
 
 export type ButtonSize =
   | "xs"

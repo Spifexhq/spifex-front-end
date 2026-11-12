@@ -46,13 +46,13 @@ export default function PersonalRecordPreview({ collection, record, currency, re
     return String(value);
   };
   return <SidePanel isOpen={!!record} loading={!!id && !loaded && !error} skeletonRows={fields.length} title={String(values.description || values.name || "")} eyebrow={t(transfer ? "transfer" : collection)} onClose={onClose} footer={loaded && !readOnly ? <>
-    {collection === "transactions" && !transfer && values.status !== "settled" && <Button onClick={() => onSettle(loaded)}>{t("settle")}</Button>}
-    {collection === "goals" && <Button onClick={() => onContribute(loaded)}>{t("contribute")}</Button>}
-    {!transfer && <Button variant="outline" onClick={() => onEdit(loaded)}>{t("edit")}</Button>}
+    {!transfer && <Button variant="outline" onClick={() => { onClose(); onEdit(loaded); }}>{t("edit")}</Button>}
+    {collection === "transactions" && !transfer && values.status !== "settled" && <Button onClick={() => { onClose(); onSettle(loaded); }}>{t("settle")}</Button>}
+    {collection === "goals" && <Button onClick={() => { onClose(); onContribute(loaded); }}>{t("contribute")}</Button>}
   </> : undefined}>
     {error ? <div role="alert" className="space-y-3 text-xs text-red-700"><p>{error}</p><Button variant="outline" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div> : loaded && <>
       <SidePanelDetails fields={fields.map(key => ({ label: t(key === "saved" ? "savedAmount" : key), value: format(key) }))}/>
-      {collection === "transactions" && !transfer && detail && <section className="mt-6"><h3 className="text-xs font-semibold text-gray-800">{t("paymentHistory")}</h3>{detail.payments?.length ? <ul className="mt-3 divide-y divide-gray-100">{detail.payments.map(payment => <li key={payment.id} className="flex items-center justify-between gap-4 py-3 text-xs"><div><p className="font-medium text-gray-700">{payment.bank_name}</p><p className="mt-1 text-gray-400">{formatDateFromISO(payment.value_date)}</p></div><span className="tabular-nums text-gray-800">{formatCurrency(payment.amount, currency)}</span></li>)}</ul> : <p className="mt-3 text-xs text-gray-500">{t("noPayments")}</p>}</section>}
+      {collection === "transactions" && !transfer && detail && <section className="mt-6"><h3 className="text-xs font-semibold text-gray-800">{t("paymentHistory")}</h3>{detail.payments?.length ? <ul className="mt-3 divide-y divide-gray-100">{detail.payments.map(payment => <li key={payment.id} className="flex items-center justify-between gap-4 py-3 text-xs"><div><p className="font-medium text-gray-700">{payment.bank_name}</p><p className="mt-1 text-gray-500">{formatDateFromISO(payment.value_date)}</p></div><span className="tabular-nums text-gray-800">{formatCurrency(payment.amount, currency)}</span></li>)}</ul> : <p className="mt-3 text-xs text-gray-500">{t("noPayments")}</p>}</section>}
       {collection === "transactions" && !transfer && record && <TransactionAttachments key={record.id} entryId={record.id} editable={!readOnly}/>}
     </>}
   </SidePanel>;

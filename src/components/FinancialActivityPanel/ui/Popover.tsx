@@ -60,13 +60,13 @@ export function Popover({ children, onClose, anchorRef, className = "w-[360px]",
     return () => document.removeEventListener("pointerdown", outside);
   }, [anchorRef, close]);
   return createPortal(<>
-    {isMobile && <div aria-hidden className={`fixed inset-0 z-[10010] bg-gray-950/20 transition-opacity duration-150 motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`} />}
+    {isMobile && <div aria-hidden className={`fixed inset-0 z-[10050] bg-gray-950/20 transition-opacity duration-150 motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`} />}
     <div ref={panel} role={role} aria-modal={isMobile && role === "dialog" || undefined} tabIndex={-1} aria-label={ariaLabel || title} data-finance-popover
       style={isMobile ? undefined : { top: position.top, left: position.left, maxHeight: position.maxHeight, visibility: position.ready ? "visible" : "hidden" }}
-      className={`fixed z-[10020] max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none ${isMobile ? "inset-x-3 bottom-3 max-h-[80dvh] w-auto" : className} ${open ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0 pointer-events-none"}`}>
+      className={`fixed z-[10060] max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] transition-[opacity,translate,scale] duration-150 ease-out motion-reduce:transition-none ${isMobile ? "inset-x-3 bottom-3 max-h-[80dvh] w-auto" : className} ${open ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0 pointer-events-none"}`}>
       {title && <div className="mb-3 flex items-center justify-between gap-3 border-b border-gray-100 pb-2">
         <h3 className="text-xs font-semibold text-gray-800">{title}</h3>
-        <button type="button" onClick={close} aria-label={t("configModal.close")} className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-gray-400"><X size={14} aria-hidden /></button>
+        <button type="button" onClick={close} aria-label={t("configModal.close")} className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-gray-400"><X size={15} aria-hidden /></button>
       </div>}
       {children}
     </div>

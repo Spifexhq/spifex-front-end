@@ -4,6 +4,7 @@ import SettingsPopover from "./SettingsPopover";
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 
 const CLOSE_MS = 150;
@@ -33,6 +34,7 @@ export type PopoverProps = {
 };
 
 const LegacyPopover: React.FC<PopoverProps> = ({ open, onClose, children, className, anchorRef, width, height, isMobile, title }) => {
+  const { t } = useTranslation("common");
   const popRef = useRef<HTMLDivElement>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -192,7 +194,7 @@ const LegacyPopover: React.FC<PopoverProps> = ({ open, onClose, children, classN
             "w-full max-w-lg rounded-t-xl border border-gray-200 bg-white p-4",
             "shadow-lg",
             "origin-bottom",
-            "transition-all duration-150 ease-out",
+            "transition-[opacity,translate,scale] duration-150 ease-out motion-reduce:transition-none",
             isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
             className || "",
           ].join(" ")}
@@ -202,7 +204,7 @@ const LegacyPopover: React.FC<PopoverProps> = ({ open, onClose, children, classN
             <button
               className="text-[22px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={closeWithAnimation}
-              aria-label="Close"
+              aria-label={t("modal.close")}
               type="button"
             >
               &times;
@@ -228,7 +230,7 @@ const LegacyPopover: React.FC<PopoverProps> = ({ open, onClose, children, classN
               "rounded-md border border-gray-300 bg-white",
               "shadow-lg",
               "origin-top",
-              "transition-all duration-150 ease-out",
+              "transition-[opacity,translate,scale] duration-150 ease-out motion-reduce:transition-none",
               isOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none",
               className || "",
             ].join(" ")}
@@ -251,7 +253,7 @@ const LegacyPopover: React.FC<PopoverProps> = ({ open, onClose, children, classN
           "rounded-md border border-gray-300 bg-white p-3",
           "shadow-lg",
           "origin-top",
-          "transition-all duration-150 ease-out",
+          "transition-[opacity,translate,scale] duration-150 ease-out motion-reduce:transition-none",
           isOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none",
           className || "",
         ].join(" ")}

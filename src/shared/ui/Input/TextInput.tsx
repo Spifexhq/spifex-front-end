@@ -10,22 +10,23 @@ import classNames from "classnames";
 
 import type { InputVariant, InputSize, TextInputProps } from "./Input.types";
 import { INPUT_MESSAGE_TONE, INPUT_SIZE } from "./sizes";
+import RequiredMark from "./RequiredMark";
 
 import visible from "@/assets/Icons/password/visible.svg";
 import notVisible from "@/assets/Icons/password/not-visible.svg";
 
 const VARIANT: Record<InputVariant, string> = {
   default: "border-gray-300",
-  outlined: "border-2 border-gray-300 focus-visible:ring-0",
+  outlined: "border-2 border-gray-300",
   filled: "bg-gray-50 border border-transparent focus:border-gray-300",
 };
 
 const BASE =
-  "w-full max-w-full min-w-0 text-gray-900 outline-none transition-colors duration-150 " +
+  "w-full max-w-full min-w-0 text-gray-900 transition-colors duration-150 " +
   "placeholder:text-gray-400 border bg-white " +
-  "hover:bg-gray-50 focus:bg-gray-50 focus-visible:ring-1 focus-visible:ring-gray-300 " +
+  "hover:bg-gray-50 focus:bg-gray-50 " +
   "disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed " +
-  "disabled:hover:bg-gray-100 disabled:focus:bg-gray-100 disabled:focus-visible:ring-0";
+  "disabled:hover:bg-gray-100 disabled:focus:bg-gray-100";
 
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
   const { t } = useTranslation("common");
@@ -92,7 +93,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
     sz.inputBox,
     rightPadClass,
     VARIANT[variant] ?? VARIANT.default,
-    errorMessage && "border-red-500 focus:border-red-500 focus-visible:ring-red-200",
+    errorMessage && "border-red-500 focus:border-red-500",
     className
   );
 
@@ -126,6 +127,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
             className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
           >
             {label}
+            {props.required ? <RequiredMark /> : null}
           </label>
 
           {labelChip ? (
@@ -193,7 +195,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
               onClick={onClear}
               onMouseDown={(e) => e.preventDefault()}
               className={classNames(
-                "pointer-events-auto rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
+                "pointer-events-auto rounded hover:bg-gray-100",
                 sz.trailingBtnPad
               )}
               aria-label={t("input.clear", "Clear")}
@@ -217,7 +219,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
               onClick={togglePasswordVisibility}
               onMouseDown={(e) => e.preventDefault()}
               className={classNames(
-                "pointer-events-auto rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
+                "pointer-events-auto rounded hover:bg-gray-100",
                 sz.trailingBtnPad
               )}
               disabled={isLoading}

@@ -17,15 +17,17 @@ type Details = {
     project?: string;
     entity?: string;
 };
-export default function EntryPreview({ entry, onClose, onEdit, onSettle }: {
+export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRevert }: {
     entry: FinancialEntry | null;
     onClose(): void;
     onEdit?(entry: Entry): void;
     onSettle?(entry: Entry): void;
+    onRevert?(entry: FinancialEntry): Promise<void>;
 }) {
     const { t } = useTranslation("financeEntries");
     const navigate = useNavigate();
     const [details, setDetails] = useState<Details | null>(null), [loading, setLoading] = useState(false), [error, setError] = useState(""), [accountingError, setAccountingError] = useState(""), [retry, setRetry] = useState(0);
+    const [reverting, setReverting] = useState(false);
     const key = entry ? entryId(entry) : "";
     useEffect(() => {
         if (!entry)
@@ -63,10 +65,15 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle }: {
     const status = accounting?.status;
     const editable = shown && !isSettlement(shown) ? shown : null;
     const canSettle = !!editable && isOutstandingEntry(editable);
+    const revertable = !!shown && isSettlement(shown) && !!onRevert;
     return <SidePanel skeletonVariant="detail" loading={loading || (!!entry && !currentDetails && !error)} eyebrow={t("entryDetails")} isOpen={!!entry} title={entry?.description || t("entryDetails")} subtitle={t(entry && isSettlement(entry) ? "settledEntry" : "plannedEntry")} onClose={onClose} footer={editable && (onEdit || (onSettle && canSettle)) ? <>
       {onEdit && <Button variant="outline" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onEdit(editable); }}>{t("edit")}</Button>}
       {onSettle && canSettle && <Button variant="primary" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onSettle(editable); }}>{t("settle")}</Button>}
-    </> : undefined}>
+    </> : revertable ? <Button variant="outline" isLoading={reverting} disabled={reverting || loading || !currentDetails} onClick={() => {
+      if (!shown || !onRevert) return;
+      setReverting(true);
+      void onRevert(shown).then(onClose).catch(cause => setError(apiErrorMessage(cause, t("detailLoadError")))).finally(() => setReverting(false));
+    }}>{t("reopen")}</Button> : undefined}>
   {loading ? <p role="status" className="py-6 text-xs text-gray-500">{t("loading")}</p> : error ? <div role="alert" className="space-y-3 text-xs text-red-700"><p>{error}</p><Button size="sm" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div> : shown && <div className="space-y-6">
    <section><p className="text-xs text-gray-500">{t("amount")}</p><p className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${signedAmount(shown) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{formatCurrency(signedAmount(shown))}</p></section>
    <SidePanelDetails fields={[

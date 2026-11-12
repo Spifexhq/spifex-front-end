@@ -7,6 +7,5 @@ export interface CheckboxProps extends Pick<React.InputHTMLAttributes<HTMLInputE
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   disabled?: boolean;
   size?: 'small' | 'sm' | 'medium' | 'large';
-  colorClass?: string;
   required?: boolean;
 }

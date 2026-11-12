@@ -1,5 +1,6 @@
 import React from "react";
 import SectionCard from "./SectionCard";
+import Badge from "@/shared/ui/Badge";
 import { fmtMoney, TX_CREDIT, TX_DEBIT } from "../helpers";
 
 type Item = {
@@ -34,17 +35,9 @@ const OverdueListCard: React.FC<{
                     <p className="truncate text-[13px] font-medium text-gray-900">{item.desc || "—"}</p>
                     <p className="mt-1 text-[11px] text-gray-500">{item.dateLabel}</p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${
-                      isPay
-                        ? "bg-red-100 text-red-700"
-                        : isReceive
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
+                  <Badge tone={isPay ? "danger" : isReceive ? "info" : "neutral"}>
                     {isPay ? "Pay" : isReceive ? "Receive" : "Other"}
-                  </span>
+                  </Badge>
                 </div>
 
                 <div className="mt-2 text-right text-[13px] font-semibold text-gray-900">

@@ -133,7 +133,7 @@ const CostCentersTab: React.FC<Props> = ({
 
         <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] text-gray-700">
+            <span className="text-xs text-gray-700">
               {t("entriesModal:costCenters.distribution")}
             </span>
 
@@ -167,7 +167,7 @@ const CostCentersTab: React.FC<Props> = ({
             ))}
 
             {selectedDepartments.length === 0 && (
-              <p className="text-[12px] text-gray-500">
+              <p className="text-xs text-gray-500">
                 {t("entriesModal:costCenters.noneSelected")}
               </p>
             )}

@@ -41,7 +41,7 @@ export const TopProgress: React.FC<TopProgressProps> = ({
           aria-busy={active}
         >
           <div
-            className="h-full w-1/2 bg-[var(--brand,#f97316)] transition-opacity duration-200 ease-out tprog-anim"
+            className="h-full w-1/2 bg-[var(--accentPrimary)] transition-opacity duration-180 ease-out motion-reduce:transition-none tprog-anim"
             style={{ opacity: active ? 1 : 0, animation: active ? "tprog-slide 1.2s ease-in-out infinite" : "none" }}
           />
         </div>
@@ -58,7 +58,7 @@ export const TopProgress: React.FC<TopProgressProps> = ({
             }}
           >
             <div
-              className="h-full w-1/2 bg-[var(--brand,#f97316)] transition-opacity duration-200 ease-out tprog-anim"
+              className="h-full w-1/2 bg-[var(--accentPrimary)] transition-opacity duration-180 ease-out motion-reduce:transition-none tprog-anim"
               style={{ opacity: 1, animation: "tprog-slide 1.2s ease-in-out infinite" }}
             />
           </div>

@@ -16,6 +16,7 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
   const settings = pathname.startsWith("/settings");
   const accounting = /^\/accounting(?:\/|$)/.test(pathname);
   const section = settings || accounting;
+  /** Cashflow/settled own their full-bleed workspace; no rail is rendered. */
   const pageHasActions = /^\/(cashflow|settled)\/?$/.test(pathname);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(() => readCollapsed("spifex.workspace.collapsed", false));
   const [settingsCollapsed, setSettingsCollapsed] = useState(() => readCollapsed("spifex.settings.collapsed", false));

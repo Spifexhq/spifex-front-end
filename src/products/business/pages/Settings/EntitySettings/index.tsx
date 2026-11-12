@@ -552,7 +552,7 @@ const EntitySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftName("")}
               disabled={globalBusy}
             >
@@ -592,7 +592,7 @@ const EntitySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftAlias("")}
               disabled={globalBusy}
             >
@@ -616,7 +616,7 @@ const EntitySettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<EntityTypeOption>
                 label={t("filters.typeLabel")}
@@ -642,7 +642,7 @@ const EntitySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftTypes([])}
               disabled={globalBusy}
             >
@@ -666,7 +666,7 @@ const EntitySettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
                 label={t("filters.statusLabel")}
@@ -685,7 +685,7 @@ const EntitySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftStatuses([])}
               disabled={globalBusy}
             >

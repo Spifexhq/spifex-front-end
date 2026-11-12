@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import Card from "@/shared/ui/Card";
 import { formatDateFromISO } from "@/lib";
 import type { OverviewData, PeriodPoint } from "@/models/finance/overview";
 
@@ -8,7 +9,7 @@ export default function ActivityCalendar({ data }: { data: OverviewData }) {
   const cells: (PeriodPoint | null)[] = [...Array.from({length:offset},()=>null),...data.activity];
   const maxCount = Math.max(1,...data.activity.map(day=>day.count));
   const total = data.activity.reduce((count,day)=>count+day.count,0);
-  return <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5">
+  return <Card as="section" radius="xl" tone="slate" padding="default" className="min-w-0">
     <h2 className="text-sm font-semibold text-slate-900">{t("activity")}</h2>
     <p className="mt-1 text-xs text-slate-400">{t("activityDescription",{count:data.activity.length})}</p>
     <p className="mb-5 mt-4 text-2xl font-semibold tracking-tight tabular-nums text-slate-900">{total.toLocaleString(i18n.language)}<span className="ml-2 text-xs font-normal text-slate-400">{t("transactions")}</span></p>
@@ -19,5 +20,5 @@ export default function ActivityCalendar({ data }: { data: OverviewData }) {
       </div>
     </div>
     <div className="mt-3 flex flex-wrap justify-between gap-2 text-[10px] text-slate-400"><span>{formatDateFromISO(data.activity[0]?.date || data.period.start)} – {formatDateFromISO(data.period.end)}</span><span>{t("less")} <span className="inline-block h-2 w-2 rounded-sm bg-slate-100"/> <span className="inline-block h-2 w-2 rounded-sm bg-indigo-200"/> <span className="inline-block h-2 w-2 rounded-sm bg-indigo-500"/> {t("more")}</span></div>
-  </section>;
+  </Card>;
 }

@@ -444,7 +444,7 @@ const SecurityAndPrivacy: React.FC = () => {
     <>
       <TopProgress active={isSubmitting || isTwoFactorSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+      <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">
           
 

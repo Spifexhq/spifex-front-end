@@ -287,7 +287,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className={product === "personal" ? "min-w-0" : "min-w-0 px-4 pb-10 pt-5 sm:px-7"}>
+      <main className={product === "personal" ? "min-w-0" : "min-w-0 px-4 pb-10 pt-6 sm:px-7"}>
         <div className={product === "personal" ? "w-full space-y-5" : "mx-auto w-full max-w-[1440px] space-y-5"}>
           <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               
@@ -471,7 +471,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
 
               <SectionCard title={t("section.security")}>
                 <div className="px-4 py-3">
-                  <p className="text-[12px] text-gray-700">{t("security.subtitle")}</p>
+                  <p className="text-xs text-gray-700">{t("security.subtitle")}</p>
                   <div className="mt-3">
                     <Button variant="outline" onClick={handleSecurityNavigation} disabled={isSubmitting}>
                       {t("btn.manageSecurity")}
@@ -482,7 +482,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
 
               <SectionCard title={t("section.formats")}>
                 <div className="px-4 py-3">
-                  <p className="text-[12px] text-gray-700">{t("formats.subtitle")}</p>
+                  <p className="text-xs text-gray-700">{t("formats.subtitle")}</p>
                   <div className="mt-3">
                     <Button variant="outline" onClick={handleFormatsNavigation} disabled={isSubmitting}>
                       {t("btn.manageFormats")}

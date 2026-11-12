@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
+import Badge from "@/shared/ui/Badge";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
@@ -527,9 +528,9 @@ const InventorySettings: React.FC = () => {
               <div className="flex items-center gap-3">
 
 
-                {isBackgroundSync && (<span className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
+                {isBackgroundSync && (<Badge tone="neutral" variant="outline" size="md" className="backdrop-blur-sm">
                     {t("badge.syncing")}
-                  </span>)}
+                  </Badge>)}
               </div>
             </div></div>
 
@@ -688,7 +689,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftSku("")}
               disabled={globalBusy}
             >
@@ -728,7 +729,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftName("")}
               disabled={globalBusy}
             >
@@ -773,7 +774,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftDescription("")}
               disabled={globalBusy}
             >
@@ -813,7 +814,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftUom("")}
               disabled={globalBusy}
             >
@@ -838,7 +839,7 @@ const InventorySettings: React.FC = () => {
 
 
           <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="text-[12px] text-gray-700">
+            <label className="text-xs text-gray-700">
               {t("filters.qtyMin", { defaultValue: "Min" })}
               <div className="mt-1">
                 <Input
@@ -853,7 +854,7 @@ const InventorySettings: React.FC = () => {
               </div>
             </label>
 
-            <label className="text-[12px] text-gray-700">
+            <label className="text-xs text-gray-700">
               {t("filters.qtyMax", { defaultValue: "Max" })}
               <div className="mt-1">
                 <Input
@@ -871,7 +872,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => {
                 setDraftMinQoh("");
                 setDraftMaxQoh("");
@@ -898,7 +899,7 @@ const InventorySettings: React.FC = () => {
         <div className="p-4 overflow-visible">
 
 
-          <div className="mt-3 relative z-[1000000] overflow-visible">
+          <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
                 label={t("filters.statusLabel", { defaultValue: "Status" })}
@@ -917,7 +918,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 flex items-center justify-between">
             <button
               type="button"
-              className="text-[12px] text-gray-600 hover:text-gray-900"
+              className="text-xs text-gray-600 hover:text-gray-900"
               onClick={() => setDraftStatuses([])}
               disabled={globalBusy}
             >

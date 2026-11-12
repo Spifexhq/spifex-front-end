@@ -9,11 +9,3 @@ export function queryFromParams(params: URLSearchParams): OverviewQuery {
 }
 export function cumulativeValues(series: PeriodPoint[], field: "in" | "out" | "net" | "count") { let value = 0; return series.map(point => { value += Number(point[field]); return value; }); }
 export function percentageChange(current: number, previous: number): number | null { return previous === 0 ? current === 0 ? 0 : null : (current-previous)/Math.abs(previous); }
-export function exportSeries(series: PeriodPoint[], headers: string[]) {
-  const quote = (value: string | number) => {
-    const text = String(value);
-    const safe = /^[-+]?\d+(?:\.\d+)?$/.test(text) ? text : text.replace(/^[=+@-]/, "'$&");
-    return `"${safe.replace(/"/g, '""')}"`;
-  };
-  return "\uFEFF" + [headers, ...series.map(point => [point.date, point.in, point.out, point.net, point.count])].map(row => row.map(quote).join(",")).join("\r\n");
-}

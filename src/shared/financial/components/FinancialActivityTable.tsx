@@ -77,7 +77,7 @@ export default function FinancialActivityTable<T>({ records, newestFirst = false
     {
       key: "name",
       label: t("entries"),
-      header: <span className="inline-flex max-w-full min-w-0 items-center gap-1"><span className="truncate">{t("entries")}</span><span className="hidden shrink-0 text-gray-400 md:inline">({loadedCount})</span>{headerAccessory}</span>,
+      header: <span className="inline-flex max-w-full min-w-0 items-center gap-1"><span className="truncate">{t("entries")}</span><span className="hidden shrink-0 text-gray-500 md:inline">({loadedCount})</span>{headerAccessory}</span>,
       render: row => row.kind === "summary" ? <span className="text-xs font-semibold text-gray-700">{row.partial ? t("monthPartial", { month: new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(`${row.date}T12:00:00`)) }) : new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(`${row.date}T12:00:00`))}</span> : renderName?.(row.record!) || <div className="min-w-0"><div className="flex min-w-0 items-center gap-1.5"><span className="truncate text-[13px] font-medium leading-4">{row.record?.description || t("untitled")}</span>{(row.record?.installmentCount ?? 0) > 1 && <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium leading-none text-slate-500 tabular-nums">{row.record?.installmentIndex ?? "?"}/{row.record?.installmentCount}</span>}</div><p className="mt-0.5 truncate text-[10px] font-normal leading-3 text-gray-500">{formatDateFromISO(row.date)}{row.record?.activityKind === "settlement" && row.record.bankName ? ` · ${row.record.bankName}` : ""}</p></div>,
     },
     { key: "secondary", label: secondColumnLabel, header: secondColumnHeader, render: row => row.record ? renderSecondColumn(row.record) : null },
@@ -97,7 +97,6 @@ export default function FinancialActivityTable<T>({ records, newestFirst = false
     rowHeight={row => row.kind === "summary" ? 30 : 40}
     pagination={false}
     selectable
-    selectionPadding={180}
     canSelect={canSelect}
     rowKind={row => row.kind}
     getRowName={row => row.record?.description || row.date}

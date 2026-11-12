@@ -12,6 +12,8 @@ import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
 import Switch from "@/shared/ui/Switch";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { EmptyState } from "@/shared/ui/State";
+import Badge from "@/shared/ui/Badge";
 
 const daysUntil = (date: string) => Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000));
 
@@ -170,7 +172,7 @@ export default function WorkspaceManagementPage() {
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <Switch checked={!!workspace.is_primary} onChange={(checked) => void setPrimary(workspace, checked)} label={`${t("setAsPrimary")}: ${workspace.name}`} disabled={!canSetPrimary || !!primaryBusy} className="mt-0.5" />
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2"><p className="truncate text-[13px] font-medium text-gray-900">{workspace.name}</p>{isCurrent && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">{t("current")}</span>}</div>
+              <div className="flex flex-wrap items-center gap-2"><p className="truncate text-[13px] font-medium text-gray-900">{workspace.name}</p>{isCurrent && <Badge tone="success">{t("current")}</Badge>}</div>
               <p className="mt-1 text-xs text-gray-500">{t(workspace.product_category || "business")} · {t(workspace.lifecycle || "active")}{workspace.scheduled_deletion_at && <span className="ml-2 text-amber-700">{t("deletionDaysLeft", { count: daysUntil(workspace.scheduled_deletion_at) })}</span>}</p>
             </div>
           </div>
@@ -180,7 +182,7 @@ export default function WorkspaceManagementPage() {
             {eligible && <Button variant="outline" size="xs" className="!border-red-200 !text-red-700 hover:!bg-red-50" onClick={() => { setError(""); setDeleteTarget(workspace); setPassword(""); setConfirmed(false); requestKey.current = crypto.randomUUID(); }}>{t("deleteWorkspace")}</Button>}
           </div>
         </li>;
-      })}</ul> : <p className="px-4 py-8 text-center text-xs text-gray-500">{t("empty")}</p>}
+      })}</ul> : <EmptyState size="sm" title={t("empty")} className="px-4" />}
     </section>
 
     <FloatingDialog isOpen={!!deleteTarget} title={t("deleteWorkspace")} closeLabel={t("close")} onClose={closeDelete} busy={busy} width={520} height={500} onSubmit={event => { event.preventDefault(); void scheduleDeletion(); }} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={closeDelete}>{t("cancel")}</Button><Button type="submit" variant="cancel" disabled={busy || !password || !confirmed} isLoading={busy}>{t("scheduleDeletion")}</Button></div>}>

@@ -160,7 +160,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => !disabled && setActiveTab(tab.id)} // ✅ keep as-is (tabs only respect `disabled`)
-                  className={`relative px-3 py-1.5 text-[12px] font-medium whitespace-nowrap border-b-2 -mb-px ${
+                  className={`relative px-3 py-1.5 text-xs font-medium whitespace-nowrap border-b-2 -mb-px ${
                     isActive
                       ? "border-gray-900 text-gray-900"
                       : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
@@ -175,7 +175,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
 
         <div className={`divide-y divide-gray-200 ${disabled ? "opacity-70 pointer-events-none" : ""}`}>
           {rowsForActiveTab.length === 0 && (
-            <div className="px-4 py-3 text-[12px] text-gray-500">{t("noItems")}</div>
+            <div className="px-4 py-3 text-xs text-gray-500">{t("noItems")}</div>
           )}
 
           {rowsForActiveTab.map((row) => {
@@ -212,17 +212,19 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
                         checked ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"
                       }`}
                     >
-                      <Icon className="h-5 w-5 text-gray-600" />
+                      <Icon className="h-5 w-5 text-gray-600" aria-hidden="true" />
                     </div>
                   </div>
 
                   <div className="min-w-0">
                     <p className="text-[13px] font-medium text-gray-900">{label}</p>
-                    {description ? <p className="mt-1 text-[12px] text-gray-600">{description}</p> : null}
-                    <p className="mt-1 text-[10px] text-gray-400">{row.code}</p>
+                    {description ? <p className="mt-1 text-xs text-gray-600">{description}</p> : null}
+                    <p className="mt-1 text-[10px] text-gray-500">{row.code}</p>
                   </div>
                 </div>
 
+                {/* Pointer-only guard: the checkbox owns keyboard activation. */}
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                   className="mt-1"
                   onClick={(e) => {

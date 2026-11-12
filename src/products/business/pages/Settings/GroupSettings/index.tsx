@@ -11,6 +11,7 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
+import Badge from "@/shared/ui/Badge";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import { Pencil } from "lucide-react";
 
@@ -298,19 +299,22 @@ const GroupSettings: React.FC = () => {
   }
 
   const headerBadge = isBackgroundSync ? (
-    <span
+    <Badge
       aria-live="polite"
-      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+      tone="neutral"
+      variant="outline"
+      size="md"
+      className="backdrop-blur-sm"
     >
       {t("badge.syncing")}
-    </span>
+    </Badge>
   ) : null;
 
   return (
     <>
       <TopProgress active={isBackgroundSync || isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+      <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start sm:items-center gap-3">
               

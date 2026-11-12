@@ -34,7 +34,7 @@ export default function ImportHistory({ canDelete, canViewBanks, onError, organi
         { key: "bank", label: t("workspace.bank"), render: item => item.bank_account_label || t("workspace.notSet") },
         { key: "status", label: t("workspace.status"), render: item => <ImportStatus status={item.import_status === "committed" ? "created" : item.import_session_id ? "pending" : item.status || "uploaded"} /> },
         { key: "date", label: t("workspace.uploaded"), render: item => new Date(item.created_at).toLocaleDateString(i18n.language) },
-      ]} actions={item => <button type="button" title={t("workspace.download")} aria-label={t("workspace.download")} onClick={() => void api.downloadStatement(item.id).catch(onError)} className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><Download size={15} /></button>} />
+      ]} actions={item => <button type="button" title={t("workspace.download")} aria-label={t("workspace.download")} onClick={() => void api.downloadStatement(item.id).catch(onError)} className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><Download size={15} aria-hidden="true" /></button>} />
   </section>;
 }
 

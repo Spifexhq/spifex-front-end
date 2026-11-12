@@ -47,7 +47,7 @@ export default function ChartOfAccountsPage() {
       <p className="max-w-xl text-xs leading-5 text-gray-500">{accounting("chartPage.description")}</p>
       <div className="flex items-center gap-2">
         {chart.canAdd && <>{chart.accounts.length > 0 && <Button variant="outline" onClick={() => setImporting(!importing)}>{accounting("setupFlow.importAccounts")}</Button>}<Button onClick={() => setModal({ account: null })}>{t("workspace.addAccount")}</Button></>}
-        {chart.canDelete && chart.accounts.length > 0 && <Button ref={menuRef} variant="outline" aria-label={t("workspace.moreActions")} aria-expanded={menu} onClick={() => setMenu(!menu)}><MoreHorizontal size={16} /></Button>}
+        {chart.canDelete && chart.accounts.length > 0 && <Button ref={menuRef} variant="outline" aria-label={t("workspace.moreActions")} aria-expanded={menu} onClick={() => setMenu(!menu)}><MoreHorizontal size={16} aria-hidden="true" /></Button>}
       </div>
     </div>
     <CompactActionMenu open={menu} onClose={() => setMenu(false)} anchor={menuRef}><button type="button" className="w-full rounded px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50" onClick={() => { setMenu(false); setDeleting({}); }}>{t("workspace.deleteAll")}</button></CompactActionMenu>

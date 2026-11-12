@@ -16,7 +16,7 @@ export default function RecurrenceEntries({ currentId, series, selectable, onEdi
       {selectable && <div className="flex items-center gap-2 text-xs text-slate-500"><Checkbox disabled={series.loading} checked={series.allSelected} indeterminate={series.someSelected && !series.allSelected} onChange={series.selectAll} aria-label={t("series.selectAll")} />{t("series.selectAll")}</div>}
     </div>
     <div className="relative max-h-60 overflow-y-auto overscroll-contain" aria-busy={series.loading}>
-      {series.loading && <div role="status" aria-label={t("series.loading")} className="absolute inset-0 z-10 grid place-items-center bg-white/80"><LoaderCircle size={18} className="animate-spin text-slate-400 motion-reduce:animate-none" /><span className="sr-only">{t("series.loading")}</span></div>}
+      {series.loading && <div role="status" aria-label={t("series.loading")} className="absolute inset-0 z-10 grid place-items-center bg-white/80"><LoaderCircle size={18} className="animate-spin text-slate-400 motion-reduce:animate-none" aria-hidden="true" /><span className="sr-only">{t("series.loading")}</span></div>}
       {series.loading && !series.pageEntries.length && <div aria-hidden="true" className="divide-y divide-slate-100">{Array.from({ length: 5 }, (_, i) => <div key={i} className="flex h-12 items-center gap-4 px-3"><SkeletonLine className="h-3 w-32" /><SkeletonLine className="ml-auto h-3 w-16" /></div>)}</div>}
       <div className="divide-y divide-slate-100">
       {series.pageEntries.map(row => <div key={row.id} className={`flex items-center gap-3 px-3 py-2 ${row.id === currentId ? "bg-slate-50/70" : "bg-white"}`}>
@@ -29,7 +29,7 @@ export default function RecurrenceEntries({ currentId, series, selectable, onEdi
     </div>
     <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-3 py-2 text-[11px] text-slate-500">
       <span>{t("series.pageRange", { start: series.page * 10 + (series.pageEntries.length ? 1 : 0), end: series.page * 10 + series.pageEntries.length, total: series.total ?? series.entries.length })}</span>
-      <div className="flex items-center gap-1"><Button type="button" variant="outline" size="sm" disabled={series.loading || !series.canPrev} aria-label={t("series.previous")} onClick={() => void series.prev()}><ChevronLeft size={14} /></Button><Button type="button" variant="outline" size="sm" disabled={series.loading || !series.canNext} aria-label={t("series.next")} onClick={() => void series.next()}><ChevronRight size={14} /></Button></div>
+      <div className="flex items-center gap-1"><Button type="button" variant="outline" size="sm" disabled={series.loading || !series.canPrev} aria-label={t("series.previous")} onClick={() => void series.prev()}><ChevronLeft size={15} aria-hidden="true" /></Button><Button type="button" variant="outline" size="sm" disabled={series.loading || !series.canNext} aria-label={t("series.next")} onClick={() => void series.next()}><ChevronRight size={15} aria-hidden="true" /></Button></div>
     </div>
     <p className="border-t border-slate-100 px-3 py-2 text-[11px] leading-5 text-slate-500">{t("series.protection")}</p>
   </section>;

@@ -21,7 +21,7 @@ export default function StatusScene({ kind, paused }: { kind: StatusKind; paused
         <div className="absolute -bottom-1.5 left-3 right-3 flex justify-between">{[0, 1, 2, 3, 4].map(i => <span key={i} className="h-3 w-3 rotate-45 border-b border-r border-[#d9bba3] bg-[#fffdf9]" />)}</div>
       </motion.div>
       <motion.div animate={paused ? { x: 0, y: 0, rotate: 10 } : { x: [0, 6, 0], y: [0, -6, 0], rotate: kind === "maintenance" ? [10, -18, 10] : [10, 18, 10] }} transition={paused ? { duration: 0 } : { ...loop, delay: .15 }} className="absolute bottom-14 right-12 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#d8b49a] bg-[#efd9c8] text-[#8c4b2d] shadow-sm">
-        <Icon size={25} strokeWidth={1.5} />
+        <Icon size={24} strokeWidth={1.5} aria-hidden="true" />
       </motion.div>
       {[0, 1, 2].map(i => <motion.span key={i} animate={paused ? { y: 0, opacity: .6 } : { y: [0, -7, 0], opacity: [.35, .8, .35] }} transition={paused ? { duration: 0 } : { ...loop, delay: i * .5 }} style={{ left: `${18 + i * 29}%`, top: `${21 + (i % 2) * 49}%` }} className="absolute h-1.5 w-1.5 rounded-full bg-[#bc8969]" />)}
     </div>

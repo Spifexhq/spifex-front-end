@@ -30,8 +30,8 @@ const AccountingWorkspace: React.FC = () => {
   const { t } = useTranslation("accountingSettings");
 
   return (
-    <main className="min-w-0 p-4 text-gray-900 md:p-7">
-      <div className="mx-auto w-full max-w-[1440px] space-y-6">
+    <main className="min-w-0 px-4 py-6 text-gray-900 md:px-7">
+      <div className="mx-auto w-full max-w-[1440px] space-y-5">
 
         {status && !status.operational && <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-900 flex flex-wrap items-center justify-between gap-3"><span>{t(status.status === "needs_attention" ? "setupFlow.attention" : "setupFlow.notActive")}</span><Link className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:underline underline-offset-4" to={`/accounting/setup/${status.current_phase}`}>{t("setupFlow.continue")}</Link></div>}
         {!["overview", "setup"].includes(page) && <header className="space-y-2"><h1 className="text-2xl font-semibold tracking-tight">{t(`nav.${heading}`)}</h1></header>}

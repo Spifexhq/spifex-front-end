@@ -1,15 +1,15 @@
 
-.settings-drawer { position: fixed; inset: 0 0 0 auto; z-index: 10000; width: min(640px, 100vw); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: white; border-left: 1px solid #e3e6eb; box-shadow: -12px 0 40px #182a421c; }
+.settings-drawer { position: fixed; inset: 0 0 0 auto; z-index: 10030; width: min(640px, 100vw); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: white; border-left: 1px solid #e3e6eb; box-shadow: -12px 0 40px #182a421c; }
 .settings-drawer header { background: white; }
-.settings-drawer header h1 { font-size: 15px; }
+.settings-drawer header h1 { font-size: 16px; }
 /* Preview and edit drawers share one viewport, header, scroll and footer system. */
 .settings-modal { width: min(640px, 100vw); height: 100dvh; max-height: 100dvh; min-height: 0; padding: 0; overflow: hidden; }
 .settings-modal > header, .settings-modal-header { flex: 0 0 auto; padding: 16px 20px; border-bottom: 1px solid #e3e6eb; background: white; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .settings-modal > header > div { width: 100%; padding: 0; }
-.settings-modal > header :is(h1,h2,h3) { font-size: 15px; font-weight: 600; line-height: 22px; white-space: normal; }
+.settings-modal > header :is(h1,h2,h3) { font-size: 16px; font-weight: 600; line-height: 24px; white-space: normal; }
 .settings-modal > header .h-8.w-8 { display: none; }
 .settings-modal > .md\:hidden { display: none; }
-.settings-modal-close { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; height: 28px; width: 28px; border: 0; border-radius: 4px; background: transparent; color: #7a8594; padding: 0; }
+.settings-modal-close { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; height: 32px; width: 32px; border: 0; border-radius: 6px; background: transparent; color: #7a8594; padding: 0; }
 .settings-modal-close:hover { background: #f4f6f9; color: #27364a; }
 .settings-modal-form { display: flex !important; flex-direction: column; flex: 1 1 0% !important; min-height: 0; overflow: hidden; gap: 0 !important; padding: 0 !important; margin: 0 !important; }
 .settings-modal-content { display: flex; flex-direction: column; flex: 1 1 0%; min-height: 0; overflow: hidden; }
@@ -19,7 +19,7 @@
 .settings-modal-footer, .settings-modal-form > footer { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid #e3e6eb; background: white; padding: 14px 20px max(14px, env(safe-area-inset-bottom)); }
 .settings-modal-footer > div { position: static; width: 100%; display: flex; justify-content: flex-end; gap: 8px; padding: 0; border: 0; background: transparent; }
 .settings-modal-footer button, .settings-modal-form > footer button { min-height: 34px; font-size: 12px; border-radius: 6px; }
-@media(max-width:767px) { .settings-modal { width: 100vw; } .settings-modal > header { padding: 14px 16px; } .settings-modal-scroll { padding: 16px; } .settings-modal-footer, .settings-modal-form > footer { padding-inline: 16px; } .settings-modal-footer button, .settings-modal-form > footer button { min-height: 40px; }}
+@media(max-width:767px) { .settings-modal { width: 100vw; } .settings-modal > header { padding: 14px 16px; } .settings-modal-close { height: 44px; width: 44px; } .settings-modal-scroll { padding: 16px; } .settings-modal-footer, .settings-modal-form > footer { padding-inline: 16px; } .settings-modal-footer button, .settings-modal-form > footer button { min-height: 40px; }}
 .settings-modal > header.settings-modal-header-with-tabs { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
 .settings-modal-tabs { display: flex; width: 100%; gap: 3px; overflow-x: auto; overscroll-behavior-inline: contain; padding: 3px; border: 1px solid #e8ebf0; border-radius: 7px; background: #f5f7fa; scrollbar-width: none; }
 .settings-modal-tabs::-webkit-scrollbar { display: none; }
@@ -29,8 +29,8 @@
 .settings-modal-tab:focus-visible { background: #e8edf5; }
 @media(max-width:767px) { .settings-modal-tab { min-height: 38px; padding-inline: 10px; }}
 .settings-modal-standard-header .settings-modal-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
-.settings-modal-kicker { margin: 0 0 3px; font-size: 10px; line-height: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: .025em; color: #687385; }
-.settings-modal-title { margin: 0; font-size: 15px; line-height: 22px; font-weight: 600; letter-spacing: normal; color: #202936; }
+.settings-modal-kicker { margin: 0 0 3px; font-size: 11px; line-height: 16px; font-weight: 500; text-transform: uppercase; letter-spacing: .025em; color: #687385; }
+.settings-modal-title { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: normal; color: #202936; }
 .settings-modal-subtitle { margin: 5px 0 0; font-size: 12px; line-height: 18px; color: #687385; }
 .settings-modal-scroll { font-size: 13px; color: #202936; }
 .settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 34px; height: 34px; padding: 6px 14px; font-size: 12px; line-height: 20px; font-weight: 500; }
@@ -44,3 +44,7 @@
 .settings-modal-action-buttons { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
 .settings-modal-action-buttons > div { display: flex; align-items: center; gap: 8px; padding: 0; border: 0; position: static; }
 @media(max-width:767px) { .settings-modal-hint { display: none; } .settings-modal-footer-layout { justify-content: flex-end !important; }}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-modal-tab { transition: none; }
+}

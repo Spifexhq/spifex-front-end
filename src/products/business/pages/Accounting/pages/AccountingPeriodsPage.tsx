@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/core/api/requests";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
+import { ErrorState } from "@/shared/ui/State";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import { Select } from "@/shared/ui/Select";
@@ -56,7 +57,7 @@ export default function AccountingPeriodsPage() {
   };
   return <section className="space-y-4">
     <div className="flex flex-wrap items-start justify-between gap-3"><p className="max-w-2xl text-xs leading-6 text-gray-500">{t("setupFlow.periodGuidance")}</p>{canManage && <Button onClick={() => { setEditing(null); setForm(previous => ({ ...previous, book_id: previous.book_id || status?.primary_book_id || "" })); setOpen(true); }}>{t("setupFlow.newPeriod")}</Button>}</div>
-    {error !== null && <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-900">{error || t("setupFlow.actionError")}</p>}
+    {error !== null && <ErrorState message={error || t("setupFlow.actionError")} tone="warning" size="sm" className="leading-6" />}
     {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
     {loading && !periods.length ? <DataTableSkeleton rows={5} /> : <DataTable pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit")} emptyLabel={t("setupFlow.noPeriods")} columns={[
 { key: "name", label: t("setupFlow.periodName"), render: item => item.period_key },

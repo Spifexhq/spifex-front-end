@@ -13,6 +13,8 @@ export function SidePanelHint({ recordLabel, recordName, editable = false }: Rec
 }
 export function SidePanelForm({ children, className = "", recordLabel, recordName, onKeyDown, ...props }: FormHTMLAttributes<HTMLFormElement> & RecordHintProps) {
   const { body, actions } = splitActions(children);
+  // Ctrl/Cmd+S submit shortcut; form semantics stay with the native element.
+  // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
   return <form {...props} onKeyDown={event => {
     onKeyDown?.(event);
     if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "s") return;

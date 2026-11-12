@@ -24,6 +24,7 @@ export type InputCommonProps = {
   label?: React.ReactNode;
   labelChip?: InputLabelChip;
   errorMessage?: React.ReactNode;
+  required?: boolean;
   variant?: InputVariant;
   size?: InputSize;
   isLoading?: boolean;

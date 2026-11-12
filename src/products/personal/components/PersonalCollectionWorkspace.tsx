@@ -5,6 +5,7 @@ import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
+import Card from "@/shared/ui/Card";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import { personalApi } from "../services/api";
@@ -53,11 +54,11 @@ export default function PersonalCollectionWorkspace({ collection }: { collection
   return <div className="space-y-5">
     <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-semibold tracking-tight text-gray-900">{t(collection)}</h1><p className="mt-1.5 text-sm text-gray-500">{t(`${collection}Description`)}</p></div>{canCreate && <Button type="button" onClick={() => setDialog({ kind: collection })}>{t("create")}</Button>}</header>
     {!readOnly && !canCreate && capacityCount !== undefined && addEntitlement?.limits.limit !== null && addEntitlement?.limits.limit !== undefined && capacityCount >= addEntitlement.limits.limit && <p className="text-xs text-gray-500">{t("access.resourceCapacityReached", { limit: addEntitlement.limits.limit })}</p>}
-    <form onSubmit={event => { event.preventDefault(); setAppliedSearch(search.trim()); }} className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+    <Card as="form" radius="xl" padding="none" onSubmit={event => { event.preventDefault(); setAppliedSearch(search.trim()); }} className="flex flex-wrap items-end gap-3 p-3 sm:p-4">
       <div className="min-w-48 flex-1"><Input kind="text" label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)}/></div>
       <Button type="submit" variant="outline">{t("apply")}</Button>
       {appliedSearch && <Button type="button" variant="outline" onClick={() => { setSearch(""); setAppliedSearch(""); }}>{t("clearFilters")}</Button>}
-    </form>
+    </Card>
     {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
     <DataTable<PersonalRecord> items={pager.items} columns={columns} pager={pager} emptyLabel={t("empty")} editLabel={t("edit")} error={pager.error} busy={pager.loading} onInspect={setPreview} canEdit={canEdit} onEdit={edit} canDelete={canDelete} onDelete={async row => {
       try { await personalApi.remove(collection, row.id); }
