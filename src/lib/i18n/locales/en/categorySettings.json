@@ -27,7 +27,9 @@
     "any": "Any",
     "credit": "Credit",
     "debit": "Debit",
-    "searchPlaceholder": "Search by name, code or description…"
+    "searchPlaceholder": "Search by name, code or description…",
+    "parent": "Parent",
+    "noParent": "Top level"
   },
   "table": {
     "code": "Code",

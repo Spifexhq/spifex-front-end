@@ -147,10 +147,6 @@ export default function PersonalBankAccountsPage() {
 
   return <SettingsSurface><div className="settings-content min-w-0">
     {canView ? <>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{personalT("accounts")}</h1>
-        <p className="mt-1.5 max-w-3xl text-[13px] leading-5 text-gray-500">{personalT("accountsDescription")}</p>
-      </header>
       <div className="settings-toolbar mb-4">
         <SettingsFilters active={Object.values(applied).some(Boolean)}>
           {(["institution", "accountType", "branch", "accountNumber", "iban", "status"] as const).map(key => {

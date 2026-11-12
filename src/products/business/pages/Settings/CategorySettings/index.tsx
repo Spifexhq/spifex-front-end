@@ -11,6 +11,9 @@ import Input from "@/shared/ui/Input";
 import Textarea from "@/shared/ui/Input/Textarea";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
+import Popover from "@/shared/ui/Popover";
+import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
+import { SettingsClearFilters, SettingsFilter } from "@/shared/ui/Settings/SettingsFilter";
 import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api";
@@ -108,14 +111,22 @@ const CategorySettingsPage: React.FC = () => {
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
   const [items, setItems] = React.useState<CashflowCategory[]>([]);
+  const [parentChoices, setParentChoices] = React.useState<CashflowCategory[]>([]);
 
   const [draftSearch, setDraftSearch] = React.useState("");
-  const [draftIncludeInactive, setDraftIncludeInactive] = React.useState(true);
+  const [draftStatuses, setDraftStatuses] = React.useState<("active" | "inactive")[]>(["active"]);
   const [draftTxFilter, setDraftTxFilter] = React.useState<"credit" | "debit" | "">("");
+  const [draftParent, setDraftParent] = React.useState("");
 
   const [appliedSearch, setAppliedSearch] = React.useState("");
-  const [appliedIncludeInactive, setAppliedIncludeInactive] = React.useState(true);
+  const [appliedStatuses, setAppliedStatuses] = React.useState<("active" | "inactive")[]>(["active"]);
+  const [openFilter, setOpenFilter] = React.useState<"search" | "type" | "status" | "parent" | null>(null);
+  const searchAnchorRef = React.useRef<HTMLDivElement | null>(null);
+  const typeAnchorRef = React.useRef<HTMLDivElement | null>(null);
+  const statusAnchorRef = React.useRef<HTMLDivElement | null>(null);
+  const parentAnchorRef = React.useRef<HTMLDivElement | null>(null);
   const [appliedTxFilter, setAppliedTxFilter] = React.useState<"credit" | "debit" | "">("");
+  const [appliedParent, setAppliedParent] = React.useState("");
 
   const [modalOpen, setModalOpen] = React.useState(false);
   const [form, setForm] = React.useState<CategoryFormState>(EMPTY_FORM);
@@ -124,9 +135,10 @@ const CategorySettingsPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await api.getCashflowCategories({
-        include_inactive: appliedIncludeInactive,
+        is_active: appliedStatuses.length ? appliedStatuses.join(",") : "active,inactive",
         ...(appliedSearch.trim() ? { search: appliedSearch.trim() } : {}),
         ...(appliedTxFilter ? { tx_type_hint: appliedTxFilter } : {}),
+        ...(appliedParent ? { parent_id: appliedParent } : {}),
       });
       const nextItems = extractCollection<CashflowCategory>((response as { data?: unknown })?.data ?? response);
       setItems(nextItems);
@@ -136,26 +148,43 @@ const CategorySettingsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [appliedIncludeInactive, appliedSearch, appliedTxFilter, t]);
+  }, [appliedStatuses, appliedSearch, appliedTxFilter, appliedParent, t]);
+
+  const loadParentChoices = React.useCallback(async () => {
+    try {
+      const response = await api.getCashflowCategories({ is_active: "active,inactive" });
+      const nextItems = extractCollection<CashflowCategory>((response as { data?: unknown })?.data ?? response);
+      setParentChoices(nextItems);
+    } catch {
+      setParentChoices([]);
+    }
+  }, []);
 
   React.useEffect(() => {
     void load();
   }, [load]);
 
+  React.useEffect(() => {
+    void loadParentChoices();
+  }, [loadParentChoices]);
+
   const applyFilters = React.useCallback(() => {
     setAppliedSearch(draftSearch);
-    setAppliedIncludeInactive(draftIncludeInactive);
+    setAppliedStatuses(draftStatuses);
     setAppliedTxFilter(draftTxFilter);
-  }, [draftIncludeInactive, draftSearch, draftTxFilter]);
+    setAppliedParent(draftParent);
+  }, [draftStatuses, draftSearch, draftTxFilter, draftParent]);
 
   const clearFilters = React.useCallback(() => {
     setDraftSearch("");
-    setDraftIncludeInactive(true);
+    setDraftStatuses(["active"]);
     setDraftTxFilter("");
+    setDraftParent("");
 
     setAppliedSearch("");
-    setAppliedIncludeInactive(true);
+    setAppliedStatuses(["active"]);
     setAppliedTxFilter("");
+    setAppliedParent("");
   }, []);
 
   const parentOptions = React.useMemo(() => {
@@ -186,6 +215,32 @@ const CategorySettingsPage: React.FC = () => {
   const selectedDraftTxFilter = React.useMemo(
     () => TX_TYPE_OPTIONS.filter((item) => item.value === draftTxFilter),
     [draftTxFilter, TX_TYPE_OPTIONS]
+  );
+
+  const parentFilterOptions = React.useMemo<Array<Option>>(
+    () => [
+      { value: "root", label: t("filters.noParent") },
+      ...parentChoices
+        .slice()
+        .sort((a, b) => {
+          const codeA = (a.code || "").toLowerCase();
+          const codeB = (b.code || "").toLowerCase();
+          if (codeA !== codeB) return codeA.localeCompare(codeB, undefined, { numeric: true });
+          return (a.name || "").localeCompare(b.name || "");
+        })
+        .map((item) => ({ value: item.id, label: categoryLabel(item) })),
+    ],
+    [parentChoices, categoryLabel, t]
+  );
+
+  const selectedParentFilter = React.useMemo(
+    () => parentFilterOptions.filter((item) => item.value === appliedParent),
+    [parentFilterOptions, appliedParent]
+  );
+
+  const selectedDraftParent = React.useMemo(
+    () => parentFilterOptions.filter((item) => item.value === draftParent),
+    [parentFilterOptions, draftParent]
   );
 
   const openCreate = () => {
@@ -246,7 +301,7 @@ const CategorySettingsPage: React.FC = () => {
       }
       setModalOpen(false);
       setForm(EMPTY_FORM);
-      await load();
+      await Promise.all([load(), loadParentChoices()]);
     } catch (error) {
       const message =
         (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
@@ -263,7 +318,7 @@ const CategorySettingsPage: React.FC = () => {
       await api.deleteCashflowCategory(item.id);
       setItems(current => current.filter(category => category.id !== item.id));
       setSnackbar({ severity: "success", message: t("feedback.deleted") });
-      await load();
+      await Promise.all([load(), loadParentChoices()]);
     } catch (error) {
       const message =
         (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
@@ -277,57 +332,44 @@ const CategorySettingsPage: React.FC = () => {
 
   if (loading) return <PageSkeleton rows={6} />;
 
+  const statusIsDefault = appliedStatuses.length === 1 && appliedStatuses[0] === "active";
+  const hasFilters = !!appliedSearch || !!appliedTxFilter || !!appliedParent || !statusIsDefault;
+  const statusFilterLabel = appliedStatuses.length === 0
+    ? t("filters.any")
+    : appliedStatuses.map(value => t(`status.${value}`)).join(", ");
+
   return (
     <>
       <main className="settings-page">
         <div className="settings-content space-y-6">
           <section className="space-y-4">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <form className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(180px,1fr)_180px_auto_auto] xl:items-end" onSubmit={event => { event.preventDefault(); applyFilters(); }}>
-                <Input
-                  kind="text"
-                  label={t("filters.search")}
-                  placeholder={t("filters.searchPlaceholder")}
-                  value={draftSearch}
-                  onChange={(e) => setDraftSearch(e.target.value)}
-                />
-
-                <Select<Option<"credit" | "debit">>
-                  label={t("filters.transactionHint")}
-                  items={TX_TYPE_OPTIONS}
-                  selected={selectedDraftTxFilter}
-                  onChange={(selected) => setDraftTxFilter(selected[0]?.value ?? "")}
-                  getItemKey={(item) => item.value}
-                  getItemLabel={(item) => item.label}
-                  buttonLabel={t("filters.any")}
-                  singleSelect
-                  hideCheckboxes
-                />
-
-                <label className="flex min-h-8 items-center gap-2 text-xs text-gray-600">
-                  <Checkbox
-                    checked={draftIncludeInactive}
-                    onChange={(e) => setDraftIncludeInactive(e.target.checked)}
-                    size="small"
-                  />
-                  <span>{t("filters.includeInactive")}</span>
-                </label>
-
-                <div className="flex items-center gap-2 lg:justify-end">
-                  <Button type="button" variant="outline" onClick={clearFilters}>
-                    {t("actions.clear")}
-                  </Button>
-                  <Button type="submit" variant="outline">
-                    {t("actions.apply")}
-                  </Button>
-                </div>
-              </form>
+            <div className="settings-toolbar mb-4">
+              <SettingsFilters active={hasFilters}>
+                <div ref={searchAnchorRef}><SettingsFilter label={t("filters.search")} value={appliedSearch ? `• ${appliedSearch}` : undefined} active={!!appliedSearch} expanded={openFilter === "search"} onClick={() => setOpenFilter(openFilter === "search" ? null : "search")} onClear={appliedSearch ? () => { setDraftSearch(""); setAppliedSearch(""); } : undefined} /></div>
+                <div ref={parentAnchorRef}><SettingsFilter label={t("filters.parent")} value={selectedParentFilter[0] ? `• ${selectedParentFilter[0].label}` : undefined} active={!!appliedParent} expanded={openFilter === "parent"} onClick={() => setOpenFilter(openFilter === "parent" ? null : "parent")} onClear={appliedParent ? () => { setDraftParent(""); setAppliedParent(""); } : undefined} /></div>
+                <div ref={typeAnchorRef}><SettingsFilter label={t("filters.transactionHint")} value={appliedTxFilter ? t(appliedTxFilter === "credit" ? "filters.credit" : "filters.debit") : undefined} active={!!appliedTxFilter} expanded={openFilter === "type"} onClick={() => setOpenFilter(openFilter === "type" ? null : "type")} onClear={appliedTxFilter ? () => { setDraftTxFilter(""); setAppliedTxFilter(""); } : undefined} /></div>
+                <div ref={statusAnchorRef}><SettingsFilter label={t("table.status")} value={statusFilterLabel} active={!statusIsDefault} expanded={openFilter === "status"} onClick={() => setOpenFilter(openFilter === "status" ? null : "status")} onClear={() => { setDraftStatuses(["active"]); setAppliedStatuses(["active"]); }} /></div>
+                {hasFilters && <SettingsClearFilters label={t("actions.clear")} onClick={clearFilters} />}
+              </SettingsFilters>
               <Button type="button" onClick={openCreate} disabled={saving || !!deletingId}>{t("actions.new")}</Button>
             </div>
 
+            <Popover appearance="settings" open={openFilter === "search"} anchorRef={searchAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.search")} width={420}>
+              <div className="p-4"><Input kind="text" value={draftSearch} onChange={event => setDraftSearch(event.target.value)} placeholder={t("filters.searchPlaceholder")} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); applyFilters(); setOpenFilter(null); } }} /><div className="mt-3 flex items-center justify-between"><Button type="button" variant="ghost" size="sm" onClick={() => { setDraftSearch(""); setAppliedSearch(""); }}>{t("actions.clear")}</Button><Button type="button" size="sm" onClick={() => { applyFilters(); setOpenFilter(null); }}>{t("actions.apply")}</Button></div></div>
+            </Popover>
+            <Popover appearance="settings" open={openFilter === "parent"} anchorRef={parentAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.parent")} width={360}>
+              <div className="p-4"><Select<Option> label={t("filters.parent")} items={parentFilterOptions} selected={selectedDraftParent} onChange={selected => setDraftParent(selected[0]?.value ?? "")} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("filters.any")} singleSelect hideCheckboxes /><div className="mt-3 flex items-center justify-between"><Button type="button" variant="ghost" size="sm" onClick={() => setDraftParent("")}>{t("actions.clear")}</Button><Button type="button" size="sm" onClick={() => { applyFilters(); setOpenFilter(null); }}>{t("actions.apply")}</Button></div></div>
+            </Popover>
+            <Popover appearance="settings" open={openFilter === "type"} anchorRef={typeAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.transactionHint")} width={360}>
+              <div className="p-4"><Select<Option<"credit" | "debit">> label={t("filters.transactionHint")} items={TX_TYPE_OPTIONS} selected={selectedDraftTxFilter} onChange={selected => setDraftTxFilter(selected[0]?.value ?? "")} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("filters.any")} singleSelect hideCheckboxes /><div className="mt-3 flex items-center justify-between"><Button type="button" variant="ghost" size="sm" onClick={() => setDraftTxFilter("")}>{t("actions.clear")}</Button><Button type="button" size="sm" onClick={() => { applyFilters(); setOpenFilter(null); }}>{t("actions.apply")}</Button></div></div>
+            </Popover>
+            <Popover appearance="settings" open={openFilter === "status"} anchorRef={statusAnchorRef} onClose={() => setOpenFilter(null)} title={t("table.status")} width={360}>
+              <div className="p-4"><Select<{ value: "active" | "inactive"; label: string }> label={t("table.status")} items={[{ value: "active", label: t("status.active") }, { value: "inactive", label: t("status.inactive") }]} selected={draftStatuses.map(value => ({ value, label: t(`status.${value}`) }))} onChange={selected => setDraftStatuses(selected.map(item => item.value) as ("active" | "inactive")[])} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("filters.any")} /><div className="mt-3 flex items-center justify-between"><Button type="button" variant="ghost" size="sm" onClick={() => setDraftStatuses(["active"])}>{t("actions.clear")}</Button><Button type="button" size="sm" onClick={() => { applyFilters(); setOpenFilter(null); }}>{t("actions.apply")}</Button></div></div>
+            </Popover>
+
             <div className="[&_table]:min-w-0! md:[&_table]:min-w-[740px]!">
             <DataTable
-              key={JSON.stringify([appliedSearch, appliedIncludeInactive, appliedTxFilter])}
+              key={JSON.stringify([appliedSearch, appliedStatuses, appliedTxFilter, appliedParent])}
 
               items={items}
               editLabel={t("actions.edit")}

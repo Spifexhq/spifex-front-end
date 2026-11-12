@@ -113,6 +113,8 @@ import type {
 import type {
   GetIntegrationActivityResponse,
   GetIntegrationConnectionsResponse,
+  IntegrationConnectionPolicy,
+  UpdateIntegrationConnectionPolicyRequest,
 } from '@/models/integrations/connections';
 
 
@@ -500,6 +502,13 @@ export const api = {
     request<void>(
       `integrations/connections/${encodeURIComponent(applicationId)}/`,
       "DELETE",
+    ),
+
+  updateIntegrationConnectionPolicy: (applicationId: string, payload: UpdateIntegrationConnectionPolicyRequest) =>
+    request<IntegrationConnectionPolicy>(
+      `integrations/connections/${encodeURIComponent(applicationId)}/policy/`,
+      "PUT",
+      payload,
     ),
 
   getIntegrationActivity: (limit = 50) =>

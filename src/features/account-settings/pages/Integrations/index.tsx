@@ -1,5 +1,6 @@
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
-import { ArrowUpRight, Clipboard, KeyRound, ShieldCheck, Unplug } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { ArrowUpRight, Clipboard, KeyRound, Settings2, ShieldCheck, Unplug } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,6 +11,7 @@ import DataTable, { type Column } from "@/shared/ui/DataTable";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
 import type { IntegrationConnection } from "@/models/integrations/connections";
+import ConnectionPolicyEditor from "./ConnectionPolicyEditor";
 
 type Snack =
   | { message: string; severity: "success" | "error" | "info" | "warning" }
@@ -25,6 +27,7 @@ function ConnectionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pending, setPending] = useState<Row | null>(null);
+  const [configuring, setConfiguring] = useState<Row | null>(null);
   const [revoking, setRevoking] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
   const endpoint = "https://api.spifex.com/mcp";
@@ -296,21 +299,43 @@ function ConnectionsPage() {
               canEdit={false}
               canDelete={false}
               actions={row => (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setPending(row)}
-                  disabled={!row.revocable}
-                >
-                  <Unplug size={15} aria-hidden="true" />
-                  <span className="ml-1.5">{t("revoke.action")}</span>
-                </Button>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setConfiguring(row)}
+                  >
+                    <Settings2 size={15} aria-hidden="true" />
+                    <span className="ml-1.5">{t("policy.configure", "Configure")}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPending(row)}
+                    disabled={!row.revocable}
+                  >
+                    <Unplug size={15} aria-hidden="true" />
+                    <span className="ml-1.5">{t("revoke.action")}</span>
+                  </Button>
+                </div>
               )}
             />
           </div>
         )}
       </section>
+
+      <AnimatePresence initial={false}>
+        {configuring && <ConnectionPolicyEditor
+          connection={configuring}
+          onClose={() => setConfiguring(null)}
+          onSaved={policy => {
+            setConnections(current => current ? current.map(item => item.application_id === configuring.application_id ? { ...item, policy } : item) : current);
+            setConfiguring(previous => previous ? { ...previous, policy } : previous);
+          }}
+        />}
+      </AnimatePresence>
 
       <ConfirmToast
         open={Boolean(pending)}

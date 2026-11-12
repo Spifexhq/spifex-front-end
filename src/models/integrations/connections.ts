@@ -1,4 +1,24 @@
 export type IntegrationConnectionStatus = "active" | "expired";
+export type IntegrationWorkspaceMode = "single" | "selected";
+export type IntegrationWorkspacePermissions = {
+  read: Record<string, boolean>;
+  actions: Record<string, boolean>;
+};
+
+export type IntegrationConnectionPolicy = {
+  configured: boolean;
+  workspace_mode: IntegrationWorkspaceMode;
+  workspace_ids: string[];
+  permissions: {
+    workspaces: Record<string, IntegrationWorkspacePermissions>;
+  };
+};
+
+export type UpdateIntegrationConnectionPolicyRequest = {
+  workspace_mode: IntegrationWorkspaceMode;
+  workspace_ids: string[];
+  permissions: IntegrationConnectionPolicy["permissions"];
+};
 
 export type IntegrationConnection = {
   application_id: string;
@@ -12,6 +32,7 @@ export type IntegrationConnection = {
   last_used_at: string | null;
   expires_at: string | null;
   revocable: boolean;
+  policy: IntegrationConnectionPolicy;
 };
 
 export type GetIntegrationConnectionsResponse = {

@@ -6,7 +6,8 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PermissionMiddleware } from "src/middlewares";
 
-import Checkbox from "@/shared/ui/Checkbox";
+import Switch from "@/shared/ui/Switch";
+import SegmentedControl from "@/shared/ui/SegmentedControl";
 import Button from "@/shared/ui/Button";
 
 import { permissionIcons } from "@/core/permissions/icons";
@@ -150,27 +151,8 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
   return (
     <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
       <div className="border-t border-gray-200">
-        <div className="overflow-x-auto border-b border-gray-200 bg-white px-4 pt-2">
-          <nav className="flex w-max min-w-full gap-2" aria-label={t("aria.tabs", { defaultValue: "Permission tabs" })}>
-            {TABS.map((tab) => {
-              const isActive = tab.id === activeTab;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => !disabled && setActiveTab(tab.id)} // ✅ keep as-is (tabs only respect `disabled`)
-                  className={`relative px-3 py-1.5 text-xs font-medium whitespace-nowrap border-b-2 -mb-px ${
-                    isActive
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
-                  } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
-                >
-                  {t(`tabs.${tab.id}`)}
-                </button>
-              );
-            })}
-          </nav>
+        <div className="border-b border-gray-200 bg-white px-4 py-2">
+          <SegmentedControl<PermissionTabId> tabs value={activeTab} label={t("aria.tabs", { defaultValue: "Permission tabs" })} onChange={value => !disabled && setActiveTab(value)} items={TABS.map(tab => ({ value: tab.id, label: t(`tabs.${tab.id}`) }))} />
         </div>
 
         <div className={`divide-y divide-gray-200 ${disabled ? "opacity-70 pointer-events-none" : ""}`}>
@@ -185,33 +167,10 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
             const Icon = permissionIcons(row.code);
 
             return (
-              <div
-                key={row.code}
-                className={`flex items-start justify-between px-4 py-3 transition-colors ${
-                  selectionDisabled ? "cursor-default" : "cursor-pointer hover:bg-gray-50"
-                }`}
-                onClick={() => {
-                  if (selectionDisabled) return;
-                  onToggle(row.code, !checked);
-                }}
-                role="button"
-                tabIndex={selectionDisabled ? -1 : 0}
-                onKeyDown={(e) => {
-                  if (selectionDisabled) return;
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onToggle(row.code, !checked);
-                  }
-                }}
-                aria-label={label}
-              >
-                <div className="pr-3 flex gap-3">
+              <div key={row.code} className="flex items-start justify-between gap-3 px-4 py-3 transition-colors hover:bg-gray-50">
+                <div className="flex min-w-0 gap-3">
                   <div className="mt-0.5" aria-hidden="true">
-                    <div
-                      className={`h-9 w-9 rounded-lg border flex items-center justify-center ${
-                        checked ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"
-                      }`}
-                    >
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${checked ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"}`}>
                       <Icon className="h-5 w-5 text-gray-600" aria-hidden="true" />
                     </div>
                   </div>
@@ -223,31 +182,15 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
                   </div>
                 </div>
 
-                {/* Pointer-only guard: the checkbox owns keyboard activation. */}
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                <div
-                  className="mt-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  <Checkbox
-                    checked={checked}
-                    onChange={(e) => {
-                      if (selectionDisabled) return;
-                      onToggle(row.code, e.target.checked);
-                    }}
-                    disabled={selectionDisabled}
-                    size="sm"
-                    aria-label={label}
-                  />
+                <div className="mt-1 shrink-0">
+                  <Switch checked={checked} onChange={value => onToggle(row.code, value)} disabled={selectionDisabled} label={label} />
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 px-4 py-3">
           <Button variant="cancel" type="button" onClick={onUndo} disabled={!dirty || selectionDisabled}>
             {t("buttons.undo")}
           </Button>

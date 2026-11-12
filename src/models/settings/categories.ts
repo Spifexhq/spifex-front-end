@@ -15,6 +15,7 @@ export type CashflowCategory = {
 
 export type GetCashflowCategoriesParams = {
   include_inactive?: boolean;
+  is_active?: string;
   search?: string;
   parent_id?: string;
   tx_type_hint?: "credit" | "debit";

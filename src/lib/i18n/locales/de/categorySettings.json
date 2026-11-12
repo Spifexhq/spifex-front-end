@@ -27,7 +27,9 @@
     "any": "Alle",
     "credit": "Kredit",
     "debit": "Debit",
-    "searchPlaceholder": "Nach Name, Code oder Beschreibung suchen…"
+    "searchPlaceholder": "Nach Name, Code oder Beschreibung suchen…",
+    "parent": "Übergeordnet",
+    "noParent": "Oberste Ebene"
   },
   "table": {
     "code": "Code",

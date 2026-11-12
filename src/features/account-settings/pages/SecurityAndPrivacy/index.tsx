@@ -74,7 +74,8 @@ const getApiErrorMessage = (error: ApiErrorBody): string | undefined => {
 /* -------------------------------------------------------------------------- */
 const SecurityAndPrivacy: React.FC = () => {
   const { t, i18n } = useTranslation("securityAndPrivacy");
-  const { user: authUser } = useAuthContext();
+  const { user: authUser, organization } = useAuthContext();
+  const personal = organization?.organization?.product_category === "personal";
 
   useEffect(() => {
     document.title = t("title");
@@ -444,12 +445,12 @@ const SecurityAndPrivacy: React.FC = () => {
     <>
       <TopProgress active={isSubmitting || isTwoFactorSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
-        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+      <main className={personal ? "min-w-0" : "min-w-0 px-4 pb-10 pt-6 sm:px-7"}>
+        <div className={personal ? "w-full space-y-5" : "mx-auto w-full max-w-[1440px] space-y-5"}>
           
 
           <PermissionMiddleware codeName={"view_security_and_privacy_page"} behavior="lock">
-            <section className="mt-6">
+            <section>
               <SectionCard title={t("section.access")}>
                 <div className="flex flex-col">
                   <Row

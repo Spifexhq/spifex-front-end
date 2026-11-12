@@ -10,10 +10,13 @@ import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
+import Card from "@/shared/ui/Card";
 import Snackbar from "@/shared/ui/Snackbar";
 import Badge from "@/shared/ui/Badge";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
-import { Pencil } from "lucide-react";
+import { EmptyState } from "@/shared/ui/State";
+import { AnimatePresence, motion } from "framer-motion";
+import { Pencil, ShieldCheck, Users, X } from "lucide-react";
 
 import GroupPermissionsTable from "./GroupPermissionsTable";
 import GroupModal from "./GroupModal";
@@ -138,7 +141,7 @@ const GroupSettings: React.FC = () => {
       try {
         const detailRes = await api.getGroup(selectedGroupId);
         const detail = detailRes.data;
-        setSelectedGroupDetail(detail);
+        setSelectedGroupDetail({ ...detail, permissions: detail.permissions ?? [] });
 
         if (canViewPermissions) {
           const permRes = await api.getGroupPermissions(selectedGroupId);
@@ -316,150 +319,77 @@ const GroupSettings: React.FC = () => {
 
       <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start sm:items-center gap-3">
-              
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
-                
-                {headerBadge}
-              </div>
-            </div></div>
+          {headerBadge && <div className="flex flex-wrap items-center justify-end gap-3">{headerBadge}</div>}
 
           <PermissionMiddleware codeName={"view_group"} behavior="lock">
-            <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-              <aside className="xl:col-span-3">
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden ">
-                  <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between gap-3 ">
-                    <div className="text-xs font-semibold text-gray-700">{t("left.groups")}</div>
-
-                    <PermissionMiddleware codeName={"add_group"}>
-                      <Button className="!py-1.5 !px-3" onClick={openCreateModal} disabled={busy}>
-                        {t("left.create")}
-                      </Button>
-                    </PermissionMiddleware>
+            <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+              <Card as="aside" padding="none" radius="lg" className="overflow-hidden">
+                <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white p-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-gray-900">{t("left.groups")}</h2>
+                    <p className="text-[11px] text-gray-500">{filteredGroups.length} {t("left.results", "groups")}</p>
                   </div>
-
-                  <div className="p-3 border-b border-gray-200">
-                    <Input
-                      kind="text"
-                      placeholder={t("left.searchPlaceholder")}
-                      name="groupSearch"
-                      value={groupSearch}
-                      onChange={(e) => setGroupSearch(e.target.value)}
-                      disabled={busy}
-                    />
-                  </div>
-
-                  <div className="max-h-56 xl:max-h-[60dvh] overflow-auto divide-y divide-gray-200">
-                    {filteredGroups.map((group) => (
-                      <button
-                        key={group.id}
-                        aria-pressed={selectedGroupId === group.id}
-                        disabled={busy}
-                        onClick={() => !busy && setSelectedGroupId((prev) => (prev === group.id ? null : group.id))}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${
-                          selectedGroupId === group.id ? "bg-gray-100/70 border-l-2 border-gray-900" : "border-l-2 border-transparent"
-                        } ${busy ? "pointer-events-none opacity-70" : ""}`}
-                      >
-                        <div className="text-[13px] font-medium text-gray-900 truncate">{group.name}</div>
-                        <div className="text-[11px] text-gray-500">
-                          {t("left.meta", { perms: group.permissions_count, members: group.members_count })}
-                        </div>
-                      </button>
-                    ))}
-
-                    {filteredGroups.length === 0 && (
-                      <p className="p-4 text-center text-sm text-gray-500">{t("left.empty")}</p>
-                    )}
-                  </div>
+                  <PermissionMiddleware codeName={"add_group"}>
+                    <Button className="!px-3 !py-1.5" onClick={openCreateModal} disabled={busy}>{t("left.create")}</Button>
+                  </PermissionMiddleware>
                 </div>
-              </aside>
+                <div className="border-b border-gray-200 p-3">
+                  <Input kind="text" size="sm" placeholder={t("left.searchPlaceholder")} name="groupSearch" value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} disabled={busy} />
+                </div>
+                <div className="max-h-56 space-y-1 overflow-y-auto p-2 sm:max-h-[60dvh]">
+                  {filteredGroups.map((group) => <button key={group.id} type="button" aria-pressed={selectedGroupId === group.id} disabled={busy} onClick={() => !busy && setSelectedGroupId((prev) => (prev === group.id ? null : group.id))} className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors disabled:opacity-70 ${selectedGroupId === group.id ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-gray-50"}`}>
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${selectedGroupId === group.id ? "border-slate-300 bg-white text-slate-700" : "border-gray-200 bg-gray-50 text-gray-500"}`}><Users size={15} aria-hidden="true" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-medium">{group.name}</span>
+                      <span className="mt-0.5 block truncate text-[11px] text-gray-500">{t("left.meta", { perms: group.permissions_count, members: group.members_count })}</span>
+                    </span>
+                  </button>)}
+                  {filteredGroups.length === 0 && <EmptyState size="sm" title={t("left.empty")} />}
+                </div>
+              </Card>
 
-              <section className="xl:col-span-9">
-                {!selectedGroupDetail ? (
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500 ">
-                    {t("right.selectPrompt")}
-                  </div>
-                ) : (
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden ">
-                    <div className="p-4 border-gray-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="flex flex-col min-w-0 sm:max-w-[70%]">
-                        <label className="text-xs font-semibold text-gray-700">
-                          {t("right.nameLabel")}
-                        </label>
-                        <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">
-                          {selectedGroupDetail.name}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                        <PermissionMiddleware codeName={"change_group"}>
-                          <Button
-                            variant="outline"
-                            className="inline-flex items-center gap-2"
-                            onClick={openRenameModal}
-                            disabled={busy}
-                          >
-                            <Pencil className="h-4 w-4" aria-hidden />
-                            {t("right.rename")}
-                          </Button>
-                        </PermissionMiddleware>
-
-                        {!selectedGroupDetail.is_system && (
-                          <PermissionMiddleware codeName={"delete_group"}>
-                            <Button
-                              variant="outline"
-                              onClick={requestDeleteGroup}
-                              disabled={busy}
-                              aria-busy={busy || undefined}
-                            >
-                              {t("right.delete")}
-                            </Button>
+              <div className="min-w-0">
+                <AnimatePresence mode="wait" initial={false}>
+                  {!selectedGroupDetail ? <motion.div key="empty" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                    <Card padding="default" radius="lg"><EmptyState size="sm" icon={<ShieldCheck size={22} />} title={t("right.selectPrompt")} /></Card>
+                  </motion.div> : <motion.div key={selectedGroupDetail.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                    <Card padding="none" radius="lg" className="overflow-hidden">
+                      <div className="flex flex-col gap-3 border-b border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600"><ShieldCheck size={17} aria-hidden="true" /></span>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{t("right.nameLabel")}</p>
+                            <h2 className="truncate text-base font-semibold text-gray-900">{selectedGroupDetail.name}</h2>
+                            <p className="mt-0.5 text-xs text-gray-500">{selectedGroupDetail.permissions?.length ?? 0} {t("right.permissions", "permissions")}{selectedGroupDetail.is_system ? ` · ${t("right.system", "system group")}` : ""}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <PermissionMiddleware codeName={"change_group"}>
+                            <Button variant="outline" className="inline-flex items-center gap-2" onClick={openRenameModal} disabled={busy}><Pencil size={15} aria-hidden="true" />{t("right.rename")}</Button>
                           </PermissionMiddleware>
-                        )}
-
-                        <button
-                          type="button"
-                          aria-label={t("right.closePanel")}
-                          className="text-[18px] leading-none px-2 text-gray-400 hover:text-gray-700 disabled:opacity-50"
-                          onClick={() => setSelectedGroupId(null)}
-                          disabled={busy}
-                        >
-                          ×
-                        </button>
+                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"delete_group"}>
+                            <Button variant="outline" onClick={requestDeleteGroup} disabled={busy} aria-busy={busy || undefined}>{t("right.delete")}</Button>
+                          </PermissionMiddleware>}
+                          <button type="button" aria-label={t("right.closePanel")} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50" onClick={() => setSelectedGroupId(null)} disabled={busy}><X size={16} aria-hidden="true" /></button>
+                        </div>
                       </div>
-                    </div>
-
-                    <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
-                      <GroupPermissionsTable
-                        selectedCodes={selectedCodes}
-                        disabled={busy}
-                        dirty={dirty}
-                        onToggle={setPermissionChecked}
-                        onUndo={handleDiscard}
-                        onSave={handleSavePermissions}
-                      />
-                    </PermissionMiddleware>
-                  </div>
-                )}
-              </section>
-            </section>
+                      <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
+                        <GroupPermissionsTable selectedCodes={selectedCodes} disabled={busy} dirty={dirty} onToggle={setPermissionChecked} onUndo={handleDiscard} onSave={handleSavePermissions} />
+                      </PermissionMiddleware>
+                    </Card>
+                  </motion.div>}
+                </AnimatePresence>
+              </div>
+            </div>
           </PermissionMiddleware>
-        </div>
 
-        <PermissionMiddleware codeName={["add_group", "change_group"]}>
-          <GroupModal
-            isOpen={modal.open}
-            mode={modal.mode}
-            initialName={modal.initialName}
-            busy={busy}
-            onClose={closeModal}
-            onSubmit={async (name) => {
+          <PermissionMiddleware codeName={["add_group", "change_group"]}>
+            <GroupModal isOpen={modal.open} mode={modal.mode} initialName={modal.initialName} busy={busy} onClose={closeModal} onSubmit={async (name) => {
               if (modal.mode === "create") return handleCreateGroup(name);
               return handleRenameGroup(name);
-            }}
-          />
-        </PermissionMiddleware>
+            }} />
+          </PermissionMiddleware>
+        </div>
       </main>
 
       <ConfirmToast

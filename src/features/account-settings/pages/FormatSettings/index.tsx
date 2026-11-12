@@ -289,22 +289,8 @@ const FormatSettings: React.FC = () => {
 
       <main className="settings-page">
         <div className="settings-content ">
-          {/* Header card */}
-          <div className="settings-intro"><div className="px-5 py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                
-                <div>
-                  
-                  
-                  <p className="mt-0.5 text-xs text-gray-600">
-                    {t("header.subtitle")}
-                  </p>
-                </div>
-              </div>
-            </div></div>
-
           {/* Main card */}
-          <section className="mt-6">
+          <section>
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 settings-panel-heading">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
