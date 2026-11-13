@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/core/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import Button from "@/shared/ui/Button";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import DataTable, { type Column } from "@/shared/ui/DataTable";
@@ -23,6 +24,8 @@ const DOCS_URL = "https://spifex.com/docs/ai-connections";
 
 function ConnectionsPage() {
   const { t, i18n } = useTranslation("aiConnections");
+  const { organization } = useAuthContext();
+  const workspaceId = organization?.organization?.id;
   const [connections, setConnections] = useState<IntegrationConnection[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,8 +54,13 @@ function ConnectionsPage() {
   }, [t]);
 
   useEffect(() => {
+    setConfiguring(null);
+    setPending(null);
+  }, [workspaceId]);
+
+  useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, workspaceId]);
 
   const formatMoment = useCallback(
     (value: string | null) => {
