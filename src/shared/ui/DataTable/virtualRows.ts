@@ -5,7 +5,7 @@ export function buildRowOffsets(heights: readonly number[]): number[] {
   return offsets;
 }
 
-export function virtualRowRange(offsets: readonly number[], top: number, viewport: number, enabled = true) {
+export function virtualRowRange(offsets: readonly number[], top: number, viewport: number, enabled = true, overscan = 8) {
   const count = offsets.length - 1;
   const rowAt = (position: number) => {
     let low = 0, high = count;
@@ -16,7 +16,7 @@ export function virtualRowRange(offsets: readonly number[], top: number, viewpor
     }
     return low;
   };
-  const start = enabled ? Math.max(0, rowAt(Math.max(0, top)) - 8) : 0;
-  const end = enabled ? Math.min(count, rowAt(Math.max(0, top) + viewport) + 9) : count;
+  const start = enabled ? Math.max(0, rowAt(Math.max(0, top)) - overscan) : 0;
+  const end = enabled ? Math.min(count, rowAt(Math.max(0, top) + viewport) + overscan + 1) : count;
   return { start, end, before: offsets[start], after: offsets[count] - offsets[end] };
 }

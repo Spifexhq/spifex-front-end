@@ -6,9 +6,9 @@ export const getCursorFromUrl = (url?: string | null): string | undefined => {
 
   try {
     const parsed = new URL(url);
-    return parsed.searchParams.get("cursor") ?? undefined;
+    return parsed.searchParams.get("cursor") ?? parsed.searchParams.get("page") ?? undefined;
   } catch {
-    const m = url.match(/[?&]cursor=([^&]+)/);
+    const m = url.match(/[?&](?:cursor|page)=([^&]+)/);
     return m ? decodeURIComponent(m[1]) : undefined;
   }
 };

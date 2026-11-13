@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type RefObject } from "react";
 import { buildRowOffsets, virtualRowRange } from "./virtualRows";
 
-export function useVirtualRows(ref: RefObject<HTMLElement>, heights: number[], enabled: boolean, resetKey: string) {
+export function useVirtualRows(ref: RefObject<HTMLElement>, heights: number[], enabled: boolean, resetKey: string, overscan = 8) {
   const [top, setTop] = useState(0);
   const [viewport, setViewport] = useState(600);
   const offsets = useMemo(() => buildRowOffsets(heights), [heights]);
@@ -22,7 +22,7 @@ export function useVirtualRows(ref: RefObject<HTMLElement>, heights: number[], e
   }, [ref, resetKey]);
 
   return {
-    ...virtualRowRange(offsets, top, viewport, enabled),
+    ...virtualRowRange(offsets, top, viewport, enabled, overscan),
     onScroll: () => setTop(ref.current?.scrollTop || 0),
   };
 }

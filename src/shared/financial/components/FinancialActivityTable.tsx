@@ -94,6 +94,8 @@ export default function FinancialActivityTable<T>({ records, newestFirst = false
     editLabel={editLabel}
     fillHeight
     virtualize
+    virtualOverscan={20}
+    endReachedThreshold={800}
     rowHeight={row => row.kind === "summary" ? 30 : 40}
     pagination={false}
     selectable

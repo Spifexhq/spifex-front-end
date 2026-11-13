@@ -31,6 +31,10 @@ export type DataTableProps<T> = {
     rowHeight?: number | ((item: T) => number);
     loadingMore?: boolean;
     onEndReached?(): void;
+    /** Distance from the scroll end that starts loading the next page, in pixels. */
+    endReachedThreshold?: number;
+    /** Extra rows rendered above and below the viewport in virtual mode. */
+    virtualOverscan?: number;
     selectionPadding?: number;
     canSelect?: boolean;
     rowKind?(item: T): "record" | "summary";

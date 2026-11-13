@@ -28,9 +28,9 @@ export default function DataTable<T extends {
     const reducedMotion = useReducedMotion();
     const editLabel = props.editLabel || t("records.edit");
     const deleteLabel = props.deleteLabel || t("records.delete");
-    const { onEndReached, loadingMore } = props;
+    const { onEndReached, loadingMore, endReachedThreshold = 150, virtualOverscan = 8 } = props;
     const page = useTablePagination(items, pager, pagination);
-    const table = useRef<HTMLTableElement>(null), anchor = useRef<HTMLButtonElement | null>(null), bulkCancelRef = useRef<HTMLButtonElement>(null);
+    const table = useRef<HTMLTableElement>(null), anchor = useRef<HTMLButtonElement | null>(null), bulkCancelRef = useRef<HTMLButtonElement>(null), autoLoadCount = useRef(-1);
     const sizing = useColumnWidths(columns.map(column => column.key), props.initialWidths);
     const [previewId, setPreviewId] = useState<string | null>(null), [menu, setMenu] = useState<T | null>(null), [deleting, setDeleting] = useState<T[]>([]), [bulkConfirming, setBulkConfirming] = useState(false), [pending, setPending] = useState(false), [error, setError] = useState("");
     const selectableRows = page.rows.filter(item => props.rowKind?.(item) !== "summary");
@@ -39,7 +39,7 @@ export default function DataTable<T extends {
     const { rowHeight } = props;
     const heightFor = (item: T) => typeof rowHeight === "function" ? rowHeight(item) : rowHeight || 48;
     const heights = useMemo(() => page.rows.map(item => typeof rowHeight === "function" ? rowHeight(item) : rowHeight || 48), [page.rows, rowHeight]);
-    const virtual = useVirtualRows(scroller, heights, !!props.virtualize, `${page.rows[0]?.id || ""}:${page.pageSize}`);
+    const virtual = useVirtualRows(scroller, heights, !!props.virtualize, `${page.rows[0]?.id || ""}:${page.pageSize}`, virtualOverscan);
     const desktopSpan = columns.length + (selectable ? 1 : 0) + 1;
     const mobileSpan = columns.filter((column, index) => index === 0 || column.mobile).length + (selectable ? 1 : 0) + (props.mobileActions === false ? 0 : 1);
     const spacer = (height: number) => <tr aria-hidden="true"><td className="hidden md:table-cell" colSpan={desktopSpan} style={{ height }}/><td className="md:hidden" colSpan={mobileSpan} style={{ height }}/></tr>;
@@ -67,8 +67,10 @@ export default function DataTable<T extends {
         window.addEventListener("keydown", escape);
         return () => window.removeEventListener("keydown", escape);
     }, [selection, menu, selected, deleting.length, props.busy, pending]);
-    useEffect(() => { const node = scroller.current; if (node && !props.busy && !loadingMore && node.clientHeight > 0 && node.scrollHeight <= node.clientHeight + 100)
-        onEndReached?.(); }, [props.items.length, onEndReached, loadingMore, props.busy]);
+    useEffect(() => { const node = scroller.current; if (!props.items.length) { autoLoadCount.current = -1; return; } if (node && !props.busy && !loadingMore && node.clientHeight > 0 && node.scrollHeight <= node.clientHeight + endReachedThreshold && autoLoadCount.current !== props.items.length) {
+        autoLoadCount.current = props.items.length;
+        onEndReached?.();
+    } }, [props.items.length, onEndReached, loadingMore, props.busy, endReachedThreshold]);
     const busy = !!props.busy || !!pager?.loading || pending;
     const remove = async (targets: T[] = deleting) => {
         if (!onDelete || pending || !targets.length)
@@ -103,7 +105,7 @@ export default function DataTable<T extends {
     if (busy && !items.length && !props.error && !error) return <DataTableSkeleton columns={columns.length} selectable={selectable} pagination={pagination} />;
     return <section aria-busy={busy || undefined} className={`${props.fillHeight ? "flex h-full min-h-0 flex-col" : ""} min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-none ${props.className || ""}`}>
   {(error || props.error) && <ErrorState variant="inline" message={props.errorContent || error || props.error} />}
-  <div ref={scroller} style={selection.selectedIds.length && props.selectionPadding ? { paddingBottom: props.selectionPadding } : undefined} onScroll={() => { virtual.onScroll(); const node = scroller.current; if (node && node.scrollHeight - node.scrollTop - node.clientHeight < 150)
+  <div ref={scroller} style={selection.selectedIds.length && props.selectionPadding ? { paddingBottom: props.selectionPadding } : undefined} onScroll={() => { virtual.onScroll(); const node = scroller.current; if (node && node.scrollHeight - node.scrollTop - node.clientHeight < endReachedThreshold)
         props.onEndReached?.(); }} className={props.fillHeight ? "min-h-0 flex-1 overflow-auto" : "max-h-[65dvh] overflow-auto"}>
    <table ref={table} aria-label={t("records.list")} className="w-full table-fixed text-left text-[13px] md:min-w-[740px] [&_th]:font-medium! [&_th]:text-gray-500! [&_td]:py-0! max-md:min-w-0!">
     <colgroup>{selectable && <col className="w-10"/>}{columns.map((column, i) => <col key={column.key} style={{ "--column-width": `${sizing.widths[i]}%`, "--mobile-width": column.mobileWidth || "auto" } as CSSProperties} className={`md:[width:var(--column-width)] max-md:[width:var(--mobile-width)] ${i && !column.mobile ? "hidden md:table-column" : ""}`}/>)}<col className={`${props.mobileActions === false ? "hidden md:table-column" : ""} ${actions ? "w-[180px]" : onDelete && canDelete && onEdit && canEdit ? "w-[96px]" : "w-[55px]"}`}/></colgroup>

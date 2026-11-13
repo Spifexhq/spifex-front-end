@@ -301,7 +301,7 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
       ? await personalApi.settledActivity({ ...query, page, page_size: pageSize })
       : await personalApi.list<PersonalTransaction>("transactions", { ...query, basis: "outstanding", page, page_size: pageSize });
     return { items: response.data.results, nextCursor: response.data.next ? getCursorFromUrl(response.data.next) : undefined, totalCount: response.data.count };
-  }, { accumulate: true, initialPageSize: 100, deps: [basis, query, workspace?.id, workspace?.lifecycle, readRevision, revision] });
+  }, { accumulate: true, initialPageSize: 200, deps: [basis, query, workspace?.id, workspace?.lifecycle, readRevision, revision] });
   const { items: _unused, ...rest } = pager;
   void _unused;
   const pagerForTable = { ...rest, items: pager.items };
