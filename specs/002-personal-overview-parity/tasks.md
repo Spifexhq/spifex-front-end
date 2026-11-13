@@ -9,9 +9,9 @@
 
 ## Phase 2: Personal Overview alignment
 
-- [x] T003 [US1] Move Personal date controls from the heading into the shared filter-panel position and add Enterprise-style quick-range toolbar controls while preserving applied-query behavior.
+- [x] T003 [US1] Move Personal date controls from the heading into the shared filter-panel position and add Business-style quick-range toolbar controls while preserving applied-query behavior.
 - [x] T004 [US1] Map Personal balance/income/expense/net data into shared metric cards; show sparklines and previous-period deltas only where supported.
-- [x] T005 [US1] Align Personal Overview's action placement, supporting cards, recent activity and upcoming entries to Enterprise's surface/spacing hierarchy while keeping Personal-only sections and behavior.
+- [x] T005 [US1] Align Personal Overview's action placement, supporting cards, recent activity and upcoming entries to Business's surface/spacing hierarchy while keeping Personal-only sections and behavior.
 
 ## Phase 3: Validation and convergence
 

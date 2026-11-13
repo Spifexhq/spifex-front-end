@@ -28,7 +28,7 @@ export default function AccountingSidebar() {
     open={open}
     mobile={mobile}
     onToggle={toggle}
-    product="Enterprise"
+    product="Business"
     label={t("section.navigation")}
     toggleLabel={t(mobile ? "section.close" : collapsed ? "section.expand" : "section.collapse")}
     position={desktop ? "section" : "rail"}

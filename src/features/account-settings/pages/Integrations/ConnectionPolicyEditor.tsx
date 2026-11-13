@@ -39,7 +39,7 @@ import { EmptyState } from "@/shared/ui/State";
 import SegmentedControl from "@/shared/ui/SegmentedControl";
 import Switch from "@/shared/ui/Switch";
 
-type Module = "personal" | "enterprise";
+type Module = "personal" | "business";
 type Tab = "read" | "actions";
 type Endpoint = { key: string; title: string; description: string; Icon: typeof Wallet };
 
@@ -54,7 +54,7 @@ const PERSONAL_ENDPOINTS: Endpoint[] = [
   { key: "transfers", title: "Transfers", description: "Money movement between accounts.", Icon: ArrowLeftRight },
 ];
 
-const ENTERPRISE_ENDPOINTS: Endpoint[] = [
+const BUSINESS_ENDPOINTS: Endpoint[] = [
   { key: "workspaces", title: "List workspaces", description: "Workspace names, currency and lifecycle.", Icon: Building2 },
   { key: "cashflow_rows", title: "Cash-flow entries", description: "Receipts, payments and open balances.", Icon: Receipt },
   { key: "cashflow_summary", title: "Cash-flow summary", description: "Totals for the selected period.", Icon: BarChart3 },
@@ -71,8 +71,8 @@ const ENTERPRISE_ENDPOINTS: Endpoint[] = [
   { key: "inventory", title: "Inventory", description: "Items, quantities and movements.", Icon: PiggyBank },
 ];
 
-const endpointsFor = (module: Module) => module === "personal" ? PERSONAL_ENDPOINTS : ENTERPRISE_ENDPOINTS;
-const moduleForWorkspace = (workspace?: Workspace): Module => workspace?.product_category === "personal" ? "personal" : "enterprise";
+const endpointsFor = (module: Module) => module === "personal" ? PERSONAL_ENDPOINTS : BUSINESS_ENDPOINTS;
+const moduleForWorkspace = (workspace?: Workspace): Module => workspace?.product_category === "personal" ? "personal" : "business";
 const defaultPermissions = (module: Module): IntegrationWorkspacePermissions => ({
   read: Object.fromEntries(endpointsFor(module).map(endpoint => [endpoint.key, true])),
   actions: {},

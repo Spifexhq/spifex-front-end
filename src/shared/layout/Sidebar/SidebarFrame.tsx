@@ -6,7 +6,7 @@ import "./sidebar-motion.css";
 
 type Props = {
   open: boolean; mobile?: boolean; onToggle(): void;
-  product: "Enterprise" | "Personal"; label: string; toggleLabel: string;
+  product: "Business" | "Personal"; label: string; toggleLabel: string;
   workspace: ReactNode; footer: ReactNode; children: ReactNode;
   /** `rail` is the sticky workspace rail; `section` is a fixed settings/accounting rail. */
   position?: "rail" | "section";

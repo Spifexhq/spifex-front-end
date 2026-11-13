@@ -73,7 +73,7 @@ export default function SidebarNavigation({
   ];
 
   return (
-    <SidebarFrame open={isOpen} mobile={mobile} onToggle={toggleSidebar} product="Enterprise" label={t("sidebar.aria.nav")} toggleLabel={t(mobile ? "sidebar.aria.close" : isOpen ? "sidebar.aria.toggleClose" : "sidebar.aria.toggleOpen")} workspace={<WorkspaceSwitcher compact={collapsed}/>} footer={<>
+    <SidebarFrame open={isOpen} mobile={mobile} onToggle={toggleSidebar} product="Business" label={t("sidebar.aria.nav")} toggleLabel={t(mobile ? "sidebar.aria.close" : isOpen ? "sidebar.aria.toggleClose" : "sidebar.aria.toggleOpen")} workspace={<WorkspaceSwitcher compact={collapsed}/>} footer={<>
         <div className="shrink-0 border-t border-gray-200 p-3">
           <Link
             to="/settings"

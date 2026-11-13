@@ -9,7 +9,7 @@ Spifex is a multi-product financial workspace:
 
 | Area | Route root | Visual character |
 | --- | --- | --- |
-| Business / Enterprise | `/`, `/bank-imports`, `/accounting` | Dense operational tables, compact forms, sidebar-first navigation |
+| Business | `/`, `/bank-imports`, `/accounting` | Dense operational tables, compact forms, sidebar-first navigation |
 | Personal | `/personal` routes | Same primitives, lighter chrome, card-based summaries |
 | Settings | `/settings/**` | Denser, `slate`-toned, rule-based layout (`SettingsSurface`) |
 | Reporting | Business reports | Hero + metric cards, larger radii, `slate` palette |

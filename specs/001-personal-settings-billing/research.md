@@ -3,9 +3,9 @@
 ## Current behavior
 
 - Personal has a single `/personal/settings` page with its own horizontal `section` segmented control. It combines profile, address, personal/sensitive data, and links/components for formats, currency, security, notifications, plans and workspace management.
-- Enterprise already has a routed settings shell with an independent `SidebarSettings` drawer, settings headings, and page-level routes. It reuses the shared account-settings features for personal profile, security, notifications, currency, formats, billing, and subscription result pages.
+- Business already has a routed settings shell with an independent `SidebarSettings` drawer, settings headings, and page-level routes. It reuses the shared account-settings features for personal profile, security, notifications, currency, formats, billing, and subscription result pages.
 - Business billing currently uses a dedicated implementation with status-specific callouts and linear plan rows. Personal billing uses a separate grid of plan cards and a simpler current plan state. Both categories have catalog-aware billing APIs; the backend keys checkout to active workspace category and enforces owner/price rules.
-- `SidebarFrame` already provides rail widths, animation, mobile backdrop/scroll lock, brand, and fixed footer structure. Personal uses it but has no labeled navigation sections or Enterprise-equivalent selected row treatment.
+- `SidebarFrame` already provides rail widths, animation, mobile backdrop/scroll lock, brand, and fixed footer structure. Personal uses it but has no labeled navigation sections or Business-equivalent selected row treatment.
 - `WorkspaceSwitcher` currently renders a generic button, distinct from `.sidebar-row`; its compact width/centering does not inherit the shared collapsed rail geometry. The embedded `manage` instance must remain a broad page action.
 
 ## Decisions
@@ -29,9 +29,9 @@
 
 ## Follow-up discovery · 2026-11-07
 
-- Enterprise's `/settings/personal` is already the combined identity page: personal/contact fields, address, timezone, sensitive profile data, and in-page links to security and formats. It writes through `identity/profile/`. It optionally shows the organization name to owners; Personal must disable that organization-only block and route security/format links to Personal settings paths.
-- Personal `PersonalSettingsSections` currently splits identity data into three pages. That split is unnecessary because the existing combined Enterprise page supports the same profile API/model and modal; reusing it with a product prop better fulfills the user's parity requirement.
-- Enterprise Organization Settings currently embeds `<WorkspaceSwitcher manage/>`. Workspace creation/replacement belongs in the settings lifecycle area too, while deletion must move to a dedicated Workspaces page. The existing switcher is one shared component used in both product sidebars; removing deletion there protects both products centrally.
+- Business's `/settings/personal` is already the combined identity page: personal/contact fields, address, timezone, sensitive profile data, and in-page links to security and formats. It writes through `identity/profile/`. It optionally shows the organization name to owners; Personal must disable that organization-only block and route security/format links to Personal settings paths.
+- Personal `PersonalSettingsSections` currently splits identity data into three pages. That split is unnecessary because the existing combined Business page supports the same profile API/model and modal; reusing it with a product prop better fulfills the user's parity requirement.
+- Business Organization Settings currently embeds `<WorkspaceSwitcher manage/>`. Workspace creation/replacement belongs in the settings lifecycle area too, while deletion must move to a dedicated Workspaces page. The existing switcher is one shared component used in both product sidebars; removing deletion there protects both products centrally.
 - The switcher trigger is a native `button`; browser button defaults can center text. Add `text-left` to its `.sidebar-row` variant to match sidebar navigation links.
 - Workspace deletion is already supported by `workspaceApi.scheduleDeletion(id, password, idempotencyKey)` and requires explicit acknowledgement in the frontend. The dedicated page should retain the 90-day countdown, cancellation warning, password and acknowledgement flow, owner-only control, and last-active-owned-workspace guard. No API or schema change is needed.
 - Business Settings routes are grouped under `/settings` and `SidebarSettingsDesktop` filters navigation by existing permissions. The new `/settings/workspaces` page can use the existing owner/organization settings permission. Personal routes remain under `/personal/settings` and use its existing `WorkspaceSwitcher manage` entry point.
