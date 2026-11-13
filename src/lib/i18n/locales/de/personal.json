@@ -335,7 +335,7 @@
     },
     "ai-connections": {
       "title": "KI-Verbindungen",
-      "description": "Verbinden Sie ChatGPT oder Claude und verwalten Sie den schreibgeschützten Zugriff auf Ihre Cashflow-Daten."
+      "description": "Verbinden Sie ChatGPT oder Claude und wählen Sie die Workspaces und Daten, auf die jeder Assistent zugreifen darf."
     }
   },
   "createCreditEntry": "Einnahme erstellen",

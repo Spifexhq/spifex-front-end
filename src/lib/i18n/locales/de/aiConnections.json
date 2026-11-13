@@ -1,6 +1,6 @@
 {
   "title": "KI-Verbindungen",
-  "description": "Verbinden Sie ChatGPT oder Claude, um Fragen zu Ihren Spifex-Cashflow-Daten zu stellen. Verbindungen sind schreibgeschützt und können jederzeit widerrufen werden.",
+  "description": "Verbinden Sie ChatGPT oder Claude mit Ihren Spifex-Workspaces. Sie wählen die Workspaces und Daten, auf die jeder Assistent zugreifen darf, und können den Zugriff jederzeit widerrufen.",
   "endpoint": {
     "copy": "URL kopieren",
     "copied": "MCP-Endpunkt in die Zwischenablage kopiert.",
@@ -8,15 +8,15 @@
   },
   "how": {
     "title": "Assistent verbinden",
-    "description": "Öffnen Sie in ChatGPT oder Claude die Connector-Einstellungen und fügen Sie Spifex mit der unten stehenden URL als benutzerdefinierten MCP-Connector hinzu. Sie werden gebeten, sich anzumelden und den schreibgeschützten Zugriff zu genehmigen.",
+    "description": "Öffnen Sie in ChatGPT oder Claude die Connector-Einstellungen und fügen Sie Spifex mit der unten stehenden URL als benutzerdefinierten MCP-Connector hinzu. Sie werden gebeten, sich anzumelden und die Verbindung zu genehmigen.",
     "step1": "Fügen Sie die Connector-URL https://api.spifex.com/mcp in Ihrem KI-Assistenten hinzu.",
-    "step2": "Melden Sie sich bei Spifex an und genehmigen Sie den schreibgeschützten Cashflow-Zugriff.",
-    "step3": "Stellen Sie Fragen zu Ihren Workspaces, Transaktionen und Summen.",
+    "step2": "Melden Sie sich bei Spifex an und genehmigen Sie die Verbindung.",
+    "step3": "Wählen Sie in den KI-Verbindungen die Workspaces und Daten aus, auf die der Assistent zugreifen darf.",
     "docs": "Einrichtungsanleitung lesen"
   },
   "list": {
     "title": "Verbundene Assistenten",
-    "description": "Jeder Assistent kann nur die Workspaces lesen, die Sie im Gespräch auswählen.",
+    "description": "Jeder Assistent kann nur die Workspaces und Daten verwenden, die Sie für ihn freigeben.",
     "refresh": "Aktualisieren",
     "retry": "Erneut versuchen",
     "duplicates": "Mehrere Zeilen mit demselben Namen sind separate Registrierungen aus wiederholten Verbindungsversuchen. Widerrufen Sie jede, die Sie nicht mehr verwenden."
@@ -48,7 +48,7 @@
   "registration": "Registrierung {{id}}",
   "details": {
     "registrationId": "Registrierungs-ID",
-    "scopes": "Bereiche",
+    "scopes": "Zugriff",
     "registrationSource": "Registrierungsmethode",
     "clientType": "Client-Typ",
     "grantType": "Grant-Typ"
@@ -61,5 +61,8 @@
   "clientType": {
     "public": "Öffentlich (PKCE)",
     "confidential": "Vertraulich"
+  },
+  "scope": {
+    "access": "Spifex-Zugriff"
   }
 }

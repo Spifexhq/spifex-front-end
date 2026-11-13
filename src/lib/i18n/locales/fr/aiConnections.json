@@ -1,6 +1,6 @@
 {
   "title": "Connexions IA",
-  "description": "Connectez ChatGPT ou Claude pour poser des questions sur vos données de trésorerie Spifex. Les connexions sont en lecture seule et peuvent être révoquées à tout moment.",
+  "description": "Connectez ChatGPT ou Claude à vos espaces de travail Spifex. Vous choisissez les espaces de travail et les données auxquels chaque assistant peut accéder, et vous pouvez révoquer l'accès à tout moment.",
   "endpoint": {
     "copy": "Copier l’URL",
     "copied": "L’URL MCP a été copiée dans le presse-papiers.",
@@ -8,15 +8,15 @@
   },
   "how": {
     "title": "Connecter un assistant",
-    "description": "Dans ChatGPT ou Claude, ouvrez les paramètres des connecteurs et ajoutez Spifex comme connecteur MCP personnalisé avec l'URL ci-dessous. Vous devrez vous connecter et approuver l'accès en lecture seule.",
+    "description": "Dans ChatGPT ou Claude, ouvrez les paramètres des connecteurs et ajoutez Spifex comme connecteur MCP personnalisé avec l'URL ci-dessous. Vous devrez vous connecter et approuver la connexion.",
     "step1": "Ajoutez l'URL du connecteur https://api.spifex.com/mcp dans votre assistant IA.",
-    "step2": "Connectez-vous à Spifex et approuvez la portée de trésorerie en lecture seule.",
-    "step3": "Posez des questions sur vos espaces de travail, transactions et totaux.",
+    "step2": "Connectez-vous à Spifex et approuvez la connexion.",
+    "step3": "Choisissez les espaces de travail et les données auxquels l'assistant peut accéder dans Connexions IA.",
     "docs": "Lire le guide de configuration"
   },
   "list": {
     "title": "Assistants connectés",
-    "description": "Chaque assistant ne peut lire que les espaces de travail que vous choisissez dans la conversation.",
+    "description": "Chaque assistant ne peut utiliser que les espaces de travail et les données que vous activez pour lui.",
     "refresh": "Actualiser",
     "retry": "Réessayer",
     "duplicates": "Plusieurs lignes portant le même nom sont des enregistrements distincts créés par des tentatives de connexion répétées. Révoquez chacune de celles que vous n'utilisez plus."
@@ -48,7 +48,7 @@
   "registration": "Enregistrement {{id}}",
   "details": {
     "registrationId": "ID d'enregistrement",
-    "scopes": "Portées",
+    "scopes": "Accès",
     "registrationSource": "Méthode d'enregistrement",
     "clientType": "Type de client",
     "grantType": "Type d'autorisation"
@@ -61,5 +61,8 @@
   "clientType": {
     "public": "Public (PKCE)",
     "confidential": "Confidentiel"
+  },
+  "scope": {
+    "access": "Accès Spifex"
   }
 }

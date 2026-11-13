@@ -335,7 +335,7 @@
     },
     "ai-connections": {
       "title": "Conexões de IA",
-      "description": "Conecte o ChatGPT ou o Claude e gerencie o acesso somente leitura aos seus dados de fluxo de caixa."
+      "description": "Ligue o ChatGPT ou o Claude e escolha os espaços de trabalho e os dados a que cada assistente pode aceder."
     }
   },
   "createCreditEntry": "Criar receita",

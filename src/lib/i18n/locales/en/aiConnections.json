@@ -1,6 +1,6 @@
 {
   "title": "AI connections",
-  "description": "Connect ChatGPT or Claude to ask questions about your Spifex cash-flow data. Connections are read-only and can be revoked at any time.",
+  "description": "Connect ChatGPT or Claude to your Spifex workspaces. You choose which workspaces and data each assistant can access, and you can revoke access at any time.",
   "endpoint": {
     "copy": "Copy URL",
     "copied": "MCP endpoint copied to clipboard.",
@@ -8,15 +8,15 @@
   },
   "how": {
     "title": "Connect an assistant",
-    "description": "In ChatGPT or Claude, open the connectors settings and add Spifex as a custom MCP connector using the URL below. You will be asked to sign in and approve read-only access.",
+    "description": "In ChatGPT or Claude, open the connectors settings and add Spifex as a custom MCP connector using the URL below. You will be asked to sign in and approve the connection.",
     "step1": "Add the connector URL https://api.spifex.com/mcp in your AI assistant.",
-    "step2": "Sign in to Spifex and approve the read-only cash-flow scope.",
-    "step3": "Ask questions about your workspaces, transactions and totals.",
+    "step2": "Sign in to Spifex and approve the connection.",
+    "step3": "Choose the workspaces and data the assistant can access in AI connections.",
     "docs": "Read the setup guide"
   },
   "list": {
     "title": "Connected assistants",
-    "description": "Each assistant can only read the workspaces you choose in the conversation.",
+    "description": "Each assistant can only use the workspaces and data you enable for it.",
     "refresh": "Refresh",
     "retry": "Try again",
     "duplicates": "Multiple rows with the same name are separate registrations created by repeated connection attempts. Revoke each one you no longer use."
@@ -48,7 +48,7 @@
   "registration": "Registration {{id}}",
   "details": {
     "registrationId": "Registration ID",
-    "scopes": "Scopes",
+    "scopes": "Access",
     "registrationSource": "Registration method",
     "clientType": "Client type",
     "grantType": "Grant type"
@@ -61,5 +61,8 @@
   "clientType": {
     "public": "Public (PKCE)",
     "confidential": "Confidential"
+  },
+  "scope": {
+    "access": "Spifex access"
   }
 }

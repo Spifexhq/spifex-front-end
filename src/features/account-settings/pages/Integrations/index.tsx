@@ -67,6 +67,11 @@ function ConnectionsPage() {
     [i18n.language, t],
   );
 
+  const scopeLabel = useCallback(
+    (scope: string) => scope === "spifex:access" || scope === "cashflow:read" ? t("scope.access") : scope,
+    [t],
+  );
+
   const rows = useMemo<Row[]>(
     () => (connections ?? []).map(connection => ({ ...connection, id: connection.application_id })),
     [connections],
@@ -105,7 +110,7 @@ function ConnectionsPage() {
               <span className="block truncate text-[11px] text-gray-500">
                 {t("registration", { id: row.application_id.slice(0, 8) })}
               </span>
-              <span className="block truncate text-xs text-gray-500">{row.scopes.join(", ")}</span>
+              <span className="block truncate text-xs text-gray-500">{row.scopes.map(scopeLabel).join(", ")}</span>
             </span>
           </div>
         ),
@@ -136,7 +141,7 @@ function ConnectionsPage() {
         render: row => <span className="text-[13px] text-gray-600">{formatMoment(row.expires_at)}</span>,
       },
     ],
-    [formatMoment, t],
+    [formatMoment, scopeLabel, t],
   );
 
   const previewColumns = useMemo<Column<Row>[]>(
@@ -171,7 +176,7 @@ function ConnectionsPage() {
       {
         key: "scopes",
         label: t("details.scopes"),
-        render: row => <span className="text-xs text-gray-700">{row.scopes.join(", ")}</span>,
+        render: row => <span className="text-xs text-gray-700">{row.scopes.map(scopeLabel).join(", ")}</span>,
       },
       {
         key: "created",
@@ -204,7 +209,7 @@ function ConnectionsPage() {
         render: row => <span className="text-xs text-gray-700">{row.grant_type}</span>,
       },
     ],
-    [formatMoment, t],
+    [formatMoment, scopeLabel, t],
   );
 
   const revoke = async () => {

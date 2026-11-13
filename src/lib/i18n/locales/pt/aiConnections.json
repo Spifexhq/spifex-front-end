@@ -1,6 +1,6 @@
 {
   "title": "Conexões de IA",
-  "description": "Conecte o ChatGPT ou o Claude para fazer perguntas sobre os dados de fluxo de caixa do Spifex. As conexões são somente leitura e podem ser revogadas a qualquer momento.",
+  "description": "Ligue o ChatGPT ou o Claude aos seus espaços de trabalho Spifex. Escolhe os espaços de trabalho e os dados a que cada assistente pode aceder e pode revogar o acesso a qualquer momento.",
   "endpoint": {
     "copy": "Copiar URL",
     "copied": "URL do MCP copiado para a área de transferência.",
@@ -8,15 +8,15 @@
   },
   "how": {
     "title": "Conectar um assistente",
-    "description": "No ChatGPT ou no Claude, abra as configurações de conectores e adicione o Spifex como conector MCP personalizado usando o URL abaixo. Você deverá entrar e aprovar o acesso somente leitura.",
+    "description": "No ChatGPT ou no Claude, abra as configurações de conectores e adicione o Spifex como conector MCP personalizado usando o URL abaixo. Será pedido que inicie sessão e aprove a ligação.",
     "step1": "Adicione o URL do conector https://api.spifex.com/mcp no seu assistente de IA.",
-    "step2": "Entre no Spifex e aprove o escopo de fluxo de caixa somente leitura.",
-    "step3": "Faça perguntas sobre seus espaços de trabalho, transações e totais.",
+    "step2": "Inicie sessão no Spifex e aprove a ligação.",
+    "step3": "Escolha os espaços de trabalho e os dados a que o assistente pode aceder em Ligações de IA.",
     "docs": "Ler o guia de configuração"
   },
   "list": {
     "title": "Assistentes conectados",
-    "description": "Cada assistente só pode ler os espaços de trabalho que você escolher na conversa.",
+    "description": "Cada assistente só pode utilizar os espaços de trabalho e os dados que ativar para ele.",
     "refresh": "Atualizar",
     "retry": "Tentar novamente",
     "duplicates": "Várias linhas com o mesmo nome são registos separados criados por tentativas de ligação repetidas. Revogue cada uma que já não utiliza."
@@ -48,7 +48,7 @@
   "registration": "Registo {{id}}",
   "details": {
     "registrationId": "ID de registo",
-    "scopes": "Âmbitos",
+    "scopes": "Acesso",
     "registrationSource": "Método de registo",
     "clientType": "Tipo de cliente",
     "grantType": "Tipo de concessão"
@@ -61,5 +61,8 @@
   "clientType": {
     "public": "Público (PKCE)",
     "confidential": "Confidencial"
+  },
+  "scope": {
+    "access": "Acesso ao Spifex"
   }
 }

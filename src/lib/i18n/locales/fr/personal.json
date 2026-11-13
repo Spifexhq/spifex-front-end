@@ -335,7 +335,7 @@
     },
     "ai-connections": {
       "title": "Connexions IA",
-      "description": "Connectez ChatGPT ou Claude et gérez l'accès en lecture seule à vos données de trésorerie."
+      "description": "Connectez ChatGPT ou Claude et choisissez les espaces de travail et les données auxquels chaque assistant peut accéder."
     }
   },
   "createCreditEntry": "Créer une recette",

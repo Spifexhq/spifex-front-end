@@ -335,7 +335,7 @@
     },
     "ai-connections": {
       "title": "AI connections",
-      "description": "Connect ChatGPT or Claude and manage read-only access to your cash-flow data."
+      "description": "Connect ChatGPT or Claude and choose the workspaces and data each assistant can access."
     }
   },
   "createCreditEntry": "Create credit entry",
