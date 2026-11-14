@@ -443,8 +443,8 @@ export const api = {
     return request<GetSettledEntryResponse>(`cashflow/settlements/table/`, "GET", params)},
 
   getSettledEntriesBulk: (ids: string[], payload?: GetSettledEntryRequest) => {
-    const params = { include_inactive: true, ...(payload || {}), ids };
-    return request<SettledEntry[]>(`cashflow/settlements/bulk/get/`, "POST", params)},
+    const params = { include_inactive: true, ...(payload || {}), ids: ids.join(",") };
+    return request<SettledEntry[]>(`cashflow/settlements/bulk/get/`, "GET", params, { fresh: true })},
 
   addSettlementsBulk: (items: BulkSettleItem[], atomic: boolean = true) =>
     request<BulkSettleResponse>(`cashflow/settlements/bulk/settle/`, "POST", { items, atomic }),

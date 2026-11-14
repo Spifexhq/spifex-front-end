@@ -46,7 +46,7 @@ As an accounting user, I can open a settlement or entry linked from a journal pr
 - **FR-007**: Edit drawers remain unstacked.
 - **FR-008**: Add en/pt/fr/de copy.
 - **FR-009**: Document the pattern in the design system.
-- **FR-010**: Settlement previews must send `ids` as a list, not a comma-separated string.
+- **FR-010**: Settlement previews must use the read-only GET bulk endpoint with `ids` as a comma-separated query value, so legacy read-only workspaces are not blocked by write guards.
 - **FR-011**: Stacked previews use a width transition and full-height square page edges that push left on open and slide right on close; a short content fade is allowed; no visible “Related preview” label.
 - **FR-012**: No other API or permission changes.
 

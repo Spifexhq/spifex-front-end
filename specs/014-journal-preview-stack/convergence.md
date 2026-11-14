@@ -16,7 +16,7 @@
 | FR-007 Edit unstacked | Done | Edit drawers use default depth 0. |
 | FR-008 Localisation | Done | en/pt/fr/de keys added. |
 | FR-009 Design-system docs | Done | Preview-stack subsection added. |
-| FR-010 Settlement bulk payload | Done | `getSettledEntriesBulk` sends `ids` as an array. |
+| FR-010 Settlement bulk read | Done | `getSettledEntriesBulk` uses GET with a comma-separated `ids` query so read-only workspaces can preview. |
 | FR-011 Stack motion | Done | 220ms width transition; full-height square page edges push left on open and slide right on close; 180ms content fade. |
 | FR-012 No other API/permission changes | Done | Existing reads reused. |
 
@@ -35,5 +35,5 @@
   inside the drawer scroll; the new table is static and the drawer owns scrolling.
 - Related previews are limited to journal sources (`cash_entry` and
   `cash_settlement`); transfers and manual journals have no related preview.
-- The settlement bulk endpoint requires a JSON list for `ids`; the client now
-  sends an array.
+- The settlement bulk endpoint supports GET and POST; the client uses GET for
+  previews so the read-only workspace guard is not triggered.

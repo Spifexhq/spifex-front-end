@@ -17,7 +17,8 @@
   - close pops to the previous preview;
   - unrelated journals replace the stack.
 - Related settlement/entry IDs are clickable on journal details.
-- Fixed the settlement bulk request to send `ids` as a list.
+- Settlement previews now use the GET bulk endpoint, keeping the read path
+  allowed in legacy read-only workspaces.
 - Added stack motion: drawer width transition, full-height square page edges
   pushing left on open and sliding right on close, and content fade; removed the
   “Related preview” eyebrow.
