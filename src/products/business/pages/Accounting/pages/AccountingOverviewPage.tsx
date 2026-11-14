@@ -154,7 +154,7 @@ function SetupOverview() {
       setActivating(false);
     }
   };
-  const primaryClass = "inline-flex min-h-9 items-center gap-2 rounded-md bg-gray-900 px-3 text-xs font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400";
+  const primaryClass = "inline-flex h-8 items-center gap-2 rounded-md bg-gray-900 px-4 text-[13px] font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400";
 
   return <section className="space-y-5">
     <header className="flex flex-wrap items-start justify-between gap-3">
