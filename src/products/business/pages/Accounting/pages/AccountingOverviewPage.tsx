@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { api } from "@/core/api/requests";
+import { journalDisplayId } from "@/lib/journalDisplay";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -234,13 +235,15 @@ function OperationalOverview() {
   useEffect(() => {
     let active = true;
     setError("");
-    Promise.all([api.getTrialBalance(), api.getJournalEntries()])
-      .then(([trialResponse, journalsResponse]) => {
+    Promise.allSettled([api.getTrialBalance(), api.getJournalEntries()])
+      .then(([trialResult, journalResult]) => {
         if (!active) return;
-        setTrial(extractCollection<TrialBalanceRow>(trialResponse.data));
-        setJournals(extractCollection<JournalEntry>(journalsResponse));
-      })
-      .catch(() => { if (active) setError(t("overview.loadError")); });
+        if (trialResult.status === "fulfilled") setTrial(extractCollection<TrialBalanceRow>(trialResult.value.data));
+        else setTrial([]);
+        if (journalResult.status === "fulfilled") setJournals(extractCollection<JournalEntry>(journalResult.value.data));
+        else setJournals([]);
+        if (trialResult.status === "rejected" || journalResult.status === "rejected") setError(t("overview.loadError"));
+      });
     return () => { active = false; };
   }, [t, reloadKey]);
 
@@ -339,7 +342,7 @@ function OperationalOverview() {
               {journalRows.map(journal => <li key={journal.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-[13px] font-medium text-slate-900">{journal.entry_number || journal.id}</p>
+                    <p className="truncate text-[13px] font-medium text-slate-900">{journalDisplayId(journal)}</p>
                     <StatusPill tone={journalTone(journal.status)}>{t(`enums.status.${journal.status}`, journal.status)}</StatusPill>
                   </div>
                   <p className="mt-0.5 truncate text-[11px] text-slate-500">{journal.memo || journal.book_code} · {journal.posting_date}</p>

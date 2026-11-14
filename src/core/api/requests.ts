@@ -78,6 +78,7 @@ import type {
   AddJournalEntryRequest,
   ReverseJournalEntryRequest,
   GetJournalEntriesParams,
+  GetJournalEntriesResponse,
   GetTrialBalanceParams,
   GetTrialBalanceResponse,
 } from '@/models/settings/accounting';
@@ -614,7 +615,7 @@ export const api = {
     request<BankAccountLedgerMap>('ledger/bank-account-maps/', 'POST', payload),
 
   getJournalEntries: (params?: GetJournalEntriesParams) =>
-    request<JournalEntry[]>('ledger/journals/', 'GET', params, { fresh: true }),
+    request<GetJournalEntriesResponse>('ledger/journals/', 'GET', params, { fresh: true }),
 
   getJournalEntry: (journalId: string) =>
     request<JournalEntry>(`ledger/journals/${journalId}/`, 'GET'),

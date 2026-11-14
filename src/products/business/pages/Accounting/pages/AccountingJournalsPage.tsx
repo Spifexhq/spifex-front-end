@@ -5,6 +5,7 @@ import DataTable from "@/shared/ui/DataTable";
 import Card from "@/shared/ui/Card";
 import AccountingStatus from "../components/AccountingStatus";
 import AccountingMetricCard from "../components/AccountingMetricCard";
+import { journalDisplayId } from "@/lib/journalDisplay";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm, SidePanelDetails } from "@/components/Modal/SidePanel";
 import AccountingTerm from "@/products/business/pages/Accounting/components/AccountingTerm";
@@ -292,7 +293,7 @@ const AccountingJournalsPage: React.FC = () => {
         <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.listTitle", "Journal list")}>
           <div className="p-4 sm:p-5">
             <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
-              { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => item.entry_number || item.id },
+              { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => journalDisplayId(item) },
               { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
               { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
               { key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
@@ -537,8 +538,8 @@ const AccountingJournalsPage: React.FC = () => {
           </SidePanelForm>
         )}
       </SidePanel>
-      <SidePanel  isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}
-        recordLabel={t("footer.journal", "Journal")} recordName={selectedJournal?.entry_number || selectedJournal?.id}
+      <SidePanel  isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal ? journalDisplayId(selectedJournal) : undefined}
+        recordLabel={t("footer.journal", "Journal")} recordName={selectedJournal ? journalDisplayId(selectedJournal) : undefined}
         >
         {selectedJournal && <div className="space-y-6">
           <SidePanelDetails fields={[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label,value]) => ({label,value}))} />
@@ -551,7 +552,7 @@ const AccountingJournalsPage: React.FC = () => {
             ]} summary={<div className="flex justify-between gap-3 border-t border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold"><span>{t("redesign.total", "Total")}</span><span>{(selectedJournal.lines.reduce((sum,line)=>sum+line.debit_minor,0)/100).toFixed(2)}</span><span>{(selectedJournal.lines.reduce((sum,line)=>sum+line.credit_minor,0)/100).toFixed(2)}</span></div>}/>
 
           </div>
-          <p className="break-all text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)} · {selectedJournal.source_external_id || "—"}</p>
+          <p className="text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)}</p>
         </div>}
       </SidePanel>
     </>
