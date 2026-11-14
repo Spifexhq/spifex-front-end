@@ -35,6 +35,7 @@ export function useRecordFilters<T>(
   const [applied, setApplied] = useState<Record<string, string>>({});
   const [openKey, setOpenKey] = useState<string | null>(null);
   const anchors = useRef<Record<string, HTMLDivElement | null>>({});
+  const searchAnchor = useRef<HTMLDivElement | null>(null);
   const engine = useCursorPager<T, { options: Record<string, string[]>; optionLabels: Record<string, Record<string, string>> }>(
     (cursor, size) => remote ? remote.fetchPage(applied, cursor, size) : Promise.resolve({ items: [] }),
     { autoLoadFirst: !!remote && remote.enabled !== false, deps: [remote?.key, applied] }
@@ -55,6 +56,17 @@ export function useRecordFilters<T>(
     setOpenKey(null);
   };
 
+  const applySearch = () => {
+    setApplied(previous => ({ ...previous, search: (draft.search || "").trim() }));
+    setOpenKey(null);
+  };
+
+  const clearSearch = () => {
+    setDraft(previous => ({ ...previous, search: "" }));
+    setApplied(previous => ({ ...previous, search: "" }));
+    setOpenKey(null);
+  };
+
   const clearControl = (key: string) => {
     setDraft(previous => ({ ...previous, [key]: "" }));
     setApplied(previous => ({ ...previous, [key]: "" }));
@@ -69,75 +81,96 @@ export function useRecordFilters<T>(
 
   const filters = <SettingsSurface>
     <form
-      className="settings-toolbar"
       onSubmit={event => {
         event.preventDefault();
-        setApplied(previous => ({ ...previous, search: (draft.search || "").trim() }));
+        applySearch();
       }}
     >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-0 flex-1">
-            <Input
-              kind="text"
-              label={t("tableFilters.search")}
-              placeholder={remote?.placeholder || t("tableFilters.placeholder")}
-              value={draft.search || ""}
-              onChange={event => setDraft(previous => ({ ...previous, search: event.target.value }))}
-            />
-          </div>
-          <Button type="submit" variant="outline">{t("tableFilters.search")}</Button>
-        </div>
-      </div>
-
-      <div className="shrink-0">
-        <SettingsFilters active={hasApplied}>
-          {controls.map(control => {
-            const active = Boolean(applied[control.key]);
-            const options = (remote ? pager.options[control.key] || [] : [...new Set(items.map(control.value).filter(Boolean))].sort()).map(value => ({
-              value,
-              label: (remote ? pager.optionLabels[control.key]?.[value] : undefined) || control.format?.(value) || value,
-            }));
-            return <div key={control.key} ref={element => { anchors.current[control.key] = element; }}>
-              <SettingsFilter
-                label={control.label}
-                value={active ? `• ${chipValue(control, applied[control.key])}` : undefined}
-                active={active}
-                expanded={openKey === control.key}
-                onClick={() => setOpenKey(previous => previous === control.key ? null : control.key)}
-                onClear={active ? () => clearControl(control.key) : undefined}
+      <SettingsFilters active={hasApplied}>
+        <div ref={searchAnchor}>
+          <SettingsFilter
+            label={t("tableFilters.search")}
+            value={applied.search ? `• ${applied.search}` : undefined}
+            active={Boolean(applied.search)}
+            expanded={openKey === "search"}
+            onClick={() => setOpenKey(previous => previous === "search" ? null : "search")}
+            onClear={applied.search ? clearSearch : undefined}
+          />
+          <Popover
+            appearance="settings"
+            open={openKey === "search"}
+            onClose={() => setOpenKey(null)}
+            anchorRef={searchAnchor}
+            title={t("tableFilters.search")}
+            width={420}
+          >
+            <div className="space-y-3">
+              <Input
+                kind="text"
+                aria-label={t("tableFilters.search")}
+                placeholder={remote?.placeholder || t("tableFilters.placeholder")}
+                value={draft.search || ""}
+                onChange={event => setDraft(previous => ({ ...previous, search: event.target.value }))}
+                onKeyDown={event => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    applySearch();
+                  }
+                }}
               />
-              <Popover
-                appearance="settings"
-                open={openKey === control.key}
-                onClose={() => setOpenKey(null)}
-                anchorRef={{ current: anchors.current[control.key] }}
-                title={control.label}
-              >
-                <div className="space-y-3">
-                  {control.date
-                    ? <Input kind="date" label={control.label} value={draft[control.key] || ""} onValueChange={value => setDraft(previous => ({ ...previous, [control.key]: value }))}/>
-                    : <Select
-                        label={control.label}
-                        items={options}
-                        selected={options.filter(option => option.value === draft[control.key])}
-                        onChange={selected => setDraft(previous => ({ ...previous, [control.key]: selected[0]?.value || "" }))}
-                        getItemKey={item => item.value}
-                        getItemLabel={item => item.label}
-                        singleSelect
-                        hideCheckboxes
-                      />}
-                  <div className="flex items-center justify-between gap-2">
-                    <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={() => clearControl(control.key)}>{t("input.clear")}</button>
-                    <Button type="button" size="sm" onClick={() => applyControl(control.key)}>{t("tableFilters.apply")}</Button>
-                  </div>
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={clearSearch}>{t("input.clear")}</button>
+                <Button type="button" size="sm" onClick={applySearch}>{t("tableFilters.apply")}</Button>
+              </div>
+            </div>
+          </Popover>
+        </div>
+        {controls.map(control => {
+          const active = Boolean(applied[control.key]);
+          const options = (remote ? pager.options[control.key] || [] : [...new Set(items.map(control.value).filter(Boolean))].sort()).map(value => ({
+            value,
+            label: (remote ? pager.optionLabels[control.key]?.[value] : undefined) || control.format?.(value) || value,
+          }));
+          return <div key={control.key} ref={element => { anchors.current[control.key] = element; }}>
+            <SettingsFilter
+              label={control.label}
+              value={active ? `• ${chipValue(control, applied[control.key])}` : undefined}
+              active={active}
+              expanded={openKey === control.key}
+              onClick={() => setOpenKey(previous => previous === control.key ? null : control.key)}
+              onClear={active ? () => clearControl(control.key) : undefined}
+            />
+            <Popover
+              appearance="settings"
+              open={openKey === control.key}
+              onClose={() => setOpenKey(null)}
+              anchorRef={{ current: anchors.current[control.key] }}
+              title={control.label}
+            >
+              <div className="space-y-3">
+                {control.date
+                  ? <Input kind="date" aria-label={control.label} value={draft[control.key] || ""} onValueChange={value => setDraft(previous => ({ ...previous, [control.key]: value }))}/>
+                  : <Select
+                      ariaLabel={control.label}
+                      buttonLabel={t("tableFilters.selectOption", "Select an option")}
+                      items={options}
+                      selected={options.filter(option => option.value === draft[control.key])}
+                      onChange={selected => setDraft(previous => ({ ...previous, [control.key]: selected[0]?.value || "" }))}
+                      getItemKey={item => item.value}
+                      getItemLabel={item => item.label}
+                      singleSelect
+                      hideCheckboxes
+                    />}
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={() => clearControl(control.key)}>{t("input.clear")}</button>
+                  <Button type="button" size="sm" onClick={() => applyControl(control.key)}>{t("tableFilters.apply")}</Button>
                 </div>
-              </Popover>
-            </div>;
-          })}
-          {hasApplied && <SettingsClearFilters label={t("tableFilters.clear")} onClick={clearAll}/>}
-        </SettingsFilters>
-      </div>
+              </div>
+            </Popover>
+          </div>;
+        })}
+        {hasApplied && <SettingsClearFilters label={t("tableFilters.clear")} onClick={clearAll}/>}
+      </SettingsFilters>
     </form>
   </SettingsSurface>;
 

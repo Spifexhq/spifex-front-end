@@ -106,7 +106,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
       </div>
       <Popover appearance="settings" open={openFilter === "search"} anchorRef={searchAnchorRef} onClose={() => setOpenFilter(null)} title={t("search")} width={420}>
         <div className="p-4">
-          <Input kind="text" label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); setAppliedSearch(search.trim()); setOpenFilter(null); } }} />
+          <Input kind="text" aria-label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); setAppliedSearch(search.trim()); setOpenFilter(null); } }} />
           <div className="mt-3 flex items-center justify-between">
             <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(""); setAppliedSearch(""); }}>{t("clearFilters")}</Button>
             <Button type="button" size="sm" onClick={() => { setAppliedSearch(search.trim()); setOpenFilter(null); }}>{t("apply")}</Button>
@@ -115,7 +115,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
       </Popover>
       {isCategories && <Popover appearance="settings" open={openFilter === "kind"} anchorRef={kindAnchorRef} onClose={() => setOpenFilter(null)} title={t("kind")} width={360}>
         <div className="p-4">
-          <Select<{ value: CategoryKind; label: string }> label={t("kind")} items={kindOptions} selected={kindOptions.filter(option => kind.includes(option.value))} onChange={items => setKind(items.map(item => item.value))} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("allTypes")} />
+          <Select<{ value: CategoryKind; label: string }> ariaLabel={t("kind")} items={kindOptions} selected={kindOptions.filter(option => kind.includes(option.value))} onChange={items => setKind(items.map(item => item.value))} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("allTypes")} />
           <div className="mt-3 flex items-center justify-between">
             <Button type="button" variant="ghost" size="sm" onClick={() => setKind([])}>{t("clearFilters")}</Button>
             <Button type="button" size="sm" onClick={() => { setAppliedKind(kind); setOpenFilter(null); }}>{t("apply")}</Button>
@@ -124,7 +124,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
       </Popover>}
       {isCategories && <Popover appearance="settings" open={openFilter === "status"} anchorRef={statusAnchorRef} onClose={() => setOpenFilter(null)} title={t("status")} width={360}>
         <div className="p-4">
-          <Select<{ value: CategoryStatus; label: string }> label={t("status")} items={statusOptions} selected={statusOptions.filter(option => statuses.includes(option.value))} onChange={items => setStatuses(items.map(item => item.value))} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("allStatuses")} />
+          <Select<{ value: CategoryStatus; label: string }> ariaLabel={t("status")} items={statusOptions} selected={statusOptions.filter(option => statuses.includes(option.value))} onChange={items => setStatuses(items.map(item => item.value))} getItemKey={item => item.value} getItemLabel={item => item.label} buttonLabel={t("allStatuses")} />
           <div className="mt-3 flex items-center justify-between">
             <Button type="button" variant="ghost" size="sm" onClick={() => setStatuses(["active"])}>{t("clearFilters")}</Button>
             <Button type="button" size="sm" onClick={() => { setAppliedStatuses(statuses); setOpenFilter(null); }}>{t("apply")}</Button>

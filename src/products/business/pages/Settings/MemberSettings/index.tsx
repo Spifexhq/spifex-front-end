@@ -614,7 +614,7 @@ const MemberSettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<RoleOption>
-                label={t("filters.roleLabel")}
+                ariaLabel={t("filters.roleLabel")}
                 items={roleOptions}
                 selected={selectedDraftRoleOptions}
                 onChange={(list) => setDraftRoles(uniq((list || []).map((x) => x.key)))}
@@ -654,7 +654,7 @@ const MemberSettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<GroupOption>
-                label={t("filters.groupLabel")}
+                ariaLabel={t("filters.groupLabel")}
                 items={groupOptions}
                 selected={selectedDraftGroupOptions}
                 onChange={(list) => setDraftGroups(uniq((list || []).map((x) => x.key)))}

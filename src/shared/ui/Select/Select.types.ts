@@ -5,6 +5,8 @@ export type SelectSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface SelectProps<T> {
   label?: React.ReactNode;
+  /** Accessible name when no visible label is rendered. */
+  ariaLabel?: string;
   errorMessage?: React.ReactNode;
   required?: boolean;
   items: T[];

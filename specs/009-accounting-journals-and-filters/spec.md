@@ -29,7 +29,7 @@ As an accounting user, I see a compact journal ID instead of a long external ide
 **Acceptance Scenarios**:
 
 1. Given a stored `entry_number`, then it is shown unchanged.
-2. Given an empty `entry_number`, then a stable `JE-YYYYMMDD-XXXX` label is shown.
+2. Given an empty `entry_number`, then a stable `JE-YYYYMMDD-XXXXXXXX` label is shown.
 3. Given the journal detail panel, then the same readable ID is used in the header.
 4. Given a linked journal in an entry preview, then the readable ID is used.
 5. The external ID is not displayed in the Journals entry column.
@@ -52,12 +52,13 @@ As an accounting user, filters on Accounting list pages look and behave like Set
 
 - **FR-001**: Set explicit newest-first ordering on the journal list viewset so cursor pagination does not fall back to primary-key order.
 - **FR-002**: Load trial balance and journals independently; do not discard one when the other fails.
-- **FR-003**: Add a shared journal display-ID helper: stored number, otherwise `JE-YYYYMMDD-XXXX` from the posting date and journal identifier suffix.
+- **FR-003**: Add a shared journal display-ID helper: stored number, otherwise `JE-YYYYMMDD-XXXXXXXX` from the posting date and journal identifier suffix.
 - **FR-004**: Use the display ID in Journals, Overview recent journals and entry previews.
-- **FR-005**: Replace the Accounting record filter bar with Settings-style search, filter chips and popovers.
+- **FR-005**: Replace the Accounting record filter bar with Settings-style filter items. Search is a `Search` chip in the same row as the other chips and opens a Settings popover, matching Settings/Categories.
 - **FR-006**: Keep remote filter options, date controls, apply/clear behaviour and pagination intact.
 - **FR-007**: Apply the filter design to every Accounting page using `useRecordFilters`.
-- **FR-008**: No permission or payload changes.
+- **FR-008**: Filter popovers must not repeat the control label inside the popover body in Accounting, Business Settings or Personal collections; the popover title provides the context.
+- **FR-009**: No permission or payload changes.
 
 ## Success Criteria
 

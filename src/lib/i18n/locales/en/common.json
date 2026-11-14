@@ -93,7 +93,8 @@
     "placeholder": "Search records…",
     "filters": "Filters",
     "clear": "Clear filters",
-    "apply": "Apply filters"
+    "apply": "Apply filters",
+    "selectOption": "Select an option"
   },
   "notifications": {
     "dismiss": "Dismiss notification",

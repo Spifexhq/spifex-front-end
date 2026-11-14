@@ -93,7 +93,8 @@
     "placeholder": "Rechercher des enregistrements…",
     "filters": "Filtres",
     "clear": "Effacer les filtres",
-    "apply": "Appliquer les filtres"
+    "apply": "Appliquer les filtres",
+    "selectOption": "Sélectionner une option"
   },
   "notifications": {
     "dismiss": "Fermer la notification",

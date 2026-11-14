@@ -901,7 +901,7 @@ const InventorySettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
-                label={t("filters.statusLabel", { defaultValue: "Status" })}
+                ariaLabel={t("filters.statusLabel", { defaultValue: "Status" })}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}
                 onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}

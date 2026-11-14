@@ -93,7 +93,8 @@
     "placeholder": "Datensätze suchen…",
     "filters": "Filter",
     "clear": "Filter zurücksetzen",
-    "apply": "Filter anwenden"
+    "apply": "Filter anwenden",
+    "selectOption": "Option auswählen"
   },
   "notifications": {
     "dismiss": "Benachrichtigung schließen",

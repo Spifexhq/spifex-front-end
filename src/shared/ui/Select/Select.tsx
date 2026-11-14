@@ -44,6 +44,7 @@ const CLOSE_MS = 150;
 
 function Select<T>({
   label,
+  ariaLabel,
   errorMessage,
   required = false,
   items,
@@ -929,11 +930,12 @@ function Select<T>({
           onFocus={handleButtonFocus}
           id={id}
           type="button"
+          data-select-trigger="true"
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={isRendered}
           aria-controls={panelId}
-          aria-label={label ? undefined : t("aria.trigger")}
+          aria-label={label ? undefined : (ariaLabel || t("aria.trigger"))}
           aria-describedby={errorId}
           className={cn(
             "group flex w-full items-center justify-between border transition-colors",
@@ -961,6 +963,7 @@ function Select<T>({
             ) : null}
 
             <span
+              data-select-placeholder={hasSelection ? undefined : true}
               className={cn(
                 "truncate",
                 disabled ? "text-gray-400" : hasSelection ? "text-gray-800" : "text-gray-400"

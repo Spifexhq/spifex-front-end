@@ -420,6 +420,30 @@ focus, closes on leave/blur/outside/Escape; 140ms entrance and reduced-motion sa
 **Rules:** menus close on outside pointer, scroll, and Escape. Anchored panels
 must flip when there is no space. Tooltips never carry essential information.
 
+### 13.1 Filter popovers (Settings pattern)
+
+All filter popovers use `appearance="settings"` and the same composition:
+
+- **Layout:** `SettingsPopover` supplies the only body padding (`p-3`). Callers
+  must not add an `mt-3` above the first control; the first field is flush with
+  the body. Apply/Clear actions sit in a footer with a consistent 12px top gap.
+- **Labels:** the popover title is the only visible field label. Controls inside
+  the popover use `aria-label` (Input) or `ariaLabel` (Select) and a placeholder;
+  never repeat the visible label inside the body.
+- **Focus:** on desktop, the first editable text/date/textarea field receives
+  focus when the popover opens. Select-only popovers keep focus on the panel and
+  never auto-open the select. On mobile (`max-width: 767px`), no field is focused
+  automatically.
+- **Placeholders:** filter placeholders share one visual style: `#94a3b8`,
+  13px, normal weight, for text inputs, date slots, textareas and select
+  placeholders. `Select` exposes `data-select-placeholder` when empty so the
+  Settings popover can apply the same token.
+- **Search:** search is a `Search` filter chip in the filter-items row (same as
+  Settings/Categories), opening a Settings popover with the search input. It is
+  not a standalone toolbar bar.
+- **Spacing:** chips and the search chip share one flex row (`SettingsFilters`);
+  do not mix an inline search bar with the chip row.
+
 ---
 
 ## 14. Feedback: Snackbar, ConfirmToast, inline alerts

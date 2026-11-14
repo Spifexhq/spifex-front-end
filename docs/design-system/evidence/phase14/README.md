@@ -9,10 +9,14 @@
   ordering on the journal list viewset and reading the paginated response.
 - Decoupled trial balance and journal loads so one failure does not hide the
   other.
-- Added compact journal display IDs (`JE-YYYYMMDD-XXXX`) across Journals,
+- Added compact journal display IDs (`JE-YYYYMMDD-XXXXXXXX`, e.g.
+  `JE-20261108-FF9A1234`) across Journals,
   Overview and entry previews.
 - Rebuilt the shared Accounting filter bar on the Settings pattern with
   `SettingsSurface`, filter chips, Settings popovers, search and clear-all.
+  Search is a `Search` chip in the same filter-item row as the other chips, and
+  filter popovers across Accounting, Business Settings and Personal collections
+  no longer repeat the control label below their title.
   Applied to Journals, Books, Bank connections, Posting policies and Periods.
 
 ## UX rules
@@ -22,7 +26,7 @@
 - Filter chips show applied values and provide a direct clear action.
 - Each filter opens a Settings-style popover with apply/clear.
 - Mobile filter chips collapse under the Settings Filters toggle.
-- Search remains visible and applies on submit.
+- Search is part of the filter-item row and applies on submit.
 
 ## Verification
 

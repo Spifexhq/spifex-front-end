@@ -106,6 +106,10 @@ Dismissal matrix:
 | Snackbar | click if enabled | no (timeout) | stays | no |
 | ConfirmToast | no | yes (cancel) | caller | no |
 
+Filter-popover focus: on desktop, focus the first editable text/date/textarea
+field; select-only filters keep focus on the panel and do not open the select.
+At `max-width: 767px`, never focus a field automatically.
+
 ## 7. Feedback timing
 
 | Feedback | Timing | Notes |

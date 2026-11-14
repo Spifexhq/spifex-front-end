@@ -732,7 +732,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<AccountTypeOption>
-                label={t("filters.accountTypeLabel")}
+                ariaLabel={t("filters.accountTypeLabel")}
                 items={accountTypeOptions}
                 selected={selectedDraftAccountTypeOptions}
                 onChange={(list) => setDraftAccountTypes(uniq((list || []).map((x) => x.key)))}
@@ -901,7 +901,7 @@ const BankSettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
-                label={t("filters.statusLabel")}
+                ariaLabel={t("filters.statusLabel")}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}
                 onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}

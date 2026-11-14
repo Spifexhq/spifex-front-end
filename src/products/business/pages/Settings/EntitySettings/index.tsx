@@ -618,7 +618,7 @@ const EntitySettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<EntityTypeOption>
-                label={t("filters.typeLabel")}
+                ariaLabel={t("filters.typeLabel")}
                 items={typeOptions}
                 selected={selectedDraftTypeOptions}
                 onChange={(list) => setDraftTypes(uniq((list || []).map((x) => x.key)))}
@@ -668,7 +668,7 @@ const EntitySettings: React.FC = () => {
           <div className="mt-3 relative z-[10060] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <Select<StatusOption>
-                label={t("filters.statusLabel")}
+                ariaLabel={t("filters.statusLabel")}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}
                 onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}

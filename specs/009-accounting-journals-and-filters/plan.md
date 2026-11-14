@@ -17,7 +17,7 @@ Fix journal ordering and independent overview loading, add a compact journal dis
 
 1. **Ordering** — the direct journals viewset declares `ordering = ("-posting_date", "-id")`; cursor pagination reads view ordering.
 2. **Overview loading** — `Promise.allSettled` sets trial and journal data independently; an error is shown if either fails.
-3. **Display ID** — `journalDisplayId` prefers `entry_number`; otherwise derives `JE-YYYYMMDD-XXXX` from `posting_date` and the last four alphanumeric characters of the journal identifier.
+3. **Display ID** — `journalDisplayId` prefers `entry_number`; otherwise derives `JE-YYYYMMDD-XXXXXXXX` from `posting_date` and the last eight alphanumeric characters of the journal identifier.
 4. **Use sites** — Journals entry column and detail header, Overview recent journals, and entry preview linked journal.
 5. **Filters** — `useRecordFilters` renders inside `SettingsSurface`; uses `SettingsFilters`, `SettingsFilter`, `SettingsClearFilters` and Settings popovers anchored to each chip.
 6. **Behaviour** — search applies on submit; each chip applies/clears its own key; clear-all clears search, drafts and applied filters.
