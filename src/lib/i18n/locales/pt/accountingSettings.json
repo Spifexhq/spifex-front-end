@@ -401,11 +401,11 @@
     "searchPlaceholder": "Pesquisar",
     "newButton": "Diário manual",
     "metrics": {
-      "entries": "Entradas",
+      "entries": "Diários",
       "entriesDetail": "Diários visíveis no recorte de pesquisa atual.",
       "reversed": "Revertidos",
       "reversedDetail": "Entradas já revertidas.",
-      "lines": "Linhas",
+      "lines": "Entradas",
       "linesDetail": "Total de linhas de diário nas entradas visíveis.",
       "posted": "Publicados",
       "postedDetail": "Lançamentos atualmente publicados no razão."
@@ -1372,6 +1372,8 @@
     "quickReview": "Encontre a definição por trás de um problema de banco ou categoria.",
     "quickRules": "Verifique as contas usadas pelas categorias de pagamento.",
     "quickBanks": "Associe contas bancárias a contas de controlo.",
-    "showingAccounts": "A mostrar {{shown}} de {{total}} contas."
+    "showingAccounts": "A mostrar {{shown}} de {{total}} contas.",
+    "balanced": "Equilibrado",
+    "unbalanced": "Desequilibrado"
   }
 }

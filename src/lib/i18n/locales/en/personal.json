@@ -23,7 +23,7 @@
   "error": "We couldn’t complete this request. Please try again.",
   "optionsError": "We couldn’t load accounts and categories. Retry before saving.",
   "empty": "No records yet.",
-  "apply": "Apply filters",
+  "apply": "Apply",
   "clearFilters": "Clear filters",
   "search": "Search",
   "searchPlaceholder": "Search by name or description…",

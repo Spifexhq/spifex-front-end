@@ -27,7 +27,7 @@
     "bankControlLabel": "Bank control",
     "manualPostingLabel": "Manual posting",
     "activeLabel": "Active",
-    "applyFilters": "Apply filters",
+    "applyFilters": "Apply",
     "clearFilters": "Clear",
     "prev": "Prev",
     "next": "Next",
@@ -81,7 +81,8 @@
     "reportingSampleDescription": "Accounts grouped by reporting classification.",
     "unassigned": "Unassigned",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "any": "Any"
   },
   "setup": {
     "pageLabel": "Settings",

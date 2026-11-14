@@ -58,7 +58,7 @@ font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60`.
 
 | Variant | Appearance | Use |
 | --- | --- | --- |
-| `primary` | Orange fill, `#202020` text | One per screen region |
+| `primary` | Deep orange `#C2410C` fill, white text; standard button shape/typography | One per screen region |
 | `outline` | White/transparent, 1px neutral border, ink text | Default secondary action |
 | `cancel` | `#f5f5f5` fill, neutral border | Dialog dismissal |
 | `danger` | `#da2020` fill, white text | Destructive confirmation |
@@ -71,7 +71,7 @@ font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60`.
 `softPrimary`, `success`, `warning`, `info`, `dashed`, `gradient`. Do not re-add
 these; use one of the eight approved variants above.
 
-**States:** hover shifts one step (`--accentPrimaryHover`), active one more
+**States:** primary uses the landing colour tokens (`--accentPrimaryStrong*`); shape, typography and motion stay standard
 (`Pressed`), disabled uses `Disabled` + `opacity-60`, loading replaces the label
 with a spinner and disables the control. Buttons intentionally render no focus
 outline (product decision 2026-11-12).
@@ -443,6 +443,9 @@ All filter popovers use `appearance="settings"` and the same composition:
   not a standalone toolbar bar.
 - **Spacing:** chips and the search chip share one flex row (`SettingsFilters`);
   do not mix an inline search bar with the chip row.
+- **Actions:** popover **Clear** resets only the draft value and never applies or
+  refreshes. **Apply** is the single action that applies the draft and refreshes
+  the data. Label it **Apply**, not **Apply filters**.
 
 ---
 

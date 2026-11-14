@@ -108,7 +108,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
         <div className="p-4">
           <Input kind="text" aria-label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); setAppliedSearch(search.trim()); setOpenFilter(null); } }} />
           <div className="mt-3 flex items-center justify-between">
-            <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(""); setAppliedSearch(""); }}>{t("clearFilters")}</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(""); }}>{t("clearFilters")}</Button>
             <Button type="button" size="sm" onClick={() => { setAppliedSearch(search.trim()); setOpenFilter(null); }}>{t("apply")}</Button>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
     </> : <Card as="form" radius="xl" padding="none" onSubmit={event => { event.preventDefault(); setAppliedSearch(search.trim()); }} className="flex flex-wrap items-end gap-3 p-3 sm:p-4">
       <div className="min-w-48 flex-1"><Input kind="text" label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)}/></div>
       <Button type="submit" variant="outline">{t("apply")}</Button>
-      {appliedSearch && <Button type="button" variant="outline" onClick={() => { setSearch(""); setAppliedSearch(""); }}>{t("clearFilters")}</Button>}
+      {search && <Button type="button" variant="outline" onClick={() => { setSearch(""); }}>{t("clearFilters")}</Button>}
     </Card>}
     {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
     <DataTable<PersonalRecord> items={pager.items} columns={columns} pager={pager} emptyLabel={t("empty")} editLabel={t("edit")} error={pager.error} busy={pager.loading} onInspect={setPreview} canEdit={canEdit} onEdit={edit} canDelete={canDelete} onDelete={async row => {

@@ -42,6 +42,6 @@ export default function OverviewFilters({ query, options, onChange, onExport, lo
     {query.basis === "settled" && !!options?.banks.length && <div className="min-w-40 flex-1">{choose("bank_id", t("bank"), options.banks)}</div>}
     <div className="min-w-40 flex-[1.5]"><Input size="sm" label={t("search")} placeholder={t("searchPlaceholder")} value={draft.description || ""} onChange={event => setDraft(previous => ({ ...previous, description: event.target.value }))} /></div>
     <Button type="submit" variant="primary" size="sm" disabled={loading}>{t("apply")}</Button>
-    {(query.bank_id || query.cashflow_category_id || query.description) && <Button variant="ghost" size="sm" onClick={() => onChange({ ...query, bank_id: undefined, cashflow_category_id: undefined, description: undefined })}>{t("clear")}</Button>}
+    {(draft.bank_id || draft.cashflow_category_id || draft.description) && <Button variant="ghost" size="sm" onClick={() => setDraft(previous => ({ ...previous, bank_id: undefined, cashflow_category_id: undefined, description: undefined }))}>{t("clear")}</Button>}
   </OverviewFilterPanel>;
 }

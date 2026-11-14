@@ -10,6 +10,7 @@ import DataTable from "@/shared/ui/DataTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Plus } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -155,7 +156,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
  {key:"status",label:t("table.status","Status"),value:item=>item.status,format:value=>t(value==="active"?"table.active":"table.inactive",value)},
  {key:"book",label:t("postingPoliciesPage.columns.book","Book"),value:item=>item.book_id,format:value=>books.find(book=>book.id===value)?.name||"—"},
  {key:"category",label:t("postingPoliciesPage.columns.category","Category"),value:item=>item.cashflow_category_id,format:value=>categories.find(category=>category.id===value)?.name||"—"}
-], item=>[item.cashflow_category_label,item.book_label,item.settlement_debit_account_label,item.settlement_credit_account_label].join(" "), { ...source, placeholder: t("filters.search.category-rules", "Search records"), onItems: setItems });
+], item=>[item.cashflow_category_label,item.book_label,item.settlement_debit_account_label,item.settlement_credit_account_label].join(" "), { ...source, placeholder: t("filters.search.category-rules", "Search records"), onItems: setItems }, <Button type="button" className="gap-2" disabled={!canManage} onClick={() => void openCreate()}><Plus size={15} aria-hidden="true"/>{t("postingPoliciesPage.actions.newPolicy", "New policy")}</Button>);
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -265,26 +266,6 @@ const AccountingPostingPoliciesPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="accounting-page-header">
-
-          <div className="flex flex-col gap-5 py-1">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                
-                <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  {t("postingPoliciesPage.description", "Define how each operational cashflow category translates into settlement, accrual, and clearing accounts inside each accounting book.")}
-                </p>
-              </div>
-
-              <Button type="button" disabled={!canManage} onClick={() => void openCreate()}>
-                {t("postingPoliciesPage.actions.newPolicy", "New policy")}
-              </Button>
-            </div>
-
-
-          </div>
-        </div>
-
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
         <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteCategoryPostingPolicy(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("postingPoliciesPage.columns.category", "Category"), render: item => displayValue(item.cashflow_category_label, item.cashflow_category_id) },

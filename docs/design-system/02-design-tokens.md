@@ -15,10 +15,14 @@ Source: the `:root` block in `src/index.css`.
 
 | Token | Value | Role | Used by |
 | --- | --- | --- | --- |
-| `--accentPrimary` | `#F46A35` | Primary action, selected state | `Button primary`, links, `Switch`, spinners |
-| `--accentPrimaryHover` | `#f4883a` | Hover | `Button primary` |
-| `--accentPrimaryPressed` | `#f15a1e` | Active/pressed | `Button primary` |
-| `--accentPrimaryDisabled` | `#eb9d7e` | Disabled primary | `Button primary` |
+| `--accentPrimary` | `#F46A35` | Selected state, links, focus intent | links, `Switch`, spinners, selection |
+| `--accentPrimaryHover` | `#f4883a` | Hover | selection/focus surfaces |
+| `--accentPrimaryPressed` | `#f15a1e` | Active/pressed | selection/focus surfaces |
+| `--accentPrimaryDisabled` | `#eb9d7e` | Disabled accent | selection/focus surfaces |
+| `--accentPrimaryStrong` | `#C2410C` | Primary button fill | `Button primary` |
+| `--accentPrimaryStrongHover` | `#A93A0A` | Primary button hover | `Button primary` |
+| `--accentPrimaryStrongPressed` | `#92320A` | Primary button active | `Button primary` |
+| `--accentPrimaryStrongDisabled` | `#E8B6A1` | Disabled primary button | `Button primary` |
 | `--accentSecondary` | `#9BE7E2` | Brand teal; decorative fills | Brand/gradient surfaces; no Button variant |
 | `--accentSecondaryHover` | `#b2e7e3` | Hover | Brand surfaces |
 | `--accentSecondaryPressed` | `#72e7dd` | Active | Brand surfaces |
@@ -48,7 +52,7 @@ Source: the `:root` block in `src/index.css`.
 | `--accentInfoPressed` | `#0284C7` | Active | Status surfaces |
 | `--accentInfoDisabled` | `#7DD3FC` | Disabled | Status surfaces |
 
-**Canonical usage rule:** only `--accentPrimary*` and `--accentDanger*` are
+**Canonical usage rule:** only `--accentPrimary*`, `--accentPrimaryStrong*` and `--accentDanger*` are
 approved for actions in normal product UI. `--accentSuccess*`,
 `--accentWarning*` and `--accentInfo*` are reserved status palette; no Button
 variant consumes them since Phase 2. `--accentSecondary*` is a brand fill and
@@ -82,7 +86,7 @@ removed in Phase 1, PR 2. Use the Tailwind palette for colors and
 | `--settings-border/muted/ink` | `src/shared/ui/Settings/SettingsSurface.tsx` | Settings surface palette; intentionally scoped |
 
 The old `--brand` fallback in `TopProgress` was replaced with
-`--accentPrimary`; there is no second orange token.
+`--accentPrimary` for selection/focus and `--accentPrimaryStrong` for the primary button fill; do not add a third orange.
 
 ---
 

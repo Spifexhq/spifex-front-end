@@ -161,7 +161,6 @@ function SetupOverview() {
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("setupFlow.workspace")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-gray-900">{t("setupFlow.setupTitle")}</h1>
-        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-gray-500">{t("setupFlow.setupDescription")}</p>
       </div>
       <StatusPill tone={setupTone}>{t(`setupFlow.states.${status.status}`)}</StatusPill>
     </header>
@@ -252,6 +251,8 @@ function OperationalOverview() {
     acc.credit += Number(row.credit_minor || 0);
     return acc;
   }, { debit: 0, credit: 0 }), [trial]);
+  const difference = totals.debit - totals.credit;
+  const balanced = difference === 0;
   const posted = (journals || []).filter(journal => journal.status === "posted");
   const lastPosting = [...posted].sort((a, b) => (b.posting_date || "").localeCompare(a.posting_date || ""))[0]?.posting_date || "";
   const money = (minor: number) => new Intl.NumberFormat(i18n.language, { style: "currency", currency: status?.profile.currency || "EUR" }).format(minor / 100);
@@ -273,7 +274,6 @@ function OperationalOverview() {
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t("setupFlow.workspace")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">{t("overview.title")}</h1>
-        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">{t("overview.description")}</p>
       </div>
       <StatusPill tone="success">{t("setupFlow.states.active")}</StatusPill>
     </header>
@@ -299,39 +299,44 @@ function OperationalOverview() {
     </div>
 
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-      <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.trialBalance")} description={t("overview.trialBalanceDescription")} actions={<Link to="/accounting/chart-of-accounts" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.openChart")}<ArrowRight size={12} aria-hidden="true"/></Link>}>
+      <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.trialBalance")} description={t("overview.trialBalanceDescription")} actions={<div className="flex items-center gap-3">
+        {!loading && accounts.length > 0 ? <StatusPill tone={balanced ? "success" : "danger"}>{balanced ? t("overview.balanced") : t("overview.unbalanced")}</StatusPill> : null}
+        <Link to="/accounting/chart-of-accounts" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.openChart")}<ArrowRight size={12} aria-hidden="true"/></Link>
+      </div>}>
         <div className="p-4 sm:p-5">
           {loading ? <div className="space-y-3">{[1,2,3,4,5].map(key => <SkeletonLine key={key} className="h-7 w-full"/>)}</div>
-            : accounts.length ? <div className="-mx-1 overflow-x-auto">
-              <table className="w-full min-w-[520px] border-collapse text-xs">
-                <thead><tr className="border-b border-slate-100">
-                  <th scope="col" className="pb-2 pr-3 text-left text-[11px] font-medium text-slate-500">{t("overview.account")}</th>
-                  <th scope="col" className="pb-2 pl-3 text-right text-[11px] font-medium text-slate-500">{t("overview.debit")}</th>
-                  <th scope="col" className="pb-2 pl-3 text-right text-[11px] font-medium text-slate-500">{t("overview.credit")}</th>
-                  <th scope="col" className="pb-2 pl-3 text-right text-[11px] font-medium text-slate-500">{t("overview.balance")}</th>
-                </tr></thead>
-                <tbody className="divide-y divide-slate-100">
-                  {accounts.map(row => {
-                    const debit = Number(row.debit_minor || 0);
-                    const credit = Number(row.credit_minor || 0);
-                    const balance = Number(row.balance_minor || 0);
-                    return <tr key={row.code}>
-                      <td className="py-2.5 pr-3"><div className="flex min-w-0 items-center gap-2"><span className="w-14 shrink-0 font-mono text-[11px] text-slate-400">{row.code}</span><span className="truncate text-slate-700">{row.name}</span></div></td>
-                      <td className="py-2.5 pl-3 text-right tabular-nums text-slate-600">{debit ? money(debit) : "—"}</td>
-                      <td className="py-2.5 pl-3 text-right tabular-nums text-slate-600">{credit ? money(credit) : "—"}</td>
-                      <td className={`py-2.5 pl-3 text-right font-medium tabular-nums ${balance < 0 ? "text-rose-600" : "text-slate-900"}`}>{money(balance)}</td>
-                    </tr>;
-                  })}
-                </tbody>
-                <tfoot><tr className="border-t border-slate-200">
-                  <td colSpan={2} className="py-2.5 pr-3 text-[11px] font-semibold text-slate-700">{t("overview.total")}</td>
-                  <td className="py-2.5 pl-3 text-right font-semibold tabular-nums text-slate-900">{money(totals.debit)}</td>
-                  <td className="py-2.5 pl-3 text-right font-semibold tabular-nums text-slate-900">{money(totals.credit)}</td>
-                  <td className={`py-2.5 pl-3 text-right font-semibold tabular-nums ${totals.debit - totals.credit === 0 ? "text-slate-900" : "text-rose-600"}`}>{money(totals.debit - totals.credit)}</td>
-                </tr></tfoot>
-              </table>
+            : accounts.length ? <>
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <table className="w-full min-w-[560px] border-collapse text-xs">
+                  <thead className="bg-slate-50/80"><tr className="border-b border-slate-200">
+                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-medium text-slate-500">{t("overview.account")}</th>
+                    <th scope="col" className="w-28 px-3 py-2.5 text-right text-[11px] font-medium text-slate-500">{t("overview.debit")}</th>
+                    <th scope="col" className="w-28 px-3 py-2.5 text-right text-[11px] font-medium text-slate-500">{t("overview.credit")}</th>
+                    <th scope="col" className="w-28 px-3 py-2.5 text-right text-[11px] font-medium text-slate-500">{t("overview.balance")}</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {accounts.map(row => {
+                      const debit = Number(row.debit_minor || 0);
+                      const credit = Number(row.credit_minor || 0);
+                      const balance = Number(row.balance_minor || 0);
+                      return <tr key={row.code} className="transition-colors hover:bg-slate-50/60">
+                        <td className="px-3 py-2.5"><div className="flex min-w-0 items-center gap-2"><span className="inline-flex min-w-14 justify-center rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">{row.code}</span><span className="truncate text-slate-700">{row.name}</span></div></td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{debit ? money(debit) : "—"}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{credit ? money(credit) : "—"}</td>
+                        <td className={`px-3 py-2.5 text-right font-medium tabular-nums ${balance < 0 ? "text-rose-600" : "text-slate-900"}`}>{money(balance)}</td>
+                      </tr>;
+                    })}
+                  </tbody>
+                  <tfoot><tr className="border-t border-slate-200 bg-slate-50/80">
+                    <td className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">{t("overview.total")}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-slate-900">{money(totals.debit)}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-slate-900">{money(totals.credit)}</td>
+                    <td className={`px-3 py-2.5 text-right font-semibold tabular-nums ${balanced ? "text-emerald-700" : "text-rose-600"}`}>{money(difference)}</td>
+                  </tr></tfoot>
+                </table>
+              </div>
               {(accountsWithBalances.length) > accounts.length ? <p className="mt-3 text-[11px] text-slate-500">{t("overview.showingAccounts", { shown: accounts.length, total: accountsWithBalances.length })}</p> : null}
-            </div> : <p className="rounded-lg border border-dashed border-slate-200 px-3 py-5 text-xs text-slate-500">{t("overview.noBalances")}</p>}
+            </> : <p className="rounded-lg border border-dashed border-slate-200 px-3 py-5 text-xs text-slate-500">{t("overview.noBalances")}</p>}
         </div>
       </Card>
 

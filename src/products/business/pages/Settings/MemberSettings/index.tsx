@@ -626,7 +626,6 @@ const MemberSettings: React.FC = () => {
               />
             </div>
 
-            <div className="mt-2 text-[11px] text-gray-500">{t("filters.roleHint")}</div>
           </div>
 
           <div className="mt-3 flex items-center justify-between">
@@ -666,7 +665,6 @@ const MemberSettings: React.FC = () => {
               />
             </div>
 
-            <div className="mt-2 text-[11px] text-gray-500">{t("filters.groupHint")}</div>
           </div>
 
           <div className="mt-3 flex items-center justify-between">

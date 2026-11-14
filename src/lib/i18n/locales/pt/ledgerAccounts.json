@@ -27,7 +27,7 @@
     "bankControlLabel": "Controlo bancário",
     "manualPostingLabel": "Lançamento manual",
     "activeLabel": "Ativa",
-    "applyFilters": "Aplicar filtros",
+    "applyFilters": "Aplicar",
     "clearFilters": "Limpar",
     "prev": "Anterior",
     "next": "Seguinte",
@@ -81,7 +81,8 @@
     "reportingSampleDescription": "Contas agrupadas por classificação de reporting.",
     "unassigned": "Não atribuído",
     "yes": "Sim",
-    "no": "Não"
+    "no": "Não",
+    "any": "Qualquer"
   },
   "setup": {
     "pageLabel": "Definições",

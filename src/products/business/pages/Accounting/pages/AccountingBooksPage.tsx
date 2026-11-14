@@ -10,6 +10,7 @@ import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/products/business/pages/Accounting/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Plus } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -78,20 +79,20 @@ const AccountingBooksPage: React.FC = () => {
   );
 
   const source = useAccountingSource<AccountingBook>("books");
+  const openCreate = () => {
+    setForm({ ...EMPTY_FORM, currency_code: setupStatus?.profile.currency || "", is_primary: !setupStatus?.primary_book_id });
+    setModalOpen(true);
+  };
+  const addButton = <Button type="button" className="gap-2" disabled={!canManage} onClick={openCreate}><Plus size={15} aria-hidden="true"/>{t("booksPage.newButton", "New book")}</Button>;
   const recordFilters = useRecordFilters(items, [
  {key:"status",label:t("table.status","Status"),value:item=>String(item.is_active),format:value=>t(value==="true"?"table.active":"table.inactive",value==="true"?"Active":"Inactive")},
  {key:"basis",label:t("booksPage.columns.basis","Basis"),value:item=>item.basis,format:value=>t(`enums.basis.${value}`,value)},
  {key:"currency",label:t("booksPage.columns.currency","Currency"),value:item=>item.currency_code},
  {key:"primary",label:t("booksPage.columns.primary","Primary"),value:item=>String(item.is_primary),format:value=>t(value==="true"?"common.yes":"common.no",value==="true"?"Yes":"No")}
-], item=>[item.name,item.code,item.basis,item.currency_code].join(" "), { ...source, placeholder: t("filters.search.books", "Search records"), onItems: setItems });
+], item=>[item.name,item.code,item.basis,item.currency_code].join(" "), { ...source, placeholder: t("filters.search.books", "Search records"), onItems: setItems }, addButton);
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
-
-  const openCreate = () => {
-    setForm({ ...EMPTY_FORM, currency_code: setupStatus?.profile.currency || "", is_primary: !setupStatus?.primary_book_id });
-    setModalOpen(true);
-  };
 
   const openEdit = (item: AccountingBook) => {
     setForm({
@@ -152,26 +153,6 @@ const AccountingBooksPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="accounting-page-header">
-
-          <div className="flex flex-col gap-5 py-1">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                
-                <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  {t("booksPage.description", "Create and maintain accounting books used as posting scopes for journals, bank mappings, and category policies.")}
-                </p>
-              </div>
-
-              <Button type="button" disabled={!canManage} onClick={openCreate}>
-                {t("booksPage.newButton", "New book")}
-              </Button>
-            </div>
-
-
-          </div>
-        </div>
-
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
         <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteAccountingBook(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("booksPage.columns.name", "Name"), render: item => item.name || "—" },

@@ -81,7 +81,8 @@
     "reportingSampleDescription": "Comptes regroupés par classification de reporting.",
     "unassigned": "Non attribué",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "any": "Tous"
   },
   "setup": {
     "pageLabel": "Paramètres",

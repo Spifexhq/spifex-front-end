@@ -25,7 +25,7 @@
   "bank": "Compte bancaire",
   "search": "Description",
   "searchPlaceholder": "Rechercher des transactions…",
-  "apply": "Appliquer les filtres",
+  "apply": "Appliquer",
   "clear": "Effacer",
   "loadError": "Impossible de charger la vue d’ensemble. Réessayez.",
   "retry": "Réessayer",

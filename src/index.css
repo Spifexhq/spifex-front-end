@@ -8,6 +8,10 @@
   --accentPrimaryHover: #f4883a;
   --accentPrimaryPressed: #f15a1e;
   --accentPrimaryDisabled: #eb9d7e;
+  --accentPrimaryStrong: #C2410C;
+  --accentPrimaryStrongHover: #A93A0A;
+  --accentPrimaryStrongPressed: #92320A;
+  --accentPrimaryStrongDisabled: #E8B6A1;
   --accentSecondary: #9BE7E2;
   --accentSecondaryHover: #b2e7e3;
   --accentSecondaryPressed: #72e7dd;

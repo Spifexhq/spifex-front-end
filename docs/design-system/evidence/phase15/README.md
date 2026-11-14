@@ -23,6 +23,10 @@
 - Placeholder token: `#94a3b8`, 13px.
 - Popover title is the only visible field label.
 - Search chip opens a Settings popover with the search input.
+- Popover Clear resets the draft only; it never applies or refreshes. Apply is
+  the single action that updates data, and the label is **Apply**.
+- Tips/hints were removed from filter popovers (bank/project type tips and member
+  role/group hints).
 
 ## Verification
 

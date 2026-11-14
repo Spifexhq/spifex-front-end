@@ -158,7 +158,7 @@ const AccountingJournalsPage: React.FC = () => {
  {key:"source",label:t("journalsPage.columns.source","Source"),value:item=>item.source_type,format:value=>t(`enums.source.${value}`,value)},
  {key:"from",label:t("filters.dateFrom","From"),value:item=>item.posting_date,date:"from"},
  {key:"to",label:t("filters.dateTo","To"),value:item=>item.posting_date,date:"to"}
-], item=>[item.entry_number,item.memo,item.book_code,item.source_external_id].join(" "), { ...source, placeholder: t("filters.search.journals", "Search records"), onItems: setItems });
+], item=>[item.entry_number,item.memo,item.book_code,item.source_external_id].join(" "), { ...source, placeholder: t("filters.search.journals", "Search records"), onItems: setItems }, <Button type="button" className="gap-2" disabled={!canManage} onClick={() => void openManualJournal()}><Plus size={15} aria-hidden="true"/>{t("journalsPage.newButton", "Manual journal")}</Button>);
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -269,16 +269,6 @@ const AccountingJournalsPage: React.FC = () => {
   return (
     <>
       <section className="space-y-5">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 max-w-3xl">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t("section.operations", "Operations")}</p>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              {t("journalsPage.description", "Inspect accounting output, create controlled manual entries, and reverse posted journals that require correction.")}
-            </p>
-          </div>
-          <Button type="button" className="gap-2" disabled={!canManage} onClick={openManualJournal}><Plus size={15} aria-hidden="true"/>{t("journalsPage.newButton", "Manual journal")}</Button>
-        </header>
-
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map(({ key, value, Icon, detail }) => <AccountingMetricCard key={key} label={t(`journalsPage.metrics.${key}`, key)} value={value.toLocaleString(language)} Icon={Icon} hint={detail}/>)}
         </div>
@@ -396,6 +386,7 @@ const AccountingJournalsPage: React.FC = () => {
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="gap-2"
                     onClick={() =>
                       setForm((prev) => ({
                         ...prev,
@@ -403,6 +394,7 @@ const AccountingJournalsPage: React.FC = () => {
                       }))
                     }
                   >
+                    <Plus size={14} aria-hidden="true"/>
                     {t("journalsPage.modal.addLine", "Add line")}
                   </Button>
                 </div>

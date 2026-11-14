@@ -11,6 +11,7 @@ import DataTable from "@/shared/ui/DataTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Plus } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -121,7 +122,7 @@ const AccountingBankMappingsPage: React.FC = () => {
  {key:"book",label:t("bankMappingsPage.columns.book","Book"),value:item=>item.book_id,format:value=>bookMap.get(value)||"—"},
  {key:"bank",label:t("bankMappingsPage.columns.bankAccount","Bank account"),value:item=>item.bank_account_id,format:value=>bankMap.get(value)||"—"},
  {key:"account",label:t("bankMappingsPage.columns.ledgerAccount","Ledger account"),value:item=>item.ledger_account_id,format:value=>accountMap.get(value)||"—"}
-], item=>[bankMap.get(item.bank_account_id),bookMap.get(item.book_id),accountMap.get(item.ledger_account_id)].join(" "), { ...source, placeholder: t("filters.search.bank-connections", "Search records"), onItems: setItems });
+], item=>[bankMap.get(item.bank_account_id),bookMap.get(item.book_id),accountMap.get(item.ledger_account_id)].join(" "), { ...source, placeholder: t("filters.search.bank-connections", "Search records"), onItems: setItems }, <Button type="button" className="gap-2" disabled={!canManage} onClick={() => void openCreate()}><Plus size={15} aria-hidden="true"/>{t("bankMappingsPage.newButton", "Map bank account")}</Button>);
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -210,26 +211,6 @@ const AccountingBankMappingsPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="accounting-page-header">
-
-          <div className="flex flex-col gap-5 py-1">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                
-                <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  {t("bankMappingsPage.description", "Link each operational bank account to the accounting book and bank-control ledger account used during posting, settlement, and transfer flows.")}
-                </p>
-              </div>
-
-              <Button type="button" disabled={!canManage} onClick={() => void openCreate()}>
-                {t("bankMappingsPage.newButton", "Map bank account")}
-              </Button>
-            </div>
-
-
-          </div>
-        </div>
-
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
         <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteBankAccountLedgerMap(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("bankMappingsPage.columns.bankAccount", "Bank account"), render: item => bankMap.get(item.bank_account_id) || "—" },

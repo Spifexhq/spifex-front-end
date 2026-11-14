@@ -23,7 +23,7 @@
   "error": "Não foi possível concluir o pedido. Tente novamente.",
   "optionsError": "Não foi possível carregar as contas e categorias. Tente novamente antes de guardar.",
   "empty": "Ainda não existem registos.",
-  "apply": "Aplicar filtros",
+  "apply": "Aplicar",
   "clearFilters": "Limpar filtros",
   "search": "Pesquisar",
   "searchPlaceholder": "Pesquisar por nome ou descrição…",

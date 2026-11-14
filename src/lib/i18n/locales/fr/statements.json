@@ -10,7 +10,7 @@
     "remove": "Retirer",
     "sendAll": "Tout envoyer",
     "clearQueue": "Vider la file",
-    "applyFilters": "Appliquer les filtres",
+    "applyFilters": "Appliquer",
     "clearFilters": "Effacer"
   },
   "dnd": {

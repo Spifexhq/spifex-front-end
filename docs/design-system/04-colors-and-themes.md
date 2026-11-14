@@ -4,7 +4,8 @@
 
 | Element | Value | Meaning |
 | --- | --- | --- |
-| Primary accent | `#F46A35` (`--accentPrimary`) | Spifex orange. Primary actions, selection, focus intent |
+| Primary accent | `#F46A35` (`--accentPrimary`) | Spifex orange. Selection, focus intent, links |
+| Primary button | `#C2410C` (`--accentPrimaryStrong`) | Landing-aligned primary action fill with white text |
 | Secondary accent | `#9BE7E2` (`--accentSecondary`) | Spifex teal. Brand support, gradients, decorative fills |
 | Ink | `#202020` (`--black`) | Text on neutral filled controls |
 | App neutral | Tailwind `gray` | Operational surfaces |
@@ -16,8 +17,9 @@ status, selection).
 
 ## 2. Brand usage rules
 
-1. `--accentPrimary` is for **one** primary action per screen region and for the
-   selected/active state. Primary buttons use dark `#202020` text (5.40:1).
+1. `--accentPrimaryStrong` is for **one** primary action per screen region and
+   uses white text (5.18:1). `--accentPrimary` remains for selection, links and
+   focus intent.
 2. Teal is **never** a text background with white text (1.41:1). It carries dark
    `#202020` text (11.58:1), or is used as a gradient partner/decorative accent.
 3. Success green (`#16A34A`) is a status color, not an alternative primary
@@ -74,10 +76,11 @@ large text (≥24px or ≥18.66px bold) requires 3:1; UI borders/icons require 3
 
 | Foreground | Background | Ratio | Verdict | Where |
 | --- | --- | --- | --- | --- |
-| `#ffffff` | `#F46A35` | **3.02** | ❌ normal text | retired from button text |
-| `#202020` | `#F46A35` | **5.40** | ✅ | **current `Button primary`** |
-| `#ffffff` | `#f15a1e` (pressed) | 3.38 | ❌ normal text | not used for text |
-| `#202020` | `#f15a1e` | 4.83 | ✅ | primary pressed |
+| `#ffffff` | `#F46A35` | **3.02** | ❌ normal text | not used for button text |
+| `#202020` | `#F46A35` | **5.40** | ✅ | links/selection on light orange |
+| `#ffffff` | `#C2410C` | **5.18** | ✅ | **`Button primary`** |
+| `#ffffff` | `#A93A0A` (hover) | 6.37 | ✅ | primary hover |
+| `#ffffff` | `#92320A` (pressed) | 7.83 | ✅ | primary pressed |
 | `#ffffff` | `#9BE7E2` | **1.41** | ❌ | retired |
 | `#202020` | `#9BE7E2` | 11.58 | ✅ | teal fill; no Button variant |
 | `#ffffff` | `#16A34A` | 3.30 | ❌ | retired background |
@@ -89,15 +92,15 @@ large text (≥24px or ≥18.66px bold) requires 3:1; UI borders/icons require 3
 | `#687385` (settings muted) | white | 4.79 | ✅ | settings metadata |
 | `#465164` (settings label) | white | 8.01 | ✅ | settings headings |
 | `#202936` (settings ink) | white | 14.67 | ✅ | settings body |
-| `#F46A35` on white | — | 3.02 | ⚠️ large text/icons only | the 13px `Button link` variant fails |
+| `#F46A35` on white | — | 3.02 | ⚠️ large text/icons only | links/focus accents, not body text |
 
 **Canonical text colors:**
 
 - `text-gray-900` primary, `text-gray-600` secondary, `text-gray-500` muted.
 - `text-gray-400` is placeholder/disabled/decorative only. Meaningful captions
   use `text-gray-500` (4.83:1) or `text-slate-500` (enforced in Phase 5, PR 19).
-- On orange, use `#202020`/`text-gray-900` (5.40:1). Primary buttons do this since
-  Phase 1, PR 1; white is allowed only at ≥18.66px bold.
+- Primary buttons use white on `#C2410C` (5.18:1). On the lighter `#F46A35`
+  accent, use `#202020`/`text-gray-900` (5.40:1).
 - On teal, use `#202020` (11.58:1).
 
 ## 6. Status colors

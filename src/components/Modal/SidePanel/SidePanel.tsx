@@ -25,6 +25,8 @@ type Props = {
   recordName?: string;
   contentClassName?: string;
   className?: string;
+  /** Preview stack depth; >0 narrows the drawer to reveal the previous page edge. */
+  stackDepth?: number;
   /** Optional preview actions. Rendered in the pinned footer. */
   footer?: ReactNode;
   showFooterHint?: boolean;
@@ -52,7 +54,7 @@ export default function SidePanel({
   className,
   footer,
   showFooterHint = false,
-  mode, busy = false, tabs, dialogRef, overlay,
+  mode, busy = false, tabs, dialogRef, overlay, stackDepth = 0,
 }: Props) {
   const { t } = useTranslation("common");
   const generatedId = useId();
@@ -68,6 +70,7 @@ export default function SidePanel({
       labelledBy={titleId}
       className={className}
       dialogRef={dialogRef}
+      stackDepth={stackDepth}
       onClose={onClose}
       closeOnBackdrop={!editing && !busy}
       busy={busy}

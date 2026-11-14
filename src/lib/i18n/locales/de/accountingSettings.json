@@ -401,11 +401,11 @@
     "searchPlaceholder": "Suche",
     "newButton": "Manuelles Journal",
     "metrics": {
-      "entries": "Einträge",
+      "entries": "Journale",
       "entriesDetail": "Journale, die im aktuellen Suchausschnitt sichtbar sind.",
       "reversed": "Storniert",
       "reversedDetail": "Bereits stornierte Einträge.",
-      "lines": "Zeilen",
+      "lines": "Buchungen",
       "linesDetail": "Gesamtzahl der Journalzeilen in sichtbaren Einträgen.",
       "posted": "Gebucht",
       "postedDetail": "Aktuell im Hauptbuch gebuchte Journalzeilen."
@@ -1372,6 +1372,8 @@
     "quickReview": "Finden Sie die Einstellung hinter einem Bank- oder Kategorieproblem.",
     "quickRules": "Prüfen Sie die Konten der Zahlungskategorien.",
     "quickBanks": "Ordnen Sie Bankkonten den Kontrollkonten zu.",
-    "showingAccounts": "{{shown}} von {{total}} Konten werden angezeigt."
+    "showingAccounts": "{{shown}} von {{total}} Konten werden angezeigt.",
+    "balanced": "Ausgeglichen",
+    "unbalanced": "Nicht ausgeglichen"
   }
 }

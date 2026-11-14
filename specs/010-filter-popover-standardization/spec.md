@@ -69,7 +69,10 @@ As a user, Search behaves like the Settings/Categories search chip rather than a
 - **FR-006**: Popover titles are the only visible field labels; controls use accessible names.
 - **FR-007**: Accounting search is a `Search` filter chip.
 - **FR-008**: Document the rules in the design system.
-- **FR-009**: No permission, route or API changes.
+- **FR-009**: Popover Clear resets only the draft value; it must not apply or refresh. Apply is the only action that applies the draft and refreshes data.
+- **FR-010**: The apply action is labelled **Apply** (not **Apply filters**) across filters.
+- **FR-011**: Filter popovers contain no tips, hints or instructional copy; keep only the control and Clear/Apply actions.
+- **FR-012**: No permission, route or API changes.
 
 ## Success Criteria
 

@@ -15,7 +15,10 @@
 | FR-006 No duplicate labels | Done | Accounting, Business Settings and Personal popovers use accessible names only. |
 | FR-007 Search chip | Done | Accounting search is a `SettingsFilter` chip with a Settings popover. |
 | FR-008 Design-system docs | Done | Filter-popover section and focus rules added. |
-| FR-009 No permission/route/API changes | Done | Shared UI-only change. |
+| FR-009 Clear does not refresh | Done | Popover Clear resets the draft only; Apply applies and refreshes. |
+| FR-010 Apply label | Done | Filter apply actions now read **Apply**. |
+| FR-011 No tips inside filters | Done | Removed bank/project type tips and member role/group hints from filter popovers. |
+| FR-012 No permission/route/API changes | Done | Shared UI-only change. |
 
 ## Verification
 

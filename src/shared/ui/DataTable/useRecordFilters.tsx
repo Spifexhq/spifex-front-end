@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useCursorPager, type FetchPage } from "@/hooks/useCursorPager";
 import { matchesRecordFilters } from "./recordFiltering";
 import { useTranslation } from "react-i18next";
@@ -28,7 +28,8 @@ export function useRecordFilters<T>(
     fetchPage(filters: Record<string, string>, cursor?: string, pageSize?: number): ReturnType<FetchPage<T, { options: Record<string, string[]>; optionLabels: Record<string, Record<string, string>> }>>;
     placeholder: string;
     onItems(items: T[]): void;
-  }
+  },
+  actions?: ReactNode
 ) {
   const { t } = useTranslation("common");
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -61,10 +62,18 @@ export function useRecordFilters<T>(
     setOpenKey(null);
   };
 
+  const resetSearch = () => {
+    setDraft(previous => ({ ...previous, search: "" }));
+  };
+
   const clearSearch = () => {
     setDraft(previous => ({ ...previous, search: "" }));
     setApplied(previous => ({ ...previous, search: "" }));
     setOpenKey(null);
+  };
+
+  const resetControl = (key: string) => {
+    setDraft(previous => ({ ...previous, [key]: "" }));
   };
 
   const clearControl = (key: string) => {
@@ -86,7 +95,8 @@ export function useRecordFilters<T>(
         applySearch();
       }}
     >
-      <SettingsFilters active={hasApplied}>
+      <div className="settings-toolbar">
+        <SettingsFilters active={hasApplied}>
         <div ref={searchAnchor}>
           <SettingsFilter
             label={t("tableFilters.search")}
@@ -119,7 +129,7 @@ export function useRecordFilters<T>(
                 }}
               />
               <div className="flex items-center justify-between gap-2">
-                <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={clearSearch}>{t("input.clear")}</button>
+                <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={resetSearch}>{t("input.clear")}</button>
                 <Button type="button" size="sm" onClick={applySearch}>{t("tableFilters.apply")}</Button>
               </div>
             </div>
@@ -162,7 +172,7 @@ export function useRecordFilters<T>(
                       hideCheckboxes
                     />}
                 <div className="flex items-center justify-between gap-2">
-                  <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={() => clearControl(control.key)}>{t("input.clear")}</button>
+                  <button type="button" className="text-xs text-gray-600 hover:text-gray-900" onClick={() => resetControl(control.key)}>{t("input.clear")}</button>
                   <Button type="button" size="sm" onClick={() => applyControl(control.key)}>{t("tableFilters.apply")}</Button>
                 </div>
               </div>
@@ -170,7 +180,9 @@ export function useRecordFilters<T>(
           </div>;
         })}
         {hasApplied && <SettingsClearFilters label={t("tableFilters.clear")} onClick={clearAll}/>}
-      </SettingsFilters>
+        </SettingsFilters>
+        {actions ? <div className="shrink-0">{actions}</div> : null}
+      </div>
     </form>
   </SettingsSurface>;
 

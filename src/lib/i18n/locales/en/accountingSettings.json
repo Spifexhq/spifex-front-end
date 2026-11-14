@@ -401,11 +401,11 @@
     "searchPlaceholder": "Search",
     "newButton": "Manual journal",
     "metrics": {
-      "entries": "Entries",
+      "entries": "Journals",
       "entriesDetail": "Journals visible in the current search slice.",
       "reversed": "Reversed",
       "reversedDetail": "Entries already reversed.",
-      "lines": "Lines",
+      "lines": "Entries",
       "linesDetail": "Total journal lines across visible entries.",
       "posted": "Posted",
       "postedDetail": "Entries currently posted to the ledger."
@@ -1372,6 +1372,8 @@
     "quickReview": "Find the setting behind a bank or category issue.",
     "quickRules": "Check the accounts used by payment categories.",
     "quickBanks": "Map bank accounts to control accounts.",
-    "showingAccounts": "Showing {{shown}} of {{total}} accounts."
+    "showingAccounts": "Showing {{shown}} of {{total}} accounts.",
+    "balanced": "Balanced",
+    "unbalanced": "Out of balance"
   }
 }

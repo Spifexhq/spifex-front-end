@@ -401,11 +401,11 @@
     "searchPlaceholder": "Recherche",
     "newButton": "Journal manuel",
     "metrics": {
-      "entries": "Écritures",
+      "entries": "Journaux",
       "entriesDetail": "Journaux visibles dans le périmètre de recherche actuel.",
       "reversed": "Contrepassés",
       "reversedDetail": "Écritures déjà contrepassées.",
-      "lines": "Lignes",
+      "lines": "Écritures",
       "linesDetail": "Nombre total de lignes de journal dans les écritures visibles.",
       "posted": "Comptabilisées",
       "postedDetail": "Écritures actuellement comptabilisées dans le grand livre."
@@ -1372,6 +1372,8 @@
     "quickReview": "Trouvez le paramètre à l’origine d’un problème de banque ou de catégorie.",
     "quickRules": "Vérifiez les comptes utilisés par les catégories de paiement.",
     "quickBanks": "Associez les comptes bancaires aux comptes de contrôle.",
-    "showingAccounts": "Affichage de {{shown}} comptes sur {{total}}."
+    "showingAccounts": "Affichage de {{shown}} comptes sur {{total}}.",
+    "balanced": "Équilibré",
+    "unbalanced": "Déséquilibré"
   }
 }

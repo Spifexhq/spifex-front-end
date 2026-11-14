@@ -23,7 +23,7 @@
   "error": "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen.",
   "optionsError": "Konten und Kategorien konnten nicht geladen werden. Vor dem Speichern erneut versuchen.",
   "empty": "Noch keine Einträge.",
-  "apply": "Filter anwenden",
+  "apply": "Anwenden",
   "clearFilters": "Filter zurücksetzen",
   "search": "Suchen",
   "searchPlaceholder": "Nach Name oder Beschreibung suchen…",

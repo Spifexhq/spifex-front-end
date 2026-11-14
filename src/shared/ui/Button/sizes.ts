@@ -18,9 +18,9 @@ export const BUTTON_SIZES: Record<ButtonSize, string> = {
 
 export const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "text-[var(--black)] border border-transparent " +
-    "bg-[var(--accentPrimary)] hover:bg-[var(--accentPrimaryHover)] " +
-    "active:bg-[var(--accentPrimaryPressed)] disabled:bg-[var(--accentPrimaryDisabled)]",
+    "text-white border border-transparent " +
+    "bg-[var(--accentPrimaryStrong)] hover:bg-[var(--accentPrimaryStrongHover)] " +
+    "active:bg-[var(--accentPrimaryStrongPressed)] disabled:bg-[var(--accentPrimaryStrongDisabled)]",
 
   common:
     "text-[var(--black)] [border:var(--controlBorder)] " +

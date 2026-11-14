@@ -23,7 +23,7 @@
   "error": "Impossible de terminer cette demande. Réessayez.",
   "optionsError": "Impossible de charger les comptes et catégories. Réessayez avant d’enregistrer.",
   "empty": "Aucun enregistrement pour le moment.",
-  "apply": "Appliquer les filtres",
+  "apply": "Appliquer",
   "clearFilters": "Effacer les filtres",
   "search": "Rechercher",
   "searchPlaceholder": "Rechercher par nom ou description…",

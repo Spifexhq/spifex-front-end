@@ -27,7 +27,7 @@
     "bankControlLabel": "Banksteuerung",
     "manualPostingLabel": "Manuelle Buchung",
     "activeLabel": "Aktiv",
-    "applyFilters": "Filter anwenden",
+    "applyFilters": "Anwenden",
     "clearFilters": "Zurücksetzen",
     "prev": "Zurück",
     "next": "Weiter",
@@ -81,7 +81,8 @@
     "reportingSampleDescription": "Konten gruppiert nach Reporting-Klassifizierung.",
     "unassigned": "Nicht zugeordnet",
     "yes": "Ja",
-    "no": "Nein"
+    "no": "Nein",
+    "any": "Alle"
   },
   "setup": {
     "pageLabel": "Einstellungen",

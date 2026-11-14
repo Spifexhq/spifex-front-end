@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Landmark, ListTree, LockKeyhole, MoreHorizontal, Plus, Route, Sparkles, Upload } from "lucide-react";
+import { BookOpen, Landmark, ListTree, MoreHorizontal, Plus, Route, Sparkles, Upload } from "lucide-react";
 import SegmentedControl from "@/shared/ui/SegmentedControl";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
@@ -67,6 +67,11 @@ export default function ChartOfAccountsPage() {
       { key: "add", title: t("workspace.addAccount"), description: accounting("chartPage.addHint", { defaultValue: "Create accounts one at a time when you already know the structure." }), Icon: Plus, onClick: () => setModal({ account: null }) },
     ] : []),
   ];
+  const relatedSetup = [
+    { page: "books", key: "books", Icon: BookOpen, enabled: status.steps.find(step => step.key === "books")?.available === true },
+    { page: "posting-policies", key: "postingPolicies", Icon: Route, enabled: status.can_activate === true },
+    { page: "bank-mappings", key: "bankMappings", Icon: Landmark, enabled: status.can_activate === true },
+  ];
 
   return <section className="min-w-0 space-y-5">
     {empty && !importing && <Card as="section" radius="xl" tone="slate" padding="default" className="space-y-5">
@@ -88,31 +93,25 @@ export default function ChartOfAccountsPage() {
       </div>
     </Card>}
 
-    {!empty && !chart.loading && <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="max-w-xl text-xs leading-5 text-gray-500">{accounting("chartPage.description")}</p>
-      <div className="flex items-center gap-2">
-        {chart.canAdd && <Button variant="outline" className="gap-2" onClick={() => setModal({ account: null })}><Plus size={15} aria-hidden="true" />{t("workspace.addAccount")}</Button>}
-        {chart.canDelete && <Button ref={menuRef} variant="outline" aria-label={t("workspace.moreActions")} aria-expanded={menu} onClick={() => setMenu(!menu)}><MoreHorizontal size={16} aria-hidden="true" /></Button>}
-      </div>
-    </div>}
-
-    <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{accounting("chartPage.relatedSetup", { defaultValue: "Related setup" })}</p>
-      <div className="grid gap-2 sm:grid-cols-3">
-        {[
-          { page: "books", key: "books", Icon: BookOpen, enabled: status?.steps.find(step => step.key === "books")?.available === true },
-          { page: "posting-policies", key: "postingPolicies", Icon: Route, enabled: status?.can_activate === true },
-          { page: "bank-mappings", key: "bankMappings", Icon: Landmark, enabled: status?.can_activate === true },
-        ].map(({ page, key, Icon, enabled }) => enabled ? <Link key={page} to={`/accounting/${page}`} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs font-medium text-gray-700 hover:border-gray-300 hover:bg-gray-50"><Icon size={16} className="text-gray-400" aria-hidden="true"/>{accounting(`nav.${key}`)}<ArrowRight size={13} className="ml-auto text-gray-400" aria-hidden="true"/></Link>
-          : <span key={page} aria-disabled="true" className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-400"><LockKeyhole size={16} aria-hidden="true"/>{accounting(`nav.${key}`)}</span>)}
-      </div>
-    </div>
-
     {importing && chart.canAdd && status ? <ChartImport compact={status.profile.mode === "personal"} embedded onCancel={() => setImporting(false)} onSuccess={async () => { setImporting(false); await chart.reload(); await refresh(); }} /> : null}
 
     <CompactActionMenu open={menu} onClose={() => setMenu(false)} anchor={menuRef}><button type="button" className="w-full rounded px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50" onClick={() => { setMenu(false); setDeleting({}); }}>{t("workspace.deleteAll")}</button></CompactActionMenu>
-    {chart.accounts.length > 0 && <><SegmentedControl<"accounts" | AccountInsight> tabs id="chart-views" value={view} label={accounting("setupFlow.chartViews")} onChange={setView} items={(["accounts", "posting-controls", "bank-control", "reporting"] as const).map(value=>({value,panelId:"chart-view-panel",label:t(value === "accounts" ? "explorer.accounts" : value === "posting-controls" ? "workspace.managementPostingControlsTitle" : value === "bank-control" ? "workspace.managementBankControlTitle" : "workspace.managementReportingTitle")}))} />
-    <ChartFilters onApply={setFilters} /></>}
+    {chart.accounts.length > 0 && <>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <SegmentedControl<"accounts" | AccountInsight> tabs id="chart-views" value={view} label={accounting("setupFlow.chartViews")} onChange={setView} items={(["accounts", "posting-controls", "bank-control", "reporting"] as const).map(value=>({value,panelId:"chart-view-panel",label:t(value === "accounts" ? "explorer.accounts" : value === "posting-controls" ? "workspace.managementPostingControlsTitle" : value === "bank-control" ? "workspace.managementBankControlTitle" : "workspace.managementReportingTitle")}))} />
+      <div className="flex flex-wrap items-center gap-2">
+        {relatedSetup.map(({ page, key, Icon, enabled }) => {
+          const label = accounting(`nav.${key}`);
+          return enabled
+            ? <Link key={page} to={`/accounting/${page}`} aria-label={label} title={label} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-gray-400"><Icon size={16} aria-hidden="true"/></Link>
+            : <span key={page} aria-disabled="true" aria-label={`${label} — ${accounting("section.locked")}`} title={`${label} — ${accounting("section.locked")}`} className="inline-flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-gray-400"><Icon size={16} aria-hidden="true"/></span>;
+        })}
+        <span aria-hidden="true" className="mx-0.5 h-6 w-px bg-gray-200"/>
+        {chart.canAdd && <Button className="gap-2" onClick={() => setModal({ account: null })}><Plus size={15} aria-hidden="true" />{t("workspace.addAccount")}</Button>}
+        {chart.canDelete && <Button ref={menuRef} variant="outline" aria-label={t("workspace.moreActions")} aria-expanded={menu} onClick={() => setMenu(!menu)}><MoreHorizontal size={16} aria-hidden="true" /></Button>}
+      </div>
+    </div>
+    <ChartFilters value={filters} onApply={setFilters} /></>}
     {chart.error !== null && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"><p>{chart.error || t("workspace.requestError")}</p><Button variant="outline" onClick={() => void chart.reload()}>{accounting("redesign.retry")}</Button></div>}
     <div id="chart-view-panel" role="tabpanel" aria-labelledby={`chart-views-${view}`} tabIndex={0} className="min-w-0 focus-visible:outline-2 focus-visible:outline-indigo-500">
     {chart.loading ? <DataTableSkeleton rows={6} /> : chart.accounts.length > 0 ? view === "accounts" ? <ChartOfAccounts items={filtered} allAccounts={chart.accounts} viewMode={display} onViewModeChange={setDisplay} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? account => setDeleting({ account }) : undefined} /> : <AccountInsights filters={filters} view={view} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? async account => { if (!await chart.remove(account)) throw new Error(t("workspace.requestError")); await refresh(); } : undefined} /> : !chart.canAdd && <p className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6">{t("workspace.emptyTitle")}</p>}

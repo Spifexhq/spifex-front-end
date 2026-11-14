@@ -25,7 +25,7 @@
   "bank": "Bankkonto",
   "search": "Beschreibung",
   "searchPlaceholder": "Transaktionen suchen…",
-  "apply": "Filter anwenden",
+  "apply": "Anwenden",
   "clear": "Zurücksetzen",
   "loadError": "Die Übersicht konnte nicht geladen werden. Versuchen Sie es erneut.",
   "retry": "Erneut versuchen",

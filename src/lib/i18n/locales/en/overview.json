@@ -25,7 +25,7 @@
   "bank": "Bank account",
   "search": "Description",
   "searchPlaceholder": "Search transactions…",
-  "apply": "Apply filters",
+  "apply": "Apply",
   "clear": "Clear",
   "loadError": "Unable to load the overview. Try again.",
   "retry": "Try again",

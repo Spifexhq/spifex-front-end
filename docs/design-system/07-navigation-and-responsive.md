@@ -156,6 +156,10 @@ together or extract a constant.
   until the corresponding setup phase is available. The Review guide and AI
   setup guide open in side panels from Overview (and AI setup also from the
   chart page); neither is listed as a sidebar row.
+- **Accounting page headers** use the shell title only. Do not add a page-level
+  description paragraph; put create actions in the filter row with a `Plus`
+  icon. On Chart, keep Add/More and icon-only related-setup actions on the
+  same row as the view tabs; chart filters use the standard Settings pattern.
 - **Desktop rail collapse persistence** is stored per mode; whether Personal
   shares the same keys needs verification.
 - **Navbar page icon** (`PanelsTopLeft`) is decorative and hidden below `sm`;

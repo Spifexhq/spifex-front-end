@@ -707,10 +707,6 @@ const ProjectSettings: React.FC = () => {
                 hideFilter
               />
             </div>
-
-            <div className="mt-2 text-[11px] text-gray-500">
-              {t("filters.typeHint", { defaultValue: "Tip: select one type to filter; multiple means all types." })}
-            </div>
           </div>
 
           <div className="mt-3 flex items-center justify-between">
