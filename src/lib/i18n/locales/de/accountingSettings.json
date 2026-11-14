@@ -449,7 +449,16 @@
       "balance": "Saldo"
     },
     "listTitle": "Buchungsliste",
-    "empty": "Keine Buchungen gefunden."
+    "empty": "Keine Buchungen gefunden.",
+    "relatedPreview": "Zugehörige Vorschau",
+    "relatedEntry": "Zugehörige Buchung",
+    "relatedSettlement": "Zugehörige Zahlung",
+    "relatedId": "ID",
+    "backToJournal": "Zurück",
+    "relatedLoading": "Zugehörige Buchung wird geladen…",
+    "relatedRetry": "Erneut versuchen",
+    "relatedNotFound": "Zugehörige Zahlung nicht gefunden.",
+    "relatedLoadError": "Die zugehörige Buchung konnte nicht geladen werden."
   },
   "reconciliationPage": {
     "sectionLabel": "Abstimmung",

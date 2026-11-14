@@ -449,7 +449,16 @@
       "balance": "Saldo"
     },
     "listTitle": "Lista de lançamentos",
-    "empty": "Nenhum lançamento encontrado."
+    "empty": "Nenhum lançamento encontrado.",
+    "relatedPreview": "Pré-visualização relacionada",
+    "relatedEntry": "Entrada relacionada",
+    "relatedSettlement": "Liquidação relacionada",
+    "relatedId": "ID",
+    "backToJournal": "Voltar",
+    "relatedLoading": "A carregar entrada relacionada…",
+    "relatedRetry": "Tentar novamente",
+    "relatedNotFound": "Liquidação relacionada não encontrada.",
+    "relatedLoadError": "Não foi possível carregar a entrada relacionada."
   },
   "reconciliationPage": {
     "sectionLabel": "Reconciliação",

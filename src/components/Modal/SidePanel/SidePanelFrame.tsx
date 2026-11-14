@@ -15,9 +15,10 @@ type SidePanelFrameProps = {
   dialogRef?: RefObject<HTMLDivElement>;
   className?: string;
   overlay?: ReactNode;
+  stackDepth?: number;
 };
 
-export function SidePanelFrame({ isOpen, labelledBy, header, children, onClose, closeOnBackdrop = false, busy = false, dialogRef, className = "", overlay }: SidePanelFrameProps) {
+export function SidePanelFrame({ isOpen, labelledBy, header, children, onClose, closeOnBackdrop = false, busy = false, dialogRef, className = "", overlay, stackDepth = 0 }: SidePanelFrameProps) {
   const { t } = useTranslation("common");
   return (
     <DialogShell
@@ -32,6 +33,7 @@ export function SidePanelFrame({ isOpen, labelledBy, header, children, onClose, 
       bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
       closeOnBackdrop={closeOnBackdrop}
       busy={busy}
+      stackDepth={stackDepth}
       escapeEnabled={!overlay}
       overlay={overlay}
     >

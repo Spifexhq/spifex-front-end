@@ -11,6 +11,7 @@ import SidePanel, { SidePanelForm, SidePanelDetails } from "@/components/Modal/S
 import AccountingTerm from "@/products/business/pages/Accounting/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, CheckCheck, ListTree, LockKeyhole, Plus, RotateCcw } from "lucide-react";
 
@@ -29,6 +30,9 @@ import type {
   AddJournalEntryRequest,
   JournalSourceType,
 } from "@/models/settings/accounting";
+import type { Entry } from "@/models/entries/entries";
+import type { SettledEntry } from "@/models/entries/settlements";
+import { formatCurrency } from "@/lib";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
 
 type SnackbarState = {
@@ -101,9 +105,24 @@ const EMPTY_FORM: ManualJournalForm = {
   lines: [{ account_id: "", debit: "", credit: "", memo: "" }],
 };
 
+type PreviewTarget =
+  | { kind: "journal"; journal: JournalEntry }
+  | { kind: "entry"; id: string }
+  | { kind: "settlement"; id: string };
+
+function journalRelatedSource(journal: JournalEntry): { kind: "entry" | "settlement"; id: string } | null {
+  const id = journal.source_external_id?.trim();
+  if (!id) return null;
+  if (journal.source_type === "cash_settlement") return { kind: "settlement", id };
+  if (journal.source_type === "cash_entry") return { kind: "entry", id };
+  return null;
+}
+
 const AccountingJournalsPage: React.FC = () => {
   const { status: setupStatus, canManage } = useAccountingSetup();
   const { i18n } = useTranslation("accountingSettings");
+  const { t: financeT } = useTranslation("financeEntries");
+  const reduced = useReducedMotion();
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
@@ -118,7 +137,44 @@ const AccountingJournalsPage: React.FC = () => {
   const [items, setItems] = React.useState<JournalEntry[]>([]);
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
-  const [selectedJournal, setSelectedJournal] = React.useState<JournalEntry | null>(null);
+  const [previewStack, setPreviewStack] = React.useState<PreviewTarget[]>([]);
+  const [relatedPreview, setRelatedPreview] = React.useState<{ kind: "entry" | "settlement"; id: string; data: Entry | SettledEntry | null; loading: boolean; error: string } | null>(null);
+  const [relatedRetry, setRelatedRetry] = React.useState(0);
+  const topPreview = previewStack[previewStack.length - 1] || null;
+  const activeJournal = topPreview?.kind === "journal" ? topPreview.journal : null;
+  const initialJournal = previewStack[0]?.kind === "journal" ? previewStack[0].journal : null;
+  const openJournalPreview = React.useCallback((journal: JournalEntry) => setPreviewStack([{ kind: "journal", journal }]), []);
+  const pushRelatedPreview = React.useCallback((kind: "entry" | "settlement", id: string) => {
+    setPreviewStack(previous => previous.length ? [...previous, { kind, id }] : previous);
+  }, []);
+  const closePreview = React.useCallback(() => {
+    setPreviewStack(previous => previous.length > 1 ? previous.slice(0, -1) : []);
+  }, []);
+  React.useEffect(() => {
+    const top = previewStack[previewStack.length - 1];
+    if (!top || top.kind === "journal") {
+      setRelatedPreview(null);
+      return;
+    }
+    let alive = true;
+    setRelatedPreview({ kind: top.kind, id: top.id, data: null, loading: true, error: "" });
+    void (async () => {
+      try {
+        if (top.kind === "entry") {
+          const { data } = await api.getEntry(top.id);
+          if (alive) setRelatedPreview({ kind: top.kind, id: top.id, data, loading: false, error: "" });
+        } else {
+          const response = await api.getSettledEntriesBulk([top.id]);
+          const row = response.data?.[0];
+          if (!row) throw new Error(t("journalsPage.relatedNotFound", "Related settlement not found."));
+          if (alive) setRelatedPreview({ kind: top.kind, id: top.id, data: row, loading: false, error: "" });
+        }
+      } catch (cause) {
+        if (alive) setRelatedPreview({ kind: top.kind, id: top.id, data: null, loading: false, error: apiErrorMessage(cause, t("journalsPage.relatedLoadError", "Could not load the related entry.")) });
+      }
+    })();
+    return () => { alive = false; };
+  }, [previewStack, relatedRetry, t]);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [form, setForm] = React.useState<ManualJournalForm>(EMPTY_FORM);
 
@@ -266,6 +322,12 @@ const AccountingJournalsPage: React.FC = () => {
   </Card>;
   if (loading && !items.length) return <PageSkeleton variant="accounting" rows={6} />;
 
+  const journalRelated = activeJournal ? journalRelatedSource(activeJournal) : null;
+  const relatedData = relatedPreview?.data || null;
+  const previewCurrency = initialJournal?.currency_code;
+  const relatedSettlement = relatedPreview?.kind === "settlement" ? relatedData as SettledEntry | null : null;
+  const relatedEntry = relatedPreview?.kind === "entry" ? relatedData as Entry | null : null;
+
   return (
     <>
       <section className="space-y-5">
@@ -282,7 +344,7 @@ const AccountingJournalsPage: React.FC = () => {
 
         <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.listTitle", "Journal list")}>
           <div className="p-4 sm:p-5">
-            <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
+            <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={openJournalPreview} columns={[
               { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => journalDisplayId(item) },
               { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
               { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
@@ -530,22 +592,80 @@ const AccountingJournalsPage: React.FC = () => {
           </SidePanelForm>
         )}
       </SidePanel>
-      <SidePanel  isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal ? journalDisplayId(selectedJournal) : undefined}
-        recordLabel={t("footer.journal", "Journal")} recordName={selectedJournal ? journalDisplayId(selectedJournal) : undefined}
+      <SidePanel
+        isOpen={previewStack.length > 0}
+        onClose={closePreview}
+        stackDepth={Math.max(0, previewStack.length - 1)}
+        title={activeJournal ? t("redesign.journalDetails", "Journal details") : relatedData?.description || financeT("entryDetails")}
+        subtitle={activeJournal ? journalDisplayId(activeJournal) : topPreview?.kind !== "journal" ? topPreview?.id : undefined}
+        recordLabel={activeJournal ? t("footer.journal", "Journal") : undefined}
+        recordName={activeJournal ? journalDisplayId(activeJournal) : undefined}
+        footer={!activeJournal ? <Button type="button" variant="outline" onClick={closePreview}>{t("journalsPage.backToJournal", "Back")}</Button> : undefined}
+      >
+        <motion.div
+          key={topPreview?.kind === "journal" ? journalDisplayId(topPreview.journal) : topPreview ? `${topPreview.kind}:${topPreview.id}` : "closed"}
+          initial={{ opacity: 0, x: reduced ? 0 : 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: reduced ? 0 : 0.18, ease: "easeOut" }}
+          className="space-y-5"
         >
-        {selectedJournal && <div className="space-y-6">
-          <SidePanelDetails fields={[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label,value]) => ({label,value}))} />
-          {selectedJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{selectedJournal.memo}</p>}
-          <div className="overflow-x-auto rounded-lg border border-gray-200 settings-table-scroll">
-            <DataTable inspectable={false} items={selectedJournal.lines.map(line=>({...line,id:String(line.line_no)}))} emptyLabel={t("journalsPage.empty", "No journals found.")} columns={[
-              {key:"name",label:t("redesign.ledgerAccount", "Ledger account"),render:line=>line.account_name},
-              {key:"debit",label:t("common.balances.debit", "Debit"),render:line=>(line.debit_minor/100).toFixed(2)},
-              {key:"credit",label:t("common.balances.credit", "Credit"),render:line=>(line.credit_minor/100).toFixed(2)},
-            ]} summary={<div className="flex justify-between gap-3 border-t border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold"><span>{t("redesign.total", "Total")}</span><span>{(selectedJournal.lines.reduce((sum,line)=>sum+line.debit_minor,0)/100).toFixed(2)}</span><span>{(selectedJournal.lines.reduce((sum,line)=>sum+line.credit_minor,0)/100).toFixed(2)}</span></div>}/>
-
+        {activeJournal && <div className="space-y-6">
+          <SidePanelDetails fields={[
+            { label: t("journalsPage.columns.book", "Book"), value: activeJournal.book_code },
+            { label: t("journalsPage.columns.status", "Status"), value: t(`enums.status.${activeJournal.status}`, activeJournal.status) },
+            { label: t("journalsPage.columns.postingDate", "Posting date"), value: activeJournal.posting_date },
+            { label: t("common.currency", "Currency"), value: activeJournal.currency_code },
+            { label: journalRelated?.kind === "settlement" ? t("journalsPage.relatedSettlement", "Related settlement") : t("journalsPage.relatedEntry", "Related entry"), value: journalRelated
+              ? <button type="button" onClick={() => pushRelatedPreview(journalRelated.kind, journalRelated.id)} className="max-w-full break-all text-left font-mono text-[11px] font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950">{journalRelated.id}</button>
+              : "—" },
+          ]}/>
+          {activeJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{activeJournal.memo}</p>}
+          <div className="rounded-lg border border-slate-200">
+            <table className="w-full table-fixed border-collapse text-xs">
+              <thead className="bg-slate-50/80"><tr className="border-b border-slate-200">
+                <th scope="col" className="w-[52%] px-3 py-2 text-left text-[11px] font-medium text-slate-500">{t("redesign.ledgerAccount", "Ledger account")}</th>
+                <th scope="col" className="w-[24%] px-3 py-2 text-right text-[11px] font-medium text-slate-500">{t("common.balances.debit", "Debit")}</th>
+                <th scope="col" className="w-[24%] px-3 py-2 text-right text-[11px] font-medium text-slate-500">{t("common.balances.credit", "Credit")}</th>
+              </tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {activeJournal.lines.map(line => <tr key={line.line_no} className="transition-colors hover:bg-slate-50/60">
+                  <td className="px-3 py-2"><div className="flex min-w-0 items-center gap-2"><span className="shrink-0 font-mono text-[10px] text-slate-400">{line.account_code}</span><span className="truncate text-slate-700">{line.account_name}</span></div></td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-600">{line.debit_minor ? formatCurrency(line.debit_minor / 100, activeJournal.currency_code) : "—"}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-600">{line.credit_minor ? formatCurrency(line.credit_minor / 100, activeJournal.currency_code) : "—"}</td>
+                </tr>)}
+              </tbody>
+              <tfoot><tr className="border-t border-slate-200 bg-slate-50/80">
+                <td className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600">{t("redesign.total", "Total")}</td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-900">{formatCurrency(activeJournal.lines.reduce((sum, line) => sum + line.debit_minor, 0) / 100, activeJournal.currency_code)}</td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-900">{formatCurrency(activeJournal.lines.reduce((sum, line) => sum + line.credit_minor, 0) / 100, activeJournal.currency_code)}</td>
+              </tr></tfoot>
+            </table>
           </div>
-          <p className="text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)}</p>
+          <p className="text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${activeJournal.source_type}`, activeJournal.source_type)}</p>
         </div>}
+        {!activeJournal && relatedPreview?.loading && <p role="status" className="py-6 text-xs text-gray-500">{t("journalsPage.relatedLoading", "Loading related entry…")}</p>}
+        {!activeJournal && relatedPreview?.error && <div role="alert" className="space-y-3 text-xs text-red-700">
+          <p>{relatedPreview.error}</p>
+          <Button type="button" size="sm" variant="outline" onClick={() => setRelatedRetry(value => value + 1)}>{t("journalsPage.relatedRetry", "Try again")}</Button>
+        </div>}
+        {!activeJournal && relatedData && <div className="space-y-5">
+          {relatedData.description && <p className="text-[13px] leading-6 text-slate-600">{relatedData.description}</p>}
+          <SidePanelDetails fields={relatedSettlement ? [
+            { label: financeT("amount"), value: formatCurrency(Number(relatedSettlement.amount), previewCurrency) },
+            { label: financeT("valueDate"), value: relatedSettlement.value_date },
+            { label: financeT("bank"), value: relatedSettlement.bank ? [relatedSettlement.bank.institution, relatedSettlement.bank.account_number].filter(Boolean).join(" · ") : "—" },
+            { label: financeT("observation"), value: relatedSettlement.observation || "—" },
+            { label: financeT("notes"), value: relatedSettlement.notes || "—" },
+            { label: t("journalsPage.relatedId", "ID"), value: <span className="font-mono text-[11px]">{relatedSettlement.external_id}</span> },
+          ] : relatedEntry ? [
+            { label: financeT("amount"), value: formatCurrency(Number(relatedEntry.amount), previewCurrency) },
+            { label: financeT("dueDate"), value: relatedEntry.due_date },
+            { label: financeT("observation"), value: relatedEntry.observation || "—" },
+            { label: financeT("notes"), value: relatedEntry.notes || "—" },
+            { label: t("journalsPage.relatedId", "ID"), value: <span className="font-mono text-[11px]">{relatedEntry.id}</span> },
+          ] : []}/>
+        </div>}
+        </motion.div>
       </SidePanel>
     </>
   );

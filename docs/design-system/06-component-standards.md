@@ -401,6 +401,25 @@ its own focus trap and `inert` on the form body.
 **Remaining differences:** `SidePanel` keeps drawer-specific CSS for its
 scroll/footer/tabs layout; header title/close sizes now match the shared scale.
 
+### 12.1 Preview stacks
+
+For related previews (for example a journal and its source settlement), the
+caller keeps a stack of preview targets and renders one `SidePanel` with
+`stackDepth={stack.length - 1}`. Each level narrows the drawer by 14px and paints
+a decorative page edge behind it, so only a strip of the previous preview is
+visible. Closing the top preview pops one level; opening an unrelated record
+replaces the whole stack. Edit drawers always use `stackDepth={0}`.
+
+Preview detail tables must not introduce their own vertical scroll. Use a static
+`table-fixed` table and let the drawer body scroll; never nest an
+`overflow-y-auto` data table inside a preview.
+
+Stack motion: the drawer width transitions at 220ms. Page edges are full-height,
+square panels with the same border as the drawer; opening pushes them left and
+closing slides them right. New preview content fades in with an 8px horizontal
+offset. Do not add a visible “Related preview” label; the record title and ID
+identify the stacked preview.
+
 ---
 
 ## 13. Popover, menu, tooltip

@@ -449,7 +449,16 @@
       "balance": "Solde"
     },
     "listTitle": "Liste des écritures",
-    "empty": "Aucune écriture trouvée."
+    "empty": "Aucune écriture trouvée.",
+    "relatedPreview": "Aperçu associé",
+    "relatedEntry": "Écriture associée",
+    "relatedSettlement": "Règlement associé",
+    "relatedId": "ID",
+    "backToJournal": "Retour",
+    "relatedLoading": "Chargement de l’écriture associée…",
+    "relatedRetry": "Réessayer",
+    "relatedNotFound": "Règlement associé introuvable.",
+    "relatedLoadError": "Impossible de charger l’écriture associée."
   },
   "reconciliationPage": {
     "sectionLabel": "Rapprochement",

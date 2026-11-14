@@ -449,7 +449,16 @@
       "balance": "Balance"
     },
     "listTitle": "Journal list",
-    "empty": "No journals found."
+    "empty": "No journals found.",
+    "relatedPreview": "Related preview",
+    "relatedEntry": "Related entry",
+    "relatedSettlement": "Related settlement",
+    "relatedId": "ID",
+    "backToJournal": "Back",
+    "relatedLoading": "Loading related entry…",
+    "relatedRetry": "Try again",
+    "relatedNotFound": "Related settlement not found.",
+    "relatedLoadError": "Could not load the related entry."
   },
   "reconciliationPage": {
     "sectionLabel": "Reconciliation",

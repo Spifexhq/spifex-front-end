@@ -33,6 +33,8 @@ type DialogShellProps = {
   closeOnBackdrop?: boolean;
   escapeEnabled?: boolean;
   panelRef?: RefObject<HTMLDivElement>;
+  /** Preview stack depth; drawers are narrowed and page edges are drawn behind. */
+  stackDepth?: number;
 };
 
 /**
@@ -63,6 +65,7 @@ export default function DialogShell({
   closeOnBackdrop = false,
   escapeEnabled = true,
   panelRef,
+  stackDepth = 0,
 }: DialogShellProps) {
   const id = useId();
   const localRef = useRef<HTMLDivElement>(null);
@@ -114,6 +117,22 @@ export default function DialogShell({
             if (event.target === event.currentTarget && closeOnBackdrop && !busy) onClose();
           }}
         >
+          {isDrawer && <AnimatePresence initial={false}>
+            {Array.from({ length: stackDepth }).map((_, index) => {
+              const offset = (stackDepth - index) * 14;
+              return (
+                <motion.div
+                  key={index}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 right-0 w-[min(640px,100vw)] border border-slate-200 bg-white shadow-[-10px_0_30px_#182a4214]"
+                  initial={{ opacity: 0, x: 0 }}
+                  animate={{ opacity: 1 - index * 0.12, x: -offset }}
+                  exit={{ opacity: 0, x: 0 }}
+                  transition={{ duration: reduced ? 0 : 0.22, ease: "easeOut" }}
+                />
+              );
+            })}
+          </AnimatePresence>}
           <motion.div
             ref={ref}
             role="dialog"
@@ -122,10 +141,12 @@ export default function DialogShell({
             aria-describedby={descriptionId}
             aria-busy={busy || undefined}
             tabIndex={-1}
-            style={isDrawer ? undefined : {
-              width: width ? `min(${width}px, 100%)` : undefined,
-              height: height ? `min(${height}px, calc(100dvh - 3rem))` : undefined,
-            }}
+            style={isDrawer
+              ? stackDepth > 0 ? { width: `calc(min(640px, 100vw) - ${stackDepth * 14}px)` } : undefined
+              : {
+                  width: width ? `min(${width}px, 100%)` : undefined,
+                  height: height ? `min(${height}px, calc(100dvh - 3rem))` : undefined,
+                }}
             className={panelClasses}
             initial={isDrawer ? { x: "100%" } : { opacity: 0, y: reduced ? 0 : 10, scale: reduced ? 1 : 0.99 }}
             animate={isDrawer ? { x: 0 } : { opacity: 1, y: 0, scale: 1 }}
