@@ -108,3 +108,22 @@ html {
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
+
+/* Route and section loading progress. The linear sweep is the only looping
+   motion; reduced motion shows a calm, static segment instead. */
+@keyframes tprog-sweep {
+  from { transform: translateX(-60%); }
+  to { transform: translateX(300%); }
+}
+
+.tprog-sweep {
+  animation: tprog-sweep 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tprog-sweep {
+    animation: none !important;
+    transform: translateX(0) !important;
+    width: 35% !important;
+  }
+}

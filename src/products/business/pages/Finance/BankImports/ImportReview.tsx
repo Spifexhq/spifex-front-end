@@ -39,7 +39,7 @@ export default function ImportReview({ sessionId, canEdit }: { sessionId: string
     catch (cause) { setError(apiErrorMessage(cause, t("workspace.error"))); }
     finally { mutation.current = false; setBusy(false); }
   };
-  if (!session || !lookups) return error ? <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}<Button variant="outline" onClick={() => setRetry(value => value + 1)}>{t("workspace.retry")}</Button></div> : <PageSkeleton />;
+  if (!session || !lookups) return error ? <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}<Button variant="outline" onClick={() => setRetry(value => value + 1)}>{t("workspace.retry")}</Button></div> : <PageSkeleton variant="review" />;
   const committed = session.status === "committed", editable = canEdit && !committed;
   const summary = session.summary;
   const counts = [{ key: "total", value: summary.total_rows }, { key: "pending", value: summary.pending_rows }, { key: "ready", value: summary.ready_rows }, { key: "excluded", value: summary.excluded_rows }];

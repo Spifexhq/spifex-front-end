@@ -14,7 +14,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import Input from "@/shared/ui/Input";
@@ -225,15 +225,14 @@ const CurrencySettings: React.FC = () => {
   if (isInitialLoading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={5} />
+        <SettingsPageSkeleton rows={3} variant="panel" />
       </>
     );
   }
 
   return (
     <>
-      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isSubmitting} variant="top" />
 
       <main className="settings-page">
         <div className="settings-content ">

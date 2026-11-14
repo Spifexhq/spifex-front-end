@@ -117,7 +117,7 @@ Status is conveyed with color plus text/icon in tables and toasts. Watch for:
 | Select | `role="listbox"`, `aria-selected`, `aria-activedescendant` |
 | Switches | `role="switch" aria-checked` |
 | Toasts | `role="status"` / `role="alert"`, `aria-atomic` |
-| Tooltip | trigger `aria-describedby`, portal content |
+| Tooltip | trigger `aria-describedby`, portal content; collapsed-rail labels may rely on the control's `aria-label` when the tooltip is a visual duplicate |
 | Icons | decorative icons `aria-hidden`; meaningful icons get a label |
 | Loading | `role="status"` + `sr-only` text |
 | Language | `document.documentElement.lang` synced with i18n |

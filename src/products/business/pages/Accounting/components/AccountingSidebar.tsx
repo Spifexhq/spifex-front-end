@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, ChartNoAxesCombined, CheckCheck, CalendarDays, Lan
 import { useAppShell } from "@/contexts/AppShellContext";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
+import SidebarTooltip from "@/shared/ui/SidebarTooltip";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
 import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
 
@@ -35,12 +36,16 @@ export default function AccountingSidebar() {
     workspace={<WorkspaceSwitcher compact={collapsed} />}
     footer={<div className="shrink-0">
       <div className="space-y-1 border-t border-gray-200 p-3">
-        <Link to="/settings" className={`${row} text-gray-500 hover:bg-gray-200/50`} title={t("section.settings")}><Settings2 size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.settings")}</span></Link>
-        <Link to="/overview" className={`${row} text-gray-500 hover:bg-gray-200/50`} title={t("section.back")}><ArrowLeft size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.back")}</span></Link>
+        <SidebarTooltip label={t("section.settings")} collapsed={collapsed}>
+          <Link to="/settings" aria-label={t("section.settings")} className={`${row} text-gray-500 hover:bg-gray-200/50`}><Settings2 size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.settings")}</span></Link>
+        </SidebarTooltip>
+        <SidebarTooltip label={t("section.back")} collapsed={collapsed}>
+          <Link to="/overview" aria-label={t("section.back")} className={`${row} text-gray-500 hover:bg-gray-200/50`}><ArrowLeft size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.back")}</span></Link>
+        </SidebarTooltip>
       </div>
       <SidebarUserConfiguration collapsed={collapsed} />
     </div>}
   >
-    {groups.map(group => <section key={group.key} className="mb-5" aria-label={t(`section.${group.key}`)}><p className={`mb-2 h-5 w-[224px] pl-3 text-[11px] font-medium text-gray-500 ${label}`}>{t(`section.${group.key}`)}</p><div className="space-y-1">{group.items.map(({page,key,Icon}) => <NavLink key={page} to={`/accounting/${page}`} onClick={shell?.closeMobile} title={collapsed ? t(`nav.${key}`) : undefined} aria-label={t(`nav.${key}`)} className={({isActive}) => `${row} ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50"}`}><Icon size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t(`nav.${key}`)}</span></NavLink>)}</div></section>)}
+    {groups.map(group => <section key={group.key} className="mb-5" aria-label={t(`section.${group.key}`)}><p className={`mb-2 h-5 w-[224px] pl-3 text-[11px] font-medium text-gray-500 ${label}`}>{t(`section.${group.key}`)}</p><div className="space-y-1">{group.items.map(({page,key,Icon}) => <SidebarTooltip key={page} label={t(`nav.${key}`)} collapsed={collapsed}><NavLink to={`/accounting/${page}`} onClick={shell?.closeMobile} aria-label={t(`nav.${key}`)} className={({isActive}) => `${row} ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50"}`}><Icon size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t(`nav.${key}`)}</span></NavLink></SidebarTooltip>)}</div></section>)}
   </SidebarFrame>;
 }

@@ -10,7 +10,7 @@ import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -473,15 +473,14 @@ const ProjectSettings: React.FC = () => {
   if (shouldBlockOnInitial) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
+        <SettingsPageSkeleton rows={6} variant="settings-table" />
       </>
     );
   }
 
   return (
     <>
-      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+      <TopProgress active={isBackgroundSync} variant="top" />
 
       <main className="settings-page">
         <div className="settings-content ">

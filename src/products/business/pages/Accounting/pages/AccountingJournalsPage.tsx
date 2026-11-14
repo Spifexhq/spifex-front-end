@@ -242,7 +242,7 @@ const AccountingJournalsPage: React.FC = () => {
     }
   };
 
-  if (loading && !items.length) return <PageSkeleton rows={6} />;
+  if (loading && !items.length) return <PageSkeleton variant="accounting" rows={6} />;
 
   return (
     <>
@@ -297,7 +297,7 @@ const AccountingJournalsPage: React.FC = () => {
         subtitle={t("journalsPage.modal.subtitle", "Create a controlled accounting entry with balanced debit and credit lines.")}
       >
         {lookupsLoading ? (
-          <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
+          <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={5} /></div>
         ) : (
           <SidePanelForm recordLabel={t("footer.journal", "Journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">

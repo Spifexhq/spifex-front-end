@@ -150,6 +150,8 @@ together or extract a constant.
 
 - **No bottom mobile navigation.** The hamburger + rail is the only navigation
   pattern; do not add a tab bar without a product decision.
+- **Collapsed rails** use `SidebarTooltip` for every icon-only control. Do not
+  fall back to native `title`; keep the control's localized `aria-label`.
 - **Desktop rail collapse persistence** is stored per mode; whether Personal
   shares the same keys needs verification.
 - **Navbar page icon** (`PanelsTopLeft`) is decorative and hidden below `sm`;

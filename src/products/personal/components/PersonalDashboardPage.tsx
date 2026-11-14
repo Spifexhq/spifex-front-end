@@ -119,7 +119,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
     ];
   }, [data, t]);
 
-  if (!data && loading) return <PageSkeleton rows={7} />;
+  if (!data && loading) return <PageSkeleton variant="dashboard" rows={7} />;
 
   const setRange = (range: DateRange) => {
     setDraft(previous => ({ ...previous, ...range }));

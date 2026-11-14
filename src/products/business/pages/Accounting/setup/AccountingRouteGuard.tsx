@@ -10,7 +10,7 @@ export default function AccountingRouteGuard({ children }: { children: ReactNode
   const { pathname } = useLocation();
   const { t } = useTranslation("accountingSettings");
   const { status, loading, error, refresh } = useAccountingSetup();
-  if (loading && !status) return <PageSkeleton rows={6} />;
+  if (loading && !status) return <PageSkeleton variant="accounting" rows={6} />;
   if (error || !status) return <div role="alert" className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6">
     <h2>{t("setupFlow.loadError")}</h2><p>{error}</p><Button variant="outline" onClick={() => void refresh()}>{t("redesign.retry")}</Button>
   </div>;

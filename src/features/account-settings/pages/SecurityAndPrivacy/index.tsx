@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import PageSkeleton, { PageSkeletonShell } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import Button from "@/shared/ui/Button";
@@ -429,8 +429,7 @@ const SecurityAndPrivacy: React.FC = () => {
   if (isInitialLoading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton variant="form" rows={5} />
+        {personal ? <PageSkeleton variant="panel" rows={3} /> : <PageSkeletonShell variant="panel" rows={3} />}
       </>
     );
   }
@@ -443,7 +442,7 @@ const SecurityAndPrivacy: React.FC = () => {
 
   return (
     <>
-      <TopProgress active={isSubmitting || isTwoFactorSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isSubmitting || isTwoFactorSubmitting} variant="top" />
 
       <main className={personal ? "min-w-0" : "min-w-0 px-4 pb-10 pt-6 sm:px-7"}>
         <div className={personal ? "w-full space-y-5" : "mx-auto w-full max-w-[1440px] space-y-5"}>

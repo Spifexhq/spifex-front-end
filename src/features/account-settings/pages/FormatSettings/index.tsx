@@ -13,7 +13,7 @@ import type { Locale } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
@@ -275,8 +275,7 @@ const FormatSettings: React.FC = () => {
   if (isInitialLoading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={5} />
+        <SettingsPageSkeleton rows={2} variant="settings-form" />
       </>
     );
   }
@@ -285,7 +284,7 @@ const FormatSettings: React.FC = () => {
   return (
     <>
       {/* thin progress while saving */}
-      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isSubmitting} variant="top" />
 
       <main className="settings-page">
         <div className="settings-content ">

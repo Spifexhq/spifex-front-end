@@ -9,7 +9,7 @@ import { useAuthContext } from "@/hooks/useAuth";
 import Button from "@/shared/ui/Button";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import DataTable, { type Column } from "@/shared/ui/DataTable";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import DataTableSkeleton from "@/shared/ui/DataTable/DataTableSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
 import type { IntegrationConnection } from "@/models/integrations/connections";
 import ConnectionPolicyEditor from "./ConnectionPolicyEditor";
@@ -291,9 +291,7 @@ function ConnectionsPage() {
         </div>
 
         {loading ? (
-          <div className="p-4 sm:p-5">
-            <PageSkeleton rows={4} />
-          </div>
+          <DataTableSkeleton rows={4} columns={5} pagination={false} />
         ) : error ? (
           <div role="alert" className="flex flex-col items-start gap-3 p-4 sm:p-5">
             <p className="text-sm text-red-700">{error}</p>

@@ -1535,7 +1535,7 @@ export default function AccountingCorrelationsPage() {
   }, [centerNode, selectedRows]);
 
   if (loading) {
-    return <PageSkeleton rows={10} />;
+    return <PageSkeleton variant="correlations" rows={10} />;
   }
 
   return (

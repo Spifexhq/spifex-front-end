@@ -204,7 +204,7 @@ const AccountingBankMappingsPage: React.FC = () => {
     }
   };
 
-  if ((loading && !items.length) || lookupsLoading) return <PageSkeleton rows={6} />;
+  if ((loading && !items.length) || lookupsLoading) return <PageSkeleton variant="accounting" rows={6} />;
   if (!lookupsReady) return <div role="alert" className="space-y-3 rounded-lg border border-gray-200 p-5"><p className="text-sm text-red-700">{t("bankMappingsPage.lookupError", "Failed to load mapping form lookups.")}</p><Button variant="outline" onClick={() => void loadLookups()}>{t("redesign.retry", "Retry")}</Button></div>;
 
   return (
@@ -261,7 +261,7 @@ const AccountingBankMappingsPage: React.FC = () => {
         subtitle={t("bankMappingsPage.modal.subtitle", "Choose the operational bank account, accounting book, and bank-control ledger account.")}
       >
         {lookupsLoading ? (
-          <div className="settings-modal-scroll"><PageSkeleton rows={4} /></div>
+          <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={4} /></div>
         ) : (
           <SidePanelForm recordLabel={t("footer.bankMapping", "Bank mapping")} recordName={banks.find(bank => bank.id === form.bank_account_id)?.institution} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             {editingScope && <p className="text-xs leading-6 text-gray-500">{t("setupFlow.scopeLocked", "The bank or category and book identify this configuration. Create a new configuration to use a different scope.")}</p>}

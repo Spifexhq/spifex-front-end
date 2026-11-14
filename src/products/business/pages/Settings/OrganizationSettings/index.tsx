@@ -12,7 +12,7 @@ import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
 import Snackbar from "@/shared/ui/Snackbar";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { PageSkeletonShell } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import { api } from "@/core/api/requests";
@@ -199,8 +199,7 @@ const OrganizationSettings: React.FC = () => {
   if (isInitialLoading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton variant="form" rows={6} />
+        <PageSkeletonShell variant="form" rows={6} />
       </>
     );
   }
@@ -226,7 +225,7 @@ const OrganizationSettings: React.FC = () => {
 
   return (
     <>
-      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isSubmitting} variant="top" />
 
       <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">

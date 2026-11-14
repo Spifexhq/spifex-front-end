@@ -6,7 +6,7 @@ import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { PageSkeletonShell } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -295,8 +295,7 @@ const GroupSettings: React.FC = () => {
   if (isInitialLoading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton variant="groups" rows={6} />
+        <PageSkeletonShell variant="groups" rows={6} />
       </>
     );
   }
@@ -315,7 +314,7 @@ const GroupSettings: React.FC = () => {
 
   return (
     <>
-      <TopProgress active={isBackgroundSync || isSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isBackgroundSync || isSubmitting} variant="top" />
 
       <main className="min-w-0 px-4 pb-10 pt-6 sm:px-7">
         <div className="mx-auto w-full max-w-[1440px] space-y-5">

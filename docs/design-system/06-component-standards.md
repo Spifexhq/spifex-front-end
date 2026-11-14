@@ -413,6 +413,9 @@ mobile variant anchors to the bottom (`inset-x-3 bottom-3 max-h-[80dvh]`),
 12px text, danger color `#c52d38`, keyboard Escape returns focus to anchor.
 **`InfoTooltip`**: portal, 120ms close delay, reposition on scroll/resize,
 `role="tooltip"` via trigger `aria-describedby`; 13px text on dark or white card.
+**`SidebarTooltip`**: collapsed-rail label; portal, side-aware placement with
+left flip and vertical clamp, dark compact surface with arrow, opens on hover and
+focus, closes on leave/blur/outside/Escape; 140ms entrance and reduced-motion safe.
 
 **Rules:** menus close on outside pointer, scroll, and Escape. Anchored panels
 must flip when there is no space. Tooltips never carry essential information.
@@ -485,16 +488,20 @@ labels, settings background-sync badges, and the limits usage `ToneBadge`.
 | Component | File | When |
 | --- | --- | --- |
 | `DataTableSkeleton` | `src/shared/ui/DataTable/DataTableSkeleton.tsx` | First table load; mirrors columns/selection/pagination |
-| `PageSkeleton` | `src/shared/ui/Loaders/PageSkeleton.tsx` | Page-level first load; variants `table`/`form`/`groups`; content only, page heading stays |
-| `SkeletonLine` | same files | `rounded bg-gray-100 motion-safe:animate-pulse` |
+| `PageSkeleton` | `src/shared/ui/Loaders/PageSkeleton.tsx` | Page-level first load; content only, page heading stays. Variants mirror page compositions: `table`, `limits`, `settings-table`, `form`, `sections`, `panel`, `settings-form`, `groups`, `settings-list`, `dashboard`, `billing`, `onboarding`, `review`, `accounting`, `correlations`, `fields` |
+| `PageSkeletonShell` | same file | Page frame for routes without their own container: canonical `max-w-[1440px]` + `px-4 py-6 sm:px-7` |
+| `SettingsPageSkeleton` | same file | Settings frame: `.settings-page` + `.settings-content`; heading stays in `SettingsLayout` |
+| `SkeletonLine` | same files | `rounded bg-gray-100` with a `shimmer` sweep; static under reduced motion |
 | `Shimmer` | `src/shared/ui/Loaders/Shimmer.tsx` | Decorative shimmer block; requires `@keyframes shimmer` (exists in `index.css`) |
 | `Spinner` | `src/shared/ui/Loaders/Spinner.tsx` | Inline button/panel busy; `role="status" aria-label="loading"` |
-| `TopProgress` | `src/shared/ui/Loaders/TopProgress.tsx` | Route/global progress; `z-[9999]`, 2px bar, reduced-motion safe |
+| `TopProgress` | `src/shared/ui/Loaders/TopProgress.tsx` | Route/section progress; sticky 2px content bar (`z-20`) or centered minimal line; no visible text/shadows; reduced-motion safe |
 | `PageLoader` | `src/shared/ui/Loaders/PageLoader.tsx` | Full-page blocking load |
 
 Rules: skeleton for layout-shaped waits, spinner for actions under ~300ms,
 progress bar for navigation. Never show both skeleton and spinner for the same
-region. Skeletons use `aria-busy` + `sr-only` label.
+region. Skeletons use `aria-busy` + `sr-only` label. `PageSkeleton` carries no
+page gutter or fake title: the layout owns page chrome. Use `PageSkeletonShell`
+or `SettingsPageSkeleton` only when the route has no container of its own.
 
 Phase 4, PR 15 audit: page first loads use `PageSkeleton`/`DataTableSkeleton`,
 dialogs use `DialogSkeleton`, and no app page renders an inline `Spinner` or

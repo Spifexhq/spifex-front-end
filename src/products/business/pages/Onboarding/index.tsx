@@ -409,8 +409,11 @@ const OnboardingPage: React.FC = () => {
   if (loading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={8} />
+        <main className="min-h-full bg-[#f7f8fa] text-[#26344a] px-4 py-6 md:px-7 md:py-6">
+          <div className="mx-auto w-full min-w-0 max-w-[1440px]">
+            <PageSkeleton variant="onboarding" rows={8} />
+          </div>
+        </main>
       </>
     );
   }
@@ -440,7 +443,6 @@ const OnboardingPage: React.FC = () => {
       <TopProgress
         active={savingPersonal || savingOrg || loadingOnboarding}
         variant="top"
-        topOffset={64}
       />
 
       <main className="min-h-full bg-[#f7f8fa] text-[#26344a] px-4 py-6 md:px-7 md:py-6">

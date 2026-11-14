@@ -14,7 +14,7 @@ import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
 import Badge from "@/shared/ui/Badge";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import Select from "src/shared/ui/Select/Select";
@@ -510,15 +510,14 @@ const InventorySettings: React.FC = () => {
   if (shouldBlockOnInitial) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
+        <SettingsPageSkeleton rows={6} variant="settings-table" />
       </>
     );
   }
 
   return (
     <>
-      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+      <TopProgress active={isBackgroundSync} variant="top" />
 
       <main className="settings-page">
         <div className="settings-content ">

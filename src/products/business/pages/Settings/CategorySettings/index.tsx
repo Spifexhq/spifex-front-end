@@ -9,7 +9,7 @@ import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import Textarea from "@/shared/ui/Input/Textarea";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
 import Popover from "@/shared/ui/Popover";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
@@ -330,7 +330,7 @@ const CategorySettingsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <PageSkeleton rows={6} />;
+  if (loading) return <SettingsPageSkeleton rows={6} variant="settings-table" />;
 
   const statusIsDefault = appliedStatuses.length === 1 && appliedStatuses[0] === "active";
   const hasFilters = !!appliedSearch || !!appliedTxFilter || !!appliedParent || !statusIsDefault;

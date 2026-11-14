@@ -1,70 +1,49 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 type TopProgressProps = {
   active: boolean;
   variant?: "top" | "center";
-  topOffset?: number;
   height?: number;
+  label?: string;
 };
 
 export const TopProgress: React.FC<TopProgressProps> = ({
   active,
   variant = "top",
-  topOffset = 64,
   height = 2,
+  label,
 }) => {
+  const { t } = useTranslation("common");
+  const accessibleLabel = label ?? t("loading");
   const isTop = variant === "top";
 
-  // Center variant: mount only when active so no shadow sticks around.
+  // The center state blocks bootstrap/auth work, so it only mounts while active.
   if (!active && !isTop) return null;
 
-  return (
-    <>
-      <style>{`
-        @keyframes tprog-slide {
-          0%   { transform: translateX(-60%); }
-          50%  { transform: translateX(20%); }
-          100% { transform: translateX(110%); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .tprog-anim { animation: none !important; transform: translateX(0) !important; }
-        }
-      `}</style>
-
-      {isTop ? (
-        <div
-          className={`fixed left-0 right-0 z-[9999] overflow-hidden pointer-events-none ${
-            active ? "" : "hidden"
-          }`}
-          style={{ top: `${topOffset}px`, height }}
-          aria-hidden={!active}
-          aria-busy={active}
-        >
-          <div
-            className="h-full w-1/2 bg-[var(--accentPrimary)] transition-opacity duration-180 ease-out motion-reduce:transition-none tprog-anim"
-            style={{ opacity: active ? 1 : 0, animation: active ? "tprog-slide 1.2s ease-in-out infinite" : "none" }}
-          />
-        </div>
-      ) : (
-        <div className="fixed inset-0 z-[9999] pointer-events-none" aria-hidden={!active} aria-busy={active}>
-          <div
-            className="absolute left-1/2 top-1/2 overflow-hidden rounded-full"
-            style={{
-              width: "10vw",
-              height,
-              transform: "translate(-50%, -50%)",
-              boxShadow: "0 0 0 1px rgba(0,0,0,0.06), 0 1px 6px rgba(0,0,0,0.08)",
-              background: "transparent",
-            }}
-          >
-            <div
-              className="h-full w-1/2 bg-[var(--accentPrimary)] transition-opacity duration-180 ease-out motion-reduce:transition-none tprog-anim"
-              style={{ opacity: 1, animation: "tprog-slide 1.2s ease-in-out infinite" }}
-            />
-          </div>
-        </div>
-      )}
-    </>
+  return isTop ? (
+    <div
+      role="progressbar"
+      aria-label={accessibleLabel}
+      aria-busy={active}
+      aria-hidden={!active}
+      className={`sticky top-0 z-20 overflow-hidden bg-gray-100/80 transition-opacity duration-150 ease-out motion-reduce:transition-none ${
+        active ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
+      style={{ height, marginBottom: -height }}
+    >
+      <span className="tprog-sweep absolute inset-y-0 left-0 w-2/5 rounded-full bg-[linear-gradient(90deg,transparent_0%,var(--accentPrimary)_45%,var(--accentPrimaryHover)_85%,transparent_100%)]" />
+    </div>
+  ) : (
+    <div className="pointer-events-none fixed inset-0 z-30 grid place-items-center" aria-hidden={!active} aria-busy={active}>
+      <div
+        role="progressbar"
+        aria-label={accessibleLabel}
+        className="relative h-1 w-28 max-w-[calc(100vw-2rem)] overflow-hidden rounded-full bg-gray-200/80"
+      >
+        <span className="tprog-sweep absolute inset-y-0 left-0 w-1/2 rounded-full bg-[linear-gradient(90deg,transparent_0%,var(--accentPrimary)_45%,var(--accentPrimaryHover)_85%,transparent_100%)]" />
+      </div>
+    </div>
   );
 };
 

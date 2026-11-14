@@ -214,7 +214,7 @@ const ReportsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <main className="w-full">
-        <TopProgress active={isBusy} variant="top" topOffset={64} />
+        <TopProgress active={isBusy} variant="top" />
 
         <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-6 sm:px-5 md:space-y-6 md:px-8 lg:px-10">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

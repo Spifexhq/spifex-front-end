@@ -9,7 +9,6 @@ import React, { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Button from "@/shared/ui/Button";
 
 function useQuery() {
@@ -33,8 +32,6 @@ const SubscriptionCanceled: React.FC = () => {
 
   return (
     <>
-      <TopProgress active={false} variant="top" topOffset={64} />
-
       <main className="settings-page">
         <div className="settings-content ">
           <section className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">

@@ -6,8 +6,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { PageSkeletonShell } from "@/shared/ui/Loaders/PageSkeleton";
 import { api } from "@/core/api/requests";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { formatDateTimeFromISO } from "@/lib/date/formatDate";
@@ -204,8 +203,7 @@ const LimitsAndUsage: React.FC = () => {
   if (loading)
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
+        <PageSkeletonShell rows={6} variant="limits" />
       </>
     );
 

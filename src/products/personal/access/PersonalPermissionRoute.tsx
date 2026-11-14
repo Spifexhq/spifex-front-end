@@ -12,7 +12,7 @@ export default function PersonalPermissionRoute({ permission, children }: { perm
   const access = usePersonalAccess();
   const auth = useAuthContext();
   const superuser = auth.isSuperUser && auth.organization?.organization?.product_category === "personal";
-  if (access.loading && !superuser) return <PageSkeleton rows={6}/>;
+  if (access.loading && !superuser) return <PageSkeleton variant="table" rows={6}/>;
   if (access.error && !superuser) return <Card as="section" radius="xl" padding="spacious" role="alert" className="mx-auto mt-8 max-w-xl">
     <h1 className="text-base font-semibold text-gray-900">{t("access.loadErrorTitle")}</h1>
     <p className="mt-2 text-sm text-gray-600">{t("access.loadErrorDescription")}</p>

@@ -79,7 +79,7 @@ export default function ProductBillingSettings() {
       setBusy(false);
     }
   };
-  if (loading) return <PageSkeleton variant="groups" rows={3}/>;
+  if (loading) return <PageSkeleton variant="billing" rows={3} />;
   const subscriptionBody = status === "active" || status === "trialing"
     ? subscription?.subscription?.cancel_at_period_end ? t("callout.active.cancelAtBody", { date: dateLabel(periodDate, i18n.language) }) : t(status === "trialing" ? "callout.trialing.title" : "callout.active.renewsBody", { date: dateLabel(periodDate, i18n.language) })
     : status === "past_due" ? t("callout.pastDue.body") : status === "incomplete" ? t("callout.incomplete.body") : status === "unpaid" ? t("callout.unpaid.body") : status === "canceled" ? t(subscription?.subscription?.ended_at ? "callout.canceled.bodyEnded" : "callout.canceled.bodyNoAccess", { date: dateLabel(subscription?.subscription?.ended_at, i18n.language) }) : t("callout.none.body");

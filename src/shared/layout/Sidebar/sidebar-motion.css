@@ -115,3 +115,23 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar-mobile-backdrop, .sidebar-motion[data-mobile="true"] { transition: none; }
 }
+
+/* Collapsed-rail labels use a single compact tooltip surface. */
+.sidebar-tooltip {
+  animation: sidebar-tooltip-in-right 140ms ease-out;
+  will-change: transform, opacity;
+}
+.sidebar-tooltip[data-side="left"] {
+  animation-name: sidebar-tooltip-in-left;
+}
+@keyframes sidebar-tooltip-in-right {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes sidebar-tooltip-in-left {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-tooltip { animation: none; }
+}

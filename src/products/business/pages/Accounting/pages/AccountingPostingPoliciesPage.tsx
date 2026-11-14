@@ -260,7 +260,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     }
   };
 
-  if (loading && !items.length) return <PageSkeleton rows={6} />;
+  if (loading && !items.length) return <PageSkeleton variant="accounting" rows={6} />;
 
   return (
     <>
@@ -317,7 +317,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         subtitle={t("postingPoliciesPage.modal.subtitle", "Define how one operational category maps into settlement, accrual, and clearing accounts.")}
       >
         {lookupsLoading ? (
-          <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
+          <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={5} /></div>
         ) : (
           <SidePanelForm recordLabel={t("footer.postingPolicy", "Posting policy")} recordName={categories.find(category => category.id === form.cashflow_category_id)?.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             {editingScope && <p className="text-xs leading-6 text-gray-500">{t("setupFlow.scopeLocked", "The bank or category and book identify this configuration. Create a new configuration to use a different scope.")}</p>}

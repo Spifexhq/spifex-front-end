@@ -2,6 +2,7 @@ import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitche
 
 import SidebarUserConfiguration from "../../../../shared/layout/Sidebar/SidebarUserConfiguration";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
+import SidebarTooltip from "@/shared/ui/SidebarTooltip";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -75,20 +76,21 @@ export default function SidebarNavigation({
   return (
     <SidebarFrame open={isOpen} mobile={mobile} onToggle={toggleSidebar} product="Business" label={t("sidebar.aria.nav")} toggleLabel={t(mobile ? "sidebar.aria.close" : isOpen ? "sidebar.aria.toggleClose" : "sidebar.aria.toggleOpen")} workspace={<WorkspaceSwitcher compact={collapsed}/>} footer={<>
         <div className="shrink-0 border-t border-gray-200 p-3">
-          <Link
-            to="/settings"
-            onClick={() => {
-              if (mobile && isOpen) toggleSidebar();
-            }}
-            aria-label={t("sidebar.settings")}
-            title={collapsed ? t("sidebar.settings") : undefined}
-            className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"
-          >
-            <Settings2 size={16} className="sidebar-icon" aria-hidden="true" />
-            <span className="sidebar-label">
-              {t("sidebar.settings")}
-            </span>
-          </Link>
+          <SidebarTooltip label={t("sidebar.settings")} collapsed={collapsed}>
+            <Link
+              to="/settings"
+              onClick={() => {
+                if (mobile && isOpen) toggleSidebar();
+              }}
+              aria-label={t("sidebar.settings")}
+              className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"
+            >
+              <Settings2 size={16} className="sidebar-icon" aria-hidden="true" />
+              <span className="sidebar-label">
+                {t("sidebar.settings")}
+              </span>
+            </Link>
+          </SidebarTooltip>
         </div>
 
         <SidebarUserConfiguration collapsed={collapsed} />
@@ -146,24 +148,25 @@ export default function SidebarNavigation({
               },
             ].map(({ to, label, Icon, permission }) => {
               const item = (
-                <NavLink
-                  to={to}
-                  aria-label={label}
-                  title={collapsed ? label : undefined}
-                  onClick={() => {
-                    if (mobile && isOpen) toggleSidebar();
-                  }}
-                  className={({ isActive }) =>
-                    `sidebar-row rounded-md text-[13px] transition-colors ${
-                      isActive
-                        ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200"
-                        : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
-                    }`
-                  }
-                >
-                  <Icon size={16} className="sidebar-icon" aria-hidden="true" />
-                  <span className="sidebar-label">{label}</span>
-                </NavLink>
+                <SidebarTooltip label={label} collapsed={collapsed}>
+                  <NavLink
+                    to={to}
+                    aria-label={label}
+                    onClick={() => {
+                      if (mobile && isOpen) toggleSidebar();
+                    }}
+                    className={({ isActive }) =>
+                      `sidebar-row rounded-md text-[13px] transition-colors ${
+                        isActive
+                          ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200"
+                          : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"
+                      }`
+                    }
+                  >
+                    <Icon size={16} className="sidebar-icon" aria-hidden="true" />
+                    <span className="sidebar-label">{label}</span>
+                  </NavLink>
+                </SidebarTooltip>
               );
 
               return (
@@ -196,26 +199,23 @@ export default function SidebarNavigation({
                     requireAll
                   >
                     <li>
-                      <button
-                        type="button"
-                        onClick={() => run(onClick)}
-                        aria-label={t(`sidebar.items.${key}`)}
-                        title={
-                          collapsed
-                            ? t(`sidebar.items.${key}`)
-                            : undefined
-                        }
-                        className="sidebar-row group rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"
-                      >
-                        <Icon
-                          size={16}
-                          className="sidebar-icon"
-                          aria-hidden="true"
-                        />
-                        <span className="sidebar-label">
-                          {t(`sidebar.items.${key}`)}
-                        </span>
-                      </button>
+                      <SidebarTooltip label={t(`sidebar.items.${key}`)} collapsed={collapsed}>
+                        <button
+                          type="button"
+                          onClick={() => run(onClick)}
+                          aria-label={t(`sidebar.items.${key}`)}
+                          className="sidebar-row group rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"
+                        >
+                          <Icon
+                            size={16}
+                            className="sidebar-icon"
+                            aria-hidden="true"
+                          />
+                          <span className="sidebar-label">
+                            {t(`sidebar.items.${key}`)}
+                          </span>
+                        </button>
+                      </SidebarTooltip>
                     </li>
                   </PermissionMiddleware>
                 ))}

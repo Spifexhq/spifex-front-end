@@ -7,6 +7,7 @@ import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, C
 import { useAuthContext } from "@/hooks/useAuth";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
+import SidebarTooltip from "@/shared/ui/SidebarTooltip";
 import type { SidebarSettingsProps } from "./SidebarSettings";
 
 const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, workspaces: PanelsTopLeft, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network, formats: CalendarClock, currency: Coins, ai: Bot };
@@ -99,7 +100,9 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
     workspace={<WorkspaceSwitcher compact={frameCollapsed} />}
     footer={<div className="shrink-0">
       <div className="border-t border-gray-200 p-3">
-        <NavLink to="/" title={t("actions.back", "Back to workspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("actions.back", "Back to workspace")}</span></NavLink>
+        <SidebarTooltip label={t("actions.back", "Back to workspace")} collapsed={frameCollapsed}>
+          <NavLink to="/" aria-label={t("actions.back", "Back to workspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("actions.back", "Back to workspace")}</span></NavLink>
+        </SidebarTooltip>
       </div>
       <SidebarUserConfiguration collapsed={frameCollapsed} />
     </div>}
@@ -110,10 +113,14 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
       </div>
       <ul className="space-y-1">{section.items.map(item => {
         const Icon = Icons[item.icon];
-        return <li key={item.id}><NavLink to={`/settings/${item.id}`} onClick={mobile ? onMobileClose : undefined} title={frameCollapsed ? item.label : undefined} aria-label={item.label} aria-current={activeItem === item.id ? "page" : undefined}
-          className={`sidebar-row group rounded-md text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-gray-400 ${activeItem === item.id ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}>
-          <Icon size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{item.label}</span>
-        </NavLink></li>;
+        return <li key={item.id}>
+          <SidebarTooltip label={item.label} collapsed={frameCollapsed}>
+            <NavLink to={`/settings/${item.id}`} onClick={mobile ? onMobileClose : undefined} aria-label={item.label} aria-current={activeItem === item.id ? "page" : undefined}
+              className={`sidebar-row group rounded-md text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-gray-400 ${activeItem === item.id ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}>
+              <Icon size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{item.label}</span>
+            </NavLink>
+          </SidebarTooltip>
+        </li>;
       })}</ul>
     </section>)}
   </SidebarFrame>;

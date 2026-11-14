@@ -11,7 +11,7 @@ import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
 import Switch from "@/shared/ui/Switch";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import { EmptyState } from "@/shared/ui/State";
 import Badge from "@/shared/ui/Badge";
 
@@ -150,7 +150,7 @@ export default function WorkspaceManagementPage() {
     }
   };
 
-  if (loading) return <main className="settings-page"><div className="settings-content"><PageSkeleton variant="groups" rows={3}/></div></main>;
+  if (loading) return <SettingsPageSkeleton variant="settings-list" rows={3} />;
 
   return <main className="settings-page">
     <div className="settings-content space-y-5">

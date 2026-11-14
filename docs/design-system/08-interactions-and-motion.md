@@ -123,15 +123,20 @@ mutating controls, and never replace a populated table with a skeleton.
 
 ## 8. Loading hierarchy
 
-1. **Route-level**: `TopProgress` (2px, `z-[9999]`) or `PageLoader` for blocking
-   auth/bootstrap.
-2. **Page-level first load**: `PageSkeleton` (keeps the page heading).
+1. **Route-level**: `TopProgress` — a 2px sticky bar at the top of the content
+   scroll area (`z-20`), or a minimal centered line for blocking auth/bootstrap.
+   The indicator stays below the navbar, sidebar, modals, popovers and toasts.
+2. **Page-level first load**: `PageSkeleton` (keeps the page heading). Do not also
+   render `TopProgress` for the same first load.
 3. **Table first load**: `DataTableSkeleton`.
 4. **Region refresh**: keep content, show subtle busy state.
 5. **Action**: button `isLoading`, spinner inside the control.
 6. **Inline async field**: disable + trailing spinner.
 
-Do not stack two indicators for the same wait.
+Do not stack two indicators for the same wait. `TopProgress` uses one soft accent
+gradient sweep on a neutral track, with no visible words, borders or shadows;
+skeleton lines use the shared `shimmer` keyframe. Both become static under
+`prefers-reduced-motion`.
 
 ## 9. Interaction findings
 

@@ -16,7 +16,7 @@ import Checkbox from "@/shared/ui/Checkbox";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
 
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import PageSkeleton, { PageSkeletonShell } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the pointer row mirrors the focusable switch. */
@@ -215,8 +215,7 @@ const NotificationSettings: React.FC = () => {
   if (isInitialLoading) {
     return (
       <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton variant="form" rows={5} />
+        {personal ? <PageSkeleton variant="sections" rows={6} /> : <PageSkeletonShell variant="sections" rows={6} />}
       </>
     );
   }
@@ -224,7 +223,7 @@ const NotificationSettings: React.FC = () => {
   /* -------------------------------- Render ------------------------------- */
   return (
     <>
-      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isSubmitting} variant="top" />
 
       <main className={personal ? "min-w-0" : "min-w-0 px-4 pb-10 pt-6 sm:px-7"}>
         <div className={personal ? "w-full space-y-5" : "mx-auto w-full max-w-[1440px] space-y-5"}>

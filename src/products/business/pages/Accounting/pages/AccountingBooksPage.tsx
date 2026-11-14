@@ -147,7 +147,7 @@ const AccountingBooksPage: React.FC = () => {
     }
   };
 
-  if (loading && !items.length) return <PageSkeleton rows={6} />;
+  if (loading && !items.length) return <PageSkeleton variant="accounting" rows={6} />;
 
   return (
     <>
