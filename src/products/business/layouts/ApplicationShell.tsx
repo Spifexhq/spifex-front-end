@@ -15,25 +15,27 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
   const navigate = useNavigate();
   const settings = pathname.startsWith("/settings");
   const accounting = /^\/accounting(?:\/|$)/.test(pathname);
-  const section = settings || accounting;
+  const inventory = /^\/inventory(?:\/|$)/.test(pathname);
+  const section = settings || accounting || inventory;
   /** Cashflow/settled own their full-bleed workspace; no rail is rendered. */
   const pageHasActions = /^\/(cashflow|settled)\/?$/.test(pathname);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(() => readCollapsed("spifex.workspace.collapsed", false));
   const [settingsCollapsed, setSettingsCollapsed] = useState(() => readCollapsed("spifex.settings.collapsed", false));
   const [accountingCollapsed, setAccountingCollapsed] = useState(() => readCollapsed("spifex.accounting.collapsed", false));
+  const [inventoryCollapsed, setInventoryCollapsed] = useState(() => readCollapsed("spifex.inventory.collapsed", false));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [financialRevision, setFinancialRevision] = useState(0);
   const refreshFinance = useCallback(() => setFinancialRevision(value => value + 1), []);
   const [sidebarSlot, setSidebarSlot] = useState<HTMLDivElement | null>(null);
-  const collapsed = accounting ? accountingCollapsed : settings ? settingsCollapsed : workspaceCollapsed;
+  const collapsed = inventory ? inventoryCollapsed : accounting ? accountingCollapsed : settings ? settingsCollapsed : workspaceCollapsed;
   const toggleCollapsed = useCallback(() => {
-    const setter = accounting ? setAccountingCollapsed : settings ? setSettingsCollapsed : setWorkspaceCollapsed;
+    const setter = inventory ? setInventoryCollapsed : accounting ? setAccountingCollapsed : settings ? setSettingsCollapsed : setWorkspaceCollapsed;
     setter(previous => {
       const next = !previous;
-      try { localStorage.setItem(accounting ? "spifex.accounting.collapsed" : settings ? "spifex.settings.collapsed" : "spifex.workspace.collapsed", String(next)); } catch { /* Optional persistence. */ }
+      try { localStorage.setItem(inventory ? "spifex.inventory.collapsed" : accounting ? "spifex.accounting.collapsed" : settings ? "spifex.settings.collapsed" : "spifex.workspace.collapsed", String(next)); } catch { /* Optional persistence. */ }
       return next;
     });
-  }, [settings, accounting]);
+  }, [settings, accounting, inventory]);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const toggleMobile = useCallback(() => setMobileOpen(previous => !previous), []);
   const openHelp = useCallback(() => { setMobileOpen(false); navigate("/help"); }, [navigate]);

@@ -1,0 +1,348 @@
+{
+  "section": {
+    "title": "Inventaire",
+    "navigation": "Navigation de l'inventaire",
+    "settings": "Paramètres",
+    "back": "Retour à l'espace de travail",
+    "expand": "Développer la barre latérale",
+    "collapse": "Réduire la barre latérale",
+    "close": "Fermer",
+    "groups": {
+      "workspace": "Espace de travail",
+      "operations": "Op?rations"
+    }
+  },
+  "nav": {
+    "overview": "Vue d'ensemble",
+    "items": "Articles",
+    "stock": "Stock",
+    "locations": "Emplacements"
+  },
+  "common": {
+    "search": "Rechercher",
+    "status": "Statut",
+    "location": "Emplacement",
+    "item": "Article",
+    "quantity": "Quantité",
+    "reference": "Référence",
+    "reason": "Motif",
+    "date": "Date",
+    "notes": "Notes",
+    "code": "Code",
+    "name": "Nom",
+    "description": "Description",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "default": "Par défaut",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "retry": "Réessayer",
+    "add": "Ajouter",
+    "loading": "Chargement...",
+    "empty": "Aucun enregistrement trouvé.",
+    "all": "Tous",
+    "none": "Aucun"
+  },
+  "status": {
+    "ok": "En stock",
+    "low": "Stock faible",
+    "out": "Rupture de stock",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "default": "Par défaut"
+  },
+  "movementType": {
+    "opening": "Solde d'ouverture",
+    "receipt": "Entrée",
+    "issue": "Sortie",
+    "adjustment": "Ajustement",
+    "transfer_in": "Transfert entrant",
+    "transfer_out": "Transfert sortant"
+  },
+  "overview": {
+    "title": "Vue d'ensemble de l'inventaire",
+    "metrics": {
+      "items": "Articles",
+      "active": "Articles actifs",
+      "units": "Unités en stock",
+      "lowStock": "À surveiller",
+      "value": "Valeur du stock",
+      "locations": "Emplacements",
+      "movements": "Mouvements (30 j)"
+    },
+    "lowStockTitle": "Stock faible et rupture",
+    "lowStockDescription": "Articles au niveau de réapprovisionnement ou en dessous.",
+    "recentMovementsTitle": "Mouvements récents",
+    "recentMovementsDescription": "Les dernières écritures du grand livre de stock.",
+    "byLocationTitle": "Stock par emplacement",
+    "byLocationDescription": "Unités et articles suivis par emplacement.",
+    "itemsLabel": "{{count}} articles",
+    "viewStock": "Voir le stock",
+    "emptyLowStock": "Rien à surveiller.",
+    "emptyMovements": "Aucun mouvement pour le moment.",
+    "emptyLocations": "Aucun emplacement pour le moment."
+  },
+  "items": {
+    "add": "Ajouter un article",
+    "empty": "Aucun article trouvé.",
+    "columns": {
+      "item": "Article",
+      "sku": "SKU",
+      "description": "Description",
+      "uom": "Unité",
+      "quantity": "En stock",
+      "reorderPoint": "Seuil de réapprovisionnement",
+      "unitCost": "Coût unitaire",
+      "status": "Statut"
+    },
+    "filters": {
+      "status": "Statut",
+      "stock": "Stock",
+      "uom": "Unit?"
+    },
+    "panel": {
+      "createTitle": "Ajouter un article",
+      "editTitle": "Modifier l'article",
+      "subtitle": "Données principales, seuil et coût de référence.",
+      "openingQuantity": "Quantité d'ouverture",
+      "openingQuantityHint": "Enregistrée à l'emplacement par défaut comme mouvement d'ouverture.",
+      "reorderPointHint": "Alerte lorsque le stock est au seuil ou en dessous. Zéro désactive l'alerte.",
+      "unitCostHint": "Coût de référence par unité dans la devise de l'espace de travail.",
+      "stockReadOnly": "Le stock est modifié via les entrées, sorties, ajustements et transferts.",
+      "priceHistoryHint": "Modifier le prix enregistre un nouveau prix effectif. Utilisez l'historique pour corriger un prix ant?rieur."
+    },
+    "preview": {
+      "stockTitle": "Stock par emplacement",
+      "movementTitle": "Mouvements récents",
+      "emptyStock": "Aucun stock dans les emplacements.",
+      "emptyMovements": "Aucun mouvement pour cet article."
+    },
+    "toast": {
+      "created": "Article créé.",
+      "updated": "Article mis à jour.",
+      "deleted": "Article supprimé."
+    },
+    "errors": {
+      "load": "Impossible de charger les articles.",
+      "save": "Impossible d'enregistrer l'article.",
+      "delete": "Impossible de supprimer l'article.",
+      "validation": "Le SKU et le nom sont obligatoires.",
+      "quantity": "La quantité d'ouverture doit être un entier supérieur ou égal à zéro.",
+      "concurrent": "Cet article a changé pendant votre modification. Rechargez et réessayez."
+    }
+  },
+  "stock": {
+    "tabs": {
+      "balances": "Soldes",
+      "movements": "Mouvements"
+    },
+    "addMovement": "Ajuster le stock",
+    "transfer": "Transférer",
+    "emptyBalances": "Aucun solde de stock trouvé.",
+    "emptyMovements": "Aucun mouvement de stock trouvé.",
+    "balanceColumns": {
+      "item": "Article",
+      "location": "Emplacement",
+      "quantity": "En stock",
+      "reorderPoint": "Seuil",
+      "status": "Statut"
+    },
+    "movementColumns": {
+      "date": "Date",
+      "item": "Article",
+      "type": "Type",
+      "location": "Emplacement",
+      "quantity": "Variation",
+      "reference": "Référence",
+      "reason": "Motif",
+      "user": "Utilisateur"
+    },
+    "filters": {
+      "status": "Statut du stock",
+      "location": "Emplacement",
+      "type": "Type de mouvement",
+      "from": "Date de début",
+      "to": "Date de fin",
+      "item": "Article"
+    },
+    "adjust": {
+      "title": "Ajuster le stock",
+      "subtitle": "Enregistrez une entrée, une sortie ou un comptage exact.",
+      "mode": "Mouvement",
+      "receipt": "Entrée",
+      "issue": "Sortie",
+      "adjustment": "Définir la quantité",
+      "item": "Article",
+      "location": "Emplacement",
+      "quantity": "Quantité",
+      "targetQuantity": "Nouvelle quantité",
+      "currentQuantity": "Actuel à l'emplacement : {{quantity}}",
+      "reference": "Référence",
+      "reason": "Motif",
+      "reasonPlaceholder": "ex. : Inventaire tournant, livraison fournisseur",
+      "date": "Date",
+      "submitReceipt": "Enregistrer l'entrée",
+      "submitIssue": "Enregistrer la sortie",
+      "submitAdjustment": "Définir la quantité"
+    },
+    "transferPanel": {
+      "title": "Transférer le stock",
+      "subtitle": "Déplacez une quantité entre emplacements sans changer le total de l'article.",
+      "item": "Article",
+      "from": "Emplacement d'origine",
+      "to": "Emplacement de destination",
+      "quantity": "Quantité",
+      "reference": "Référence",
+      "reason": "Motif",
+      "submit": "Transférer le stock"
+    },
+    "toast": {
+      "recorded": "Mouvement de stock enregistré.",
+      "transferred": "Stock transféré."
+    },
+    "errors": {
+      "load": "Impossible de charger le stock.",
+      "save": "Impossible d'enregistrer le mouvement de stock.",
+      "transfer": "Impossible de transférer le stock.",
+      "quantity": "La quantité doit être supérieure à zéro.",
+      "target": "La nouvelle quantité doit être zéro ou plus.",
+      "adjustment": "Choisissez une quantité différente pour créer un ajustement.",
+      "sameLocation": "Choisissez deux emplacements différents."
+    },
+    "levelPreviewTitle": "Niveau de stock",
+    "movementPreviewTitle": "D?tails du mouvement",
+    "stockValue": "Valeur du stock",
+    "locationMovements": "Mouvements r?cents ? cet emplacement"
+  },
+  "locations": {
+    "add": "Ajouter un emplacement",
+    "empty": "Aucun emplacement trouvé.",
+    "columns": {
+      "code": "Code",
+      "name": "Nom",
+      "description": "Description",
+      "stock": "En stock",
+      "default": "Par défaut",
+      "status": "Statut"
+    },
+    "panel": {
+      "createTitle": "Ajouter un emplacement",
+      "editTitle": "Modifier l'emplacement",
+      "subtitle": "Entrepôts, magasins et réserves.",
+      "defaultHint": "Le nouveau stock y est enregistré sauf si un autre emplacement est choisi.",
+      "activeHint": "Les emplacements inactifs restent dans l'historique mais ne sont pas proposés pour de nouveaux mouvements."
+    },
+    "deleteTitle": "Supprimer l'emplacement « {{name}} » ?",
+    "toast": {
+      "created": "Emplacement créé.",
+      "updated": "Emplacement mis à jour.",
+      "deleted": "Emplacement supprimé."
+    },
+    "errors": {
+      "load": "Impossible de charger les emplacements.",
+      "save": "Impossible d'enregistrer l'emplacement.",
+      "delete": "Impossible de supprimer l'emplacement.",
+      "defaultDelete": "L'emplacement par défaut ne peut pas être supprimé.",
+      "stockDelete": "Déplacez ou ajustez le stock avant de supprimer cet emplacement.",
+      "concurrent": "Cet emplacement a changé pendant votre modification. Rechargez et réessayez.",
+      "validation": "Le code et le nom sont obligatoires."
+    },
+    "previewTitle": "D?tails de l'emplacement",
+    "stockTitle": "Stock ? cet emplacement",
+    "filters": {
+      "default": "Par d?faut",
+      "custom": "Non par d?faut"
+    }
+  },
+  "panel": {
+    "close": "Fermer",
+    "discard": "Abandonner",
+    "discardTitle": "Abandonner les modifications ?",
+    "discardMessage": "Vous avez des modifications non enregistrées. Voulez-vous les abandonner ?",
+    "ok": "OK",
+    "shortcuts": "Raccourcis : Esc fermer · Ctrl/⌘+S enregistrer"
+  },
+  "empty": "Aucun enregistrement trouvé.",
+  "units": {
+    "none": "Sans unit?",
+    "pcs": "Pi?ces",
+    "unit": "Unit?",
+    "pair": "Paire",
+    "set": "Ensemble",
+    "dozen": "Douzaine",
+    "pack": "Pack",
+    "box": "Bo?te",
+    "case": "Caisse",
+    "carton": "Carton",
+    "pallet": "Palette",
+    "bundle": "Faisceau",
+    "roll": "Rouleau",
+    "sheet": "Feuille",
+    "bag": "Sac",
+    "bottle": "Bouteille",
+    "can": "Bo?te m?tallique",
+    "kit": "Kit",
+    "mg": "Milligramme",
+    "g": "Gramme",
+    "kg": "Kilogramme",
+    "t": "Tonne",
+    "oz": "Once",
+    "lb": "Livre",
+    "ml": "Millilitre",
+    "cl": "Centilitre",
+    "dl": "D?cilitre",
+    "l": "Litre",
+    "m3": "M?tre cube",
+    "gal": "Gallon",
+    "fl_oz": "Once liquide",
+    "mm": "Millim?tre",
+    "cm": "Centim?tre",
+    "m": "M?tre",
+    "km": "Kilom?tre",
+    "in": "Pouce",
+    "ft": "Pied",
+    "yd": "Yard",
+    "cm2": "Centim?tre carr?",
+    "m2": "M?tre carr?",
+    "ft2": "Pied carr?",
+    "min": "Minute",
+    "h": "Heure",
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois",
+    "year": "Ann?e",
+    "kwh": "Kilowattheure",
+    "mwh": "M?gawattheure",
+    "other": "Autre unit?"
+  },
+  "prices": {
+    "historyTitle": "Historique des prix",
+    "manage": "G?rer",
+    "effectiveAt": "Date d'effet",
+    "unitCost": "Co?t unitaire",
+    "change": "Variation",
+    "empty": "Aucun historique de prix.",
+    "current": "Prix actuel",
+    "perUnit": "Par {{unit}}",
+    "currentTag": "Actuel",
+    "correct": "Corriger",
+    "add": "Ajouter un prix",
+    "addTitle": "Ajouter une variation de prix",
+    "correctTitle": "Corriger le prix",
+    "reason": "Motif",
+    "reasonPlaceholder": "ex. : Hausse fournisseur, correction",
+    "invalidPrice": "Saisissez un prix valide.",
+    "added": "Variation de prix enregistr?e.",
+    "corrected": "Prix corrig?.",
+    "concurrent": "Ce prix a chang? pendant votre modification. Rechargez et r?essayez.",
+    "saveError": "Impossible d'enregistrer le prix.",
+    "loadError": "Impossible de charger l'historique des prix.",
+    "currentHint": "Prix actuel : {{price}}. Enregistrer une variation ajoute un nouveau prix effectif.",
+    "back": "Retour"
+  }
+}

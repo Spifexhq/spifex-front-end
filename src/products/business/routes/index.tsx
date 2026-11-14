@@ -2,6 +2,7 @@ import { lazy } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
 const SettingsLayout = lazy(() => import("../layouts/SettingsLayout").then(module => ({ default: module.SettingsLayout })));
 const AccountingLayout = lazy(() => import("../layouts/AccountingLayout").then(module => ({ default: module.AccountingLayout })));
+const InventoryLayout = lazy(() => import("../layouts/InventoryLayout"));
 import { PermissionMiddleware, SubscriptionMiddleware } from "@/middlewares";
 const Help = lazy(() => import("@/pages/Help"));
 const Overview = lazy(() => import("@/products/business/pages/Overview"));
@@ -18,12 +19,12 @@ const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManag
 const DepartmentSettings = lazy(() => import("@/products/business/pages/Settings/DepartmentSettings"));
 const BankSettings = lazy(() => import("@/products/business/pages/Settings/BankSettings"));
 const EntitySettings = lazy(() => import("@/products/business/pages/Settings/EntitySettings"));
-const InventorySettings = lazy(() => import("@/products/business/pages/Settings/InventorySettings"));
 const ProjectSettings = lazy(() => import("@/products/business/pages/Settings/ProjectSettings"));
 const MemberSettings = lazy(() => import("@/products/business/pages/Settings/MemberSettings"));
 const GroupSettings = lazy(() => import("@/products/business/pages/Settings/GroupSettings"));
 const CategorySettings = lazy(() => import("@/products/business/pages/Settings/CategorySettings"));
 const Accounting = lazy(() => import("@/products/business/pages/Accounting"));
+const Inventory = lazy(() => import("@/products/business/pages/Inventory"));
 const BankImports = lazy(() => import("@/products/business/pages/Finance/BankImports"));
 const NotificationSettings = lazy(() => import("@/features/account-settings/pages/NotificationSettings"));
 const FormatSettings = lazy(() => import("@/features/account-settings/pages/FormatSettings"));
@@ -74,6 +75,10 @@ export const businessRoutes: RouteObject[] = [
             {
                 path: 'accounting/*',
                 element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/settings"><AccountingLayout><Accounting /></AccountingLayout></PermissionMiddleware>,
+            },
+            {
+                path: 'inventory/*',
+                element: <PermissionMiddleware codeName={["view_inventory", "view_inventory_settings_page"]} behavior="redirect" redirectTo="/settings"><InventoryLayout><Inventory /></InventoryLayout></PermissionMiddleware>,
             },
             {
                 path: 'bank-imports',
@@ -176,8 +181,8 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'inventory',
                     element: (
-                    <PermissionMiddleware codeName="view_inventory_settings_page" behavior="redirect" redirectTo={'/settings'}>
-                        <InventorySettings />
+                    <PermissionMiddleware codeName={["view_inventory_settings_page", "view_inventory"]} behavior="redirect" redirectTo={'/settings'}>
+                        <Navigate to="/inventory/items" replace />
                     </PermissionMiddleware>
                     ),
                 },

@@ -17,8 +17,9 @@
 ```
 
 - Three navigation modes share one collapse state machine: workspace, settings,
-  accounting. Persistence keys: `spifex.workspace.collapsed`,
-  `spifex.settings.collapsed`, `spifex.accounting.collapsed`.
+  accounting and inventory. Persistence keys: `spifex.workspace.collapsed`,
+  `spifex.settings.collapsed`, `spifex.accounting.collapsed` and
+  `spifex.inventory.collapsed`.
 - `AppShellContext` exposes `collapsed`, `toggleCollapsed`, `mobileOpen`,
   `toggleMobile`, `closeMobile`, `sidebarSlot`, `openHelp`, `financialRevision`.
 - Mobile state closes on route change and when the viewport crosses 768px.
@@ -29,6 +30,7 @@
 **Business content:** `src/products/business/components/Sidebar/SidebarNavigation.tsx`
 **Settings content:** `src/products/business/components/SettingsSidebar/SidebarSettings.desktop.tsx`
 **Accounting content:** `src/products/business/pages/Accounting/components/AccountingSidebar.tsx`
+**Inventory content:** `src/products/business/pages/Inventory/components/InventorySidebar.tsx`
 
 `SidebarFrame` owns the header, width, backdrop, focus trap, Escape, body scroll
 lock and `inert` behavior. `position="rail"` (workspace) is sticky; 
@@ -81,10 +83,10 @@ desktop icons `PanelLeftClose`/`PanelLeftOpen`, mobile `X`.
 
 Breadcrumb rules: max three levels; always include the parent section for detail
 routes. Every `/settings/*` page shows `Settings > current` (or a more specific
-parent for currency/formats/limits); accounting, setup and bank-import detail
-routes use their section parent. Do not repeat the page `<h1>` inside the content
-when the navbar already shows it (settings pages are the exception — they render
-an intro block).
+parent for currency/formats/limits); accounting, inventory, setup and
+bank-import detail routes use their section parent. Do not repeat the page
+`<h1>` inside the content when the navbar already shows it (settings pages are
+the exception — they render an intro block).
 
 ## 4. Tabs and in-page navigation
 
@@ -160,6 +162,11 @@ together or extract a constant.
   description paragraph; put create actions in the filter row with a `Plus`
   icon. On Chart, keep Add/More and icon-only related-setup actions on the
   same row as the view tabs; chart filters use the standard Settings pattern.
+- **Inventory section navigation** has Overview, Items, Stock and Locations.
+  Stock owns balances and movements through a `SegmentedControl`; do not add a
+  separate Movements sidebar row. `/settings/inventory` redirects to
+  `/inventory/items` and the old Settings row is removed. Inventory routes stay
+  in the Business tree only.
 - **Desktop rail collapse persistence** is stored per mode; whether Personal
   shares the same keys needs verification.
 - **Navbar page icon** (`PanelsTopLeft`) is decorative and hidden below `sm`;

@@ -301,6 +301,11 @@ import enInventorySettings from "./locales/en/inventorySettings.json";
 import frInventorySettings from "./locales/fr/inventorySettings.json";
 import deInventorySettings from "./locales/de/inventorySettings.json";
 
+import ptInventory from "./locales/pt/inventory.json";
+import enInventory from "./locales/en/inventory.json";
+import frInventory from "./locales/fr/inventory.json";
+import deInventory from "./locales/de/inventory.json";
+
 import ptEntitySettings from "./locales/pt/entitySettings.json";
 import enEntitySettings from "./locales/en/entitySettings.json";
 import frEntitySettings from "./locales/fr/entitySettings.json";
@@ -412,6 +417,7 @@ const NAMESPACES = [
   "ledgerAccounts",
   "categorySettings",
   "inventorySettings",
+  "inventory",
   "entitySettings",
 
   "statusComingSoon",
@@ -488,6 +494,7 @@ const resources: Resource = {
     ledgerAccounts: ptLedgerAccounts,
     categorySettings: ptCategorySettings,
     inventorySettings: ptInventorySettings,
+    inventory: ptInventory,
     entitySettings: ptEntitySettings,
 
     statusComingSoon: ptStatusComingSoon,
@@ -559,6 +566,7 @@ const resources: Resource = {
     ledgerAccounts: enLedgerAccounts,
     categorySettings: enCategorySettings,
     inventorySettings: enInventorySettings,
+    inventory: enInventory,
     entitySettings: enEntitySettings,
 
     statusComingSoon: enStatusComingSoon,
@@ -630,6 +638,7 @@ const resources: Resource = {
     ledgerAccounts: frLedgerAccounts,
     categorySettings: frCategorySettings,
     inventorySettings: frInventorySettings,
+    inventory: frInventory,
     entitySettings: frEntitySettings,
 
     statusComingSoon: frStatusComingSoon,
@@ -701,6 +710,7 @@ const resources: Resource = {
     ledgerAccounts: deLedgerAccounts,
     categorySettings: deCategorySettings,
     inventorySettings: deInventorySettings,
+    inventory: deInventory,
     entitySettings: deEntitySettings,
 
     statusComingSoon: deStatusComingSoon,

@@ -1,0 +1,348 @@
+{
+  "section": {
+    "title": "Inventário",
+    "navigation": "Navegação do inventário",
+    "settings": "Definições",
+    "back": "Voltar ao espaço de trabalho",
+    "expand": "Expandir barra lateral",
+    "collapse": "Recolher barra lateral",
+    "close": "Fechar",
+    "groups": {
+      "workspace": "?rea de trabalho",
+      "operations": "Opera??es"
+    }
+  },
+  "nav": {
+    "overview": "Visão geral",
+    "items": "Artigos",
+    "stock": "Stock",
+    "locations": "Localizações"
+  },
+  "common": {
+    "search": "Pesquisar",
+    "status": "Estado",
+    "location": "Localização",
+    "item": "Artigo",
+    "quantity": "Quantidade",
+    "reference": "Referência",
+    "reason": "Motivo",
+    "date": "Data",
+    "notes": "Notas",
+    "code": "Código",
+    "name": "Nome",
+    "description": "Descrição",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "default": "Predefinido",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "A guardar...",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+    "retry": "Tentar novamente",
+    "add": "Adicionar",
+    "loading": "A carregar...",
+    "empty": "Nenhum registo encontrado.",
+    "all": "Todos",
+    "none": "Nenhum"
+  },
+  "status": {
+    "ok": "Em stock",
+    "low": "Stock baixo",
+    "out": "Sem stock",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "default": "Predefinido"
+  },
+  "movementType": {
+    "opening": "Saldo inicial",
+    "receipt": "Entrada",
+    "issue": "Saída",
+    "adjustment": "Ajuste",
+    "transfer_in": "Transferência recebida",
+    "transfer_out": "Transferência enviada"
+  },
+  "overview": {
+    "title": "Visão geral do inventário",
+    "metrics": {
+      "items": "Artigos",
+      "active": "Artigos ativos",
+      "units": "Unidades em stock",
+      "lowStock": "Requer atenção",
+      "value": "Valor do stock",
+      "locations": "Localizações",
+      "movements": "Movimentos (30d)"
+    },
+    "lowStockTitle": "Stock baixo e sem stock",
+    "lowStockDescription": "Artigos no ponto de encomenda ou abaixo dele.",
+    "recentMovementsTitle": "Movimentos recentes",
+    "recentMovementsDescription": "As últimas entradas do livro de stock.",
+    "byLocationTitle": "Stock por localização",
+    "byLocationDescription": "Unidades e artigos controlados por localização.",
+    "itemsLabel": "{{count}} artigos",
+    "viewStock": "Ver stock",
+    "emptyLowStock": "Nada requer atenção.",
+    "emptyMovements": "Ainda não existem movimentos.",
+    "emptyLocations": "Ainda não existem localizações."
+  },
+  "items": {
+    "add": "Adicionar artigo",
+    "empty": "Nenhum artigo encontrado.",
+    "columns": {
+      "item": "Artigo",
+      "sku": "SKU",
+      "description": "Descrição",
+      "uom": "Unidade",
+      "quantity": "Em stock",
+      "reorderPoint": "Ponto de encomenda",
+      "unitCost": "Custo unitário",
+      "status": "Estado"
+    },
+    "filters": {
+      "status": "Estado",
+      "stock": "Stock",
+      "uom": "Unidade"
+    },
+    "panel": {
+      "createTitle": "Adicionar artigo",
+      "editTitle": "Editar artigo",
+      "subtitle": "Dados principais, limite e custo de referência.",
+      "openingQuantity": "Quantidade inicial",
+      "openingQuantityHint": "Registada na localização predefinida como movimento inicial.",
+      "reorderPointHint": "Avisa quando o stock estiver no limite ou abaixo. Zero desativa o aviso.",
+      "unitCostHint": "Custo de referência por unidade na moeda do espaço de trabalho.",
+      "stockReadOnly": "O stock é alterado através de entradas, saídas, ajustes e transferências.",
+      "priceHistoryHint": "Alterar o pre?o regista um novo pre?o efetivo. Use o hist?rico para corrigir um pre?o anterior."
+    },
+    "preview": {
+      "stockTitle": "Stock por localização",
+      "movementTitle": "Movimentos recentes",
+      "emptyStock": "Sem stock em nenhuma localização.",
+      "emptyMovements": "Sem movimentos para este artigo."
+    },
+    "toast": {
+      "created": "Artigo criado.",
+      "updated": "Artigo atualizado.",
+      "deleted": "Artigo eliminado."
+    },
+    "errors": {
+      "load": "Não foi possível carregar os artigos.",
+      "save": "Não foi possível guardar o artigo.",
+      "delete": "Não foi possível eliminar o artigo.",
+      "validation": "SKU e nome são obrigatórios.",
+      "quantity": "A quantidade inicial deve ser um número inteiro igual ou superior a zero.",
+      "concurrent": "Este artigo foi alterado enquanto o editava. Recarregue e tente novamente."
+    }
+  },
+  "stock": {
+    "tabs": {
+      "balances": "Saldos",
+      "movements": "Movimentos"
+    },
+    "addMovement": "Ajustar stock",
+    "transfer": "Transferir",
+    "emptyBalances": "Nenhum saldo de stock encontrado.",
+    "emptyMovements": "Nenhum movimento de stock encontrado.",
+    "balanceColumns": {
+      "item": "Artigo",
+      "location": "Localização",
+      "quantity": "Em stock",
+      "reorderPoint": "Ponto de encomenda",
+      "status": "Estado"
+    },
+    "movementColumns": {
+      "date": "Data",
+      "item": "Artigo",
+      "type": "Tipo",
+      "location": "Localização",
+      "quantity": "Alteração",
+      "reference": "Referência",
+      "reason": "Motivo",
+      "user": "Utilizador"
+    },
+    "filters": {
+      "status": "Estado do stock",
+      "location": "Localização",
+      "type": "Tipo de movimento",
+      "from": "Data inicial",
+      "to": "Data final",
+      "item": "Artigo"
+    },
+    "adjust": {
+      "title": "Ajustar stock",
+      "subtitle": "Registe uma entrada, saída ou contagem exata.",
+      "mode": "Movimento",
+      "receipt": "Entrada",
+      "issue": "Saída",
+      "adjustment": "Definir quantidade",
+      "item": "Artigo",
+      "location": "Localização",
+      "quantity": "Quantidade",
+      "targetQuantity": "Nova quantidade",
+      "currentQuantity": "Atual na localização: {{quantity}}",
+      "reference": "Referência",
+      "reason": "Motivo",
+      "reasonPlaceholder": "ex.: Contagem cíclica, entrega do fornecedor",
+      "date": "Data",
+      "submitReceipt": "Registar entrada",
+      "submitIssue": "Registar saída",
+      "submitAdjustment": "Definir quantidade"
+    },
+    "transferPanel": {
+      "title": "Transferir stock",
+      "subtitle": "Mova quantidade entre localizações sem alterar o total do artigo.",
+      "item": "Artigo",
+      "from": "Localização de origem",
+      "to": "Localização de destino",
+      "quantity": "Quantidade",
+      "reference": "Referência",
+      "reason": "Motivo",
+      "submit": "Transferir stock"
+    },
+    "toast": {
+      "recorded": "Movimento de stock registado.",
+      "transferred": "Stock transferido."
+    },
+    "errors": {
+      "load": "Não foi possível carregar o stock.",
+      "save": "Não foi possível registar o movimento de stock.",
+      "transfer": "Não foi possível transferir o stock.",
+      "quantity": "A quantidade deve ser superior a zero.",
+      "target": "A nova quantidade deve ser zero ou superior.",
+      "adjustment": "Escolha uma quantidade diferente para criar um ajuste.",
+      "sameLocation": "Escolha duas localizações diferentes."
+    },
+    "levelPreviewTitle": "N?vel de stock",
+    "movementPreviewTitle": "Detalhes do movimento",
+    "stockValue": "Valor do stock",
+    "locationMovements": "Movimentos recentes nesta localiza??o"
+  },
+  "locations": {
+    "add": "Adicionar localização",
+    "empty": "Nenhuma localização encontrada.",
+    "columns": {
+      "code": "Código",
+      "name": "Nome",
+      "description": "Descrição",
+      "stock": "Em stock",
+      "default": "Predefinida",
+      "status": "Estado"
+    },
+    "panel": {
+      "createTitle": "Adicionar localização",
+      "editTitle": "Editar localização",
+      "subtitle": "Armazéns, lojas e depósitos.",
+      "defaultHint": "O novo stock é registado aqui, salvo se outra localização for escolhida.",
+      "activeHint": "As localizações inativas mantêm o histórico mas não são oferecidas para novos movimentos."
+    },
+    "deleteTitle": "Eliminar a localização \"{{name}}\"?",
+    "toast": {
+      "created": "Localização criada.",
+      "updated": "Localização atualizada.",
+      "deleted": "Localização eliminada."
+    },
+    "errors": {
+      "load": "Não foi possível carregar as localizações.",
+      "save": "Não foi possível guardar a localização.",
+      "delete": "Não foi possível eliminar a localização.",
+      "defaultDelete": "A localização predefinida não pode ser eliminada.",
+      "stockDelete": "Mova ou ajuste o stock antes de eliminar esta localização.",
+      "concurrent": "Esta localização foi alterada enquanto a editava. Recarregue e tente novamente.",
+      "validation": "Código e nome são obrigatórios."
+    },
+    "previewTitle": "Detalhes da localiza??o",
+    "stockTitle": "Stock nesta localiza??o",
+    "filters": {
+      "default": "Predefinida",
+      "custom": "N?o predefinida"
+    }
+  },
+  "panel": {
+    "close": "Fechar",
+    "discard": "Descartar",
+    "discardTitle": "Descartar alterações?",
+    "discardMessage": "Tem alterações por guardar. Pretende descartá-las?",
+    "ok": "OK",
+    "shortcuts": "Atalhos: Esc fechar · Ctrl/⌘+S guardar"
+  },
+  "empty": "Nenhum registo encontrado.",
+  "units": {
+    "none": "Sem unidade",
+    "pcs": "Pe?as",
+    "unit": "Unidade",
+    "pair": "Par",
+    "set": "Conjunto",
+    "dozen": "D?zia",
+    "pack": "Pacote",
+    "box": "Caixa",
+    "case": "Caixa de embarque",
+    "carton": "Cart?o",
+    "pallet": "Palete",
+    "bundle": "Fardo",
+    "roll": "Rolo",
+    "sheet": "Folha",
+    "bag": "Saco",
+    "bottle": "Garrafa",
+    "can": "Lata",
+    "kit": "Kit",
+    "mg": "Miligrama",
+    "g": "Grama",
+    "kg": "Quilograma",
+    "t": "Tonelada",
+    "oz": "On?a",
+    "lb": "Libra",
+    "ml": "Mililitro",
+    "cl": "Centilitro",
+    "dl": "Decilitro",
+    "l": "Litro",
+    "m3": "Metro c?bico",
+    "gal": "Gal?o",
+    "fl_oz": "On?a l?quida",
+    "mm": "Mil?metro",
+    "cm": "Cent?metro",
+    "m": "Metro",
+    "km": "Quil?metro",
+    "in": "Polegada",
+    "ft": "P?",
+    "yd": "Jarda",
+    "cm2": "Cent?metro quadrado",
+    "m2": "Metro quadrado",
+    "ft2": "P? quadrado",
+    "min": "Minuto",
+    "h": "Hora",
+    "day": "Dia",
+    "week": "Semana",
+    "month": "M?s",
+    "year": "Ano",
+    "kwh": "Quilowatt-hora",
+    "mwh": "Megawatt-hora",
+    "other": "Outra unidade"
+  },
+  "prices": {
+    "historyTitle": "Hist?rico de pre?os",
+    "manage": "Gerir",
+    "effectiveAt": "Data efetiva",
+    "unitCost": "Custo unit?rio",
+    "change": "Varia??o",
+    "empty": "Ainda n?o existe hist?rico de pre?os.",
+    "current": "Pre?o atual",
+    "perUnit": "Por {{unit}}",
+    "currentTag": "Atual",
+    "correct": "Corrigir",
+    "add": "Adicionar pre?o",
+    "addTitle": "Adicionar altera??o de pre?o",
+    "correctTitle": "Corrigir pre?o",
+    "reason": "Motivo",
+    "reasonPlaceholder": "ex.: Aumento do fornecedor, corre??o",
+    "invalidPrice": "Introduza um pre?o v?lido.",
+    "added": "Altera??o de pre?o registada.",
+    "corrected": "Pre?o corrigido.",
+    "concurrent": "Este pre?o foi alterado enquanto o editava. Recarregue e tente novamente.",
+    "saveError": "N?o foi poss?vel guardar o pre?o.",
+    "loadError": "N?o foi poss?vel carregar o hist?rico de pre?os.",
+    "currentHint": "Pre?o atual: {{price}}. Guardar uma altera??o acrescenta um novo pre?o efetivo.",
+    "back": "Voltar"
+  }
+}

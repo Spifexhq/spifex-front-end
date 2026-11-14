@@ -121,10 +121,13 @@ export function toCanonicalMajorString(
     decimalSep = lastDot > lastComma ? "." : ",";
   } else if (lastDot !== -1) {
     const after = s.length - lastDot - 1;
-    if (after > 0 && after <= decimals) decimalSep = ".";
+    // 1–2 digits are decimals. More than 3 digits are API decimals (unit costs
+    // are stored with 4 places). Exactly 3 remains ambiguous and is treated as
+    // a thousands separator for typed values such as "1.234".
+    if (after > 0 && (after <= decimals || after > 3)) decimalSep = ".";
   } else if (lastComma !== -1) {
     const after = s.length - lastComma - 1;
-    if (after > 0 && after <= decimals) decimalSep = ",";
+    if (after > 0 && (after <= decimals || after > 3)) decimalSep = ",";
   }
 
   let intPart = "";

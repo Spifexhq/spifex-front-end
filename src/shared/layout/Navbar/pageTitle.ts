@@ -1,9 +1,13 @@
 const settingsPages = new Set(["personal", "organization-settings", "workspaces", "billing", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", "chart-of-accounts": "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", periods: "periods" };
+const inventoryPages: Record<string, string> = { overview: "overview", items: "items", stock: "stock", locations: "locations" };
 export function getPageTitleKey(pathname: string): string {
   const [, root, page, detail] = pathname.split("/");
   if (root === "accounting") {
     return `accountingSettings:nav.${accountingPages[page || "overview"] || "overview"}`;
+  }
+  if (root === "inventory") {
+    return `inventory:nav.${inventoryPages[page || "overview"] || "overview"}`;
   }
   if (root === "settings") {
     if (page === "ledger-accounts") return "accountingSettings:nav.chart";
@@ -25,6 +29,7 @@ export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
   if (pathname.startsWith("/bank-imports/")) return [{ titleKey: "navbar:pages.bankImports", to: "/bank-imports" }, { titleKey: "statements:workspace.reviewTitle" }];
   if (pathname.startsWith("/accounting/setup/")) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey: "accountingSettings:nav.overview", to: "/accounting/overview" }];
   if ((pathname === "/accounting" || pathname.startsWith("/accounting/"))) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey }];
+  if (pathname === "/inventory" || pathname.startsWith("/inventory/")) return [{ titleKey: "inventory:section.title", to: "/inventory/overview" }, { titleKey }];
   const parents: Record<string, PageCrumb> = {
     "/settings/manage-currency": { titleKey: "settingsSidebar:items.organization-settings", to: "/settings/organization-settings" },
     "/settings/manage-formats": { titleKey: "settingsSidebar:items.personal", to: "/settings/personal" },

@@ -16,6 +16,7 @@ import {
   Wallet,
   CircleCheck,
   ChartNoAxesCombined,
+  Boxes,
 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
@@ -145,6 +146,12 @@ export default function SidebarNavigation({
                 label: t("accountingSettings:section.title"),
                 Icon: BookOpen,
                 permission: "view_ledger_accounts_page",
+              },
+              {
+                to: "/inventory",
+                label: t("inventory:section.title"),
+                Icon: Boxes,
+                permission: ["view_inventory", "view_inventory_settings_page"],
               },
             ].map(({ to, label, Icon, permission }) => {
               const item = (

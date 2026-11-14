@@ -16,6 +16,7 @@ it does not exist as a shared primitive and must not be invented locally.
 | Multi-select table selection | `Checkbox` | `src/shared/ui/Checkbox/Checkbox.tsx` |
 | 2–5 exclusive view options | `SegmentedControl` | `src/shared/ui/SegmentedControl/index.tsx` |
 | Card/panel surface | `Card` | `src/shared/ui/Card/Card.tsx` |
+| Operational metric tile | `MetricCard` | `src/shared/ui/MetricCard/MetricCard.tsx` |
 | Record list | `DataTable` | `src/shared/ui/DataTable/index.tsx` |
 | Selection action bar | `SelectionBar` | `src/shared/ui/SelectionBar/SelectionBar.tsx` |
 | Form dialog | `FloatingDialog` | `src/components/Modal/FloatingDialog/index.tsx` |
@@ -31,6 +32,7 @@ it does not exist as a shared primitive and must not be invented locally.
 | Empty collection | `EmptyState` | `src/shared/ui/State/EmptyState.tsx` |
 | Error / retry | `ErrorState` | `src/shared/ui/State/ErrorState.tsx` |
 | Status/count label | `Badge` | `src/shared/ui/Badge/Badge.tsx` |
+| Active/inactive dot + label | `StatusDot` | `src/shared/ui/StatusDot/index.tsx` |
 | Route/global progress | `TopProgress` | `src/shared/ui/Loaders/TopProgress.tsx` |
 
 ---
@@ -322,6 +324,30 @@ one-element recipe exactly. Twelve simple card sites were migrated in Phase 2, P
 Metric tiles use `tone="metric"`; reporting may keep `rounded-[24px]`/`[28px]`
 as a local exception. Never nest two bordered panels; use dividers.
 
+### 10.1 Metric tiles
+
+**Canonical:** `src/shared/ui/MetricCard` (exported from `@/shared/ui/MetricCard`).
+
+Use `MetricCard` for section overview KPIs. It renders the two-layer Business
+metric surface: a `slate-50/60` frame, an inner white panel, an 11px uppercase
+label, a 25px tabular value, an optional 15px line icon and a 10px hint row.
+
+```tsx
+<MetricCard label={t("overview.metrics.items")} value={summary.total_items}
+  Icon={Package} hint={`${summary.active_items} active`} />
+```
+
+Rules:
+
+- Use for operational summaries, not setup progress steps.
+- Values are tabular and truncate; never wrap a KPI value onto two lines.
+- `loading` renders the skeleton inside the tile; do not replace the tile with a
+  spinner.
+- Keep the grid to 2 columns below `sm`, 3 on `xl` and 6 on `2xl` when a page has
+  six metrics.
+- Accounting's `AccountingMetricCard` is a compatibility wrapper over
+  `MetricCard`; new sections import `MetricCard` directly.
+
 ---
 
 ## 11. DataTable
@@ -364,6 +390,11 @@ border-gray-200 bg-gray-50/50 px-3 py-2`; pagination buttons 32px (40px mobile),
 footer grows to 40px targets, and selection actions use their own toolbar when
 supplied.
 
+**Scrolling:** full record tables own a `max-h-[65dvh]` inner scroll. Compact
+overview tables must pass `fitContent` so the table renders at its natural
+height without an inner vertical scrollbar; the page or card owns scrolling.
+Never add a second `overflow-y-auto` wrapper around a `DataTable`.
+
 **Rules:** always pass `items` + `columns`; do not build an ad-hoc `<table>` for
 records. Server pages pass `pager`; never slice server rows again. Use
 `onInspect`/`SidePanel` for previews instead of inline expansion.
@@ -403,22 +434,24 @@ scroll/footer/tabs layout; header title/close sizes now match the shared scale.
 
 ### 12.1 Preview stacks
 
-For related previews (for example a journal and its source settlement), the
-caller keeps a stack of preview targets and renders one `SidePanel` with
-`stackDepth={stack.length - 1}`. Each level narrows the drawer by 14px and paints
-a decorative page edge behind it, so only a strip of the previous preview is
-visible. Closing the top preview pops one level; opening an unrelated record
-replaces the whole stack. Edit drawers always use `stackDepth={0}`.
+For related previews (for example a journal and its source settlement, or an
+inventory item and its price history), the caller keeps a stack of preview
+targets and renders one `SidePanel` with `stackDepth={stack.length - 1}`. Each
+level narrows the drawer by 14px and paints a decorative page edge behind it,
+so only a strip of the previous preview is visible. Closing the top preview pops
+one level; opening an unrelated record replaces the whole stack. Edit drawers
+always use `stackDepth={0}` and do not join the preview stack.
 
 Preview detail tables must not introduce their own vertical scroll. Use a static
 `table-fixed` table and let the drawer body scroll; never nest an
 `overflow-y-auto` data table inside a preview.
 
-Stack motion: the drawer width transitions at 220ms. Page edges are full-height,
+Stack motion: the drawer width transitions at 260ms. Page edges are full-height,
 square panels with the same border as the drawer; opening pushes them left and
-closing slides them right. New preview content fades in with an 8px horizontal
-offset. Do not add a visible “Related preview” label; the record title and ID
-identify the stacked preview.
+closing slides them right without an opacity fade, so the background does not
+look like it is disappearing. New preview content slides in with a 12px
+horizontal offset over 200ms. Do not add a visible “Related preview” label; the
+record title and ID identify the stacked preview.
 
 ---
 
@@ -523,6 +556,21 @@ Use `Badge` (`src/shared/ui/Badge`). Canonical pattern:
 - `dot` adds a leading status dot; the label must still carry the meaning.
 - Never use a badge as a button.
 
+### 15.1 StatusDot
+
+**Canonical:** `src/shared/ui/StatusDot`.
+
+Use `StatusDot` for the categories-style active/inactive state: a 1.5px
+emerald dot (active) or gray dot (inactive) followed by the status label. It is
+not a Badge and has no fill. `AccountingStatus` is a compatibility wrapper.
+
+```tsx
+<StatusDot active={location.is_active} label={t("common.active")} />
+```
+
+Locations use `StatusDot` for active/inactive and a neutral `Badge` for the
+`Default` flag. Do not use a colored fill for `Default`.
+
 Migrated in Phase 4, PR 16: workspace current badges, plan current badge,
 onboarding done/required, reporting change/status badges, correlation group
 labels, settings background-sync badges, and the limits usage `ToneBadge`.
@@ -625,3 +673,83 @@ slices.
 | Snackbar/ConfirmToast | Keep; align radius/shadow tokens | 2 |
 | EmptyState/ErrorState | ✅ Primitives added; shared surfaces migrated (PR 15) | 4 |
 | Badge | ✅ Primitive added; status/count labels migrated (PR 16) | 4 |
+
+
+---
+
+## 20. Inventory patterns
+
+### 20.1 Stock status
+
+Inventory uses one three-value status vocabulary everywhere:
+
+| Value | Meaning | Badge |
+| --- | --- | --- |
+| `ok` | Positive quantity above the reorder point, or no threshold | `success` |
+| `low` | Positive quantity at or below a non-zero reorder point | `warning` |
+| `out` | Quantity at or below zero | `danger` |
+
+The backend exposes `stock_status` on items and per-location levels; the
+frontend must not recompute thresholds differently. Filter chips use the same
+labels as table badges.
+
+### 20.2 Ledger rules
+
+- `InventoryItem.quantity_on_hand` is the workspace total; location balances
+  are the detail rows.
+- Receipts and issues change one location and the total.
+- Adjustments set one location to an exact quantity and log the signed delta.
+- Transfers create paired `transfer_out`/`transfer_in` rows and never change
+  the total.
+- Movements are append-only. Editing an item never silently changes stock in
+  the primary UI; use the stock panel.
+
+### 20.3 Section composition
+
+The Inventory section follows the Accounting section shell:
+
+1. `InventoryLayout` + `SectionLayout` + `InventorySidebar`.
+2. Overview: six `MetricCard` tiles, low/out-of-stock table, recent movements,
+   stock by location.
+3. Items: server-filtered `DataTable`, preview drawer, create/edit drawer.
+4. Stock: `SegmentedControl` for balances/movements, filter chips, adjustment
+   and transfer drawers.
+5. Locations: server-filtered `DataTable`, create/edit drawer.
+
+Preview drawers that show a collection must paginate it rather than rendering
+an unbounded list. The location preview uses the shared cursor pager with a compact range label,
+previous/next controls and 20/50/100 rows-per-page selection below a static
+table. The drawer body owns scroll; the table itself has no inner vertical
+scroll.
+
+Drawers are forms (`mode="edit"`) and use a footer with Cancel left of the
+primary action. `DataTable` owns record delete confirmation. No page adds a
+second `<h1>`; the section container owns the heading.
+
+
+### 20.4 Unit vocabulary
+
+Inventory units are a closed vocabulary, mirrored in `inventory/units.py` and
+`src/products/business/pages/Inventory/units.ts`. The database enforces it with
+`inv_valid_uom`; free text is not allowed. The list covers count/packaging,
+weight, volume, length, area, time, energy and `other`.
+
+- The item form uses a `Select`, not a text input.
+- Item filters use the same translated labels.
+- The API accepts only those codes; legacy values are normalized by migration
+  aliases and unknown values become `other`.
+- Finance entry allocations keep receiving the normalized `uom` code.
+
+### 20.5 Effective-dated prices
+
+`InventoryItemPrice` is the price ledger. Every change appends a row with
+`unit_cost`, `effective_at`, `reason` and `created_by`; entries are never
+deleted. `InventoryItem.unit_cost` is the latest entry by `effective_at` and
+`id`.
+
+- The item form changing the cost appends an `Item edit` entry.
+- The price history panel can append a new entry or correct an existing one.
+- Correcting an older entry does not change the current price; correcting the
+  latest entry does.
+- Price history and stock-value tables are static preview tables; the drawer
+  owns scroll.

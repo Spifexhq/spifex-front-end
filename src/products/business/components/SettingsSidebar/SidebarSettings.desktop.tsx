@@ -76,7 +76,6 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         id: "mgmt",
         items: [
           { id: "projects", icon: "projects", label: t("items.projects"), permission: "view_project_settings_page" },
-          { id: "inventory", icon: "inventory", label: t("items.inventory"), permission: "view_inventory_settings_page" },
           { id: "entities", icon: "entities", label: t("items.entities"), permission: "view_entity_settings_page" },
           { id: "departments", icon: "departments", label: t("items.departments"), permission: "view_department_settings_page" },
         ],

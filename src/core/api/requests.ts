@@ -86,8 +86,13 @@ import type { AddDepartmentRequest, Department, DepartmentsBulkRequest, Departme
   GetDepartmentResponse, GetDepartmentsParams, GetDepartmentsResponse } from '@/models/settings/departments';
 import type { AddProjectRequest, EditProjectRequest, GetProjectsParams, GetProjectsResponse, Project,
   ProjectsBulkRequest, ProjectsBulkResponse } from '@/models/settings/projects';
-import type { AddInventoryItemRequest, EditInventoryItemRequest, GetInventoryItemsParams, GetInventoryItemsResponse,
-  InventoryItem, InventoryItemsBulkRequest, InventoryItemsBulkResponse } from '@/models/settings/inventory';
+import type { AddInventoryItemRequest, AddInventoryLocationRequest, AddInventoryPriceRequest, AddStockMovementRequest,
+  EditInventoryItemRequest, EditInventoryLocationRequest, EditInventoryPriceRequest, GetInventoryItemsParams,
+  GetInventoryItemsResponse, GetInventoryLocationsParams, GetInventoryLocationsResponse, GetInventoryMovementsParams,
+  GetInventoryMovementsResponse, GetInventoryPricesParams, GetInventoryPricesResponse, GetInventoryStockParams,
+  GetInventoryStockResponse, InventoryItem, InventoryItemPrice, InventoryItemsBulkRequest, InventoryItemsBulkResponse,
+  InventoryLocation, InventoryLocationOption, InventoryStockLevel, InventorySummary, StockMovement,
+  TransferStockRequest } from '@/models/settings/inventory';
 import type { AddEntityRequest, EditEntityRequest, EntitiesBulkRequest, EntitiesBulkResponse, Entity,
   GetEntitiesParams, GetEntitiesResponse, GetEntityResponse } from '@/models/settings/entities';
 import type {
@@ -724,6 +729,51 @@ export const api = {
 
   deleteInventoryItem: (id: string, version?: string) =>
     request<void>(`inventory/items/${id}/`, "DELETE", undefined, { ifMatch: version }),
+
+  getInventoryItemStock: (id: string) =>
+    request<InventoryStockLevel[]>(`inventory/items/${id}/stock/`, "GET"),
+
+  getInventoryPrices: (params?: GetInventoryPricesParams) =>
+    request<GetInventoryPricesResponse>(`inventory/prices/`, "GET", params),
+
+  addInventoryPrice: (payload: AddInventoryPriceRequest) =>
+    request<InventoryItemPrice>(`inventory/prices/`, "POST", payload),
+
+  editInventoryPrice: (id: string, payload: EditInventoryPriceRequest, version?: string) =>
+    request<InventoryItemPrice>(`inventory/prices/${id}/`, "PATCH", payload, { ifMatch: version }),
+
+  getInventorySummary: () =>
+    request<InventorySummary>(`inventory/summary/`, "GET"),
+
+  getInventoryStock: (params?: GetInventoryStockParams) =>
+    request<GetInventoryStockResponse>(`inventory/stock/`, "GET", params),
+
+  getInventoryMovements: (params?: GetInventoryMovementsParams) =>
+    request<GetInventoryMovementsResponse>(`inventory/movements/`, "GET", params),
+
+  addInventoryMovement: (payload: AddStockMovementRequest) =>
+    request<StockMovement>(`inventory/movements/`, "POST", payload),
+
+  transferInventoryStock: (payload: TransferStockRequest) =>
+    request<StockMovement[]>(`inventory/movements/transfer/`, "POST", payload),
+
+  getInventoryLocations: (params?: GetInventoryLocationsParams) =>
+    request<GetInventoryLocationsResponse>(`inventory/locations/`, "GET", params),
+
+  getInventoryLocationOptions: () =>
+    request<InventoryLocationOption[]>(`inventory/locations/options/`, "GET"),
+
+  getInventoryLocation: (id: string) =>
+    request<InventoryLocation>(`inventory/locations/${id}/`, "GET"),
+
+  addInventoryLocation: (payload: AddInventoryLocationRequest) =>
+    request<InventoryLocation>(`inventory/locations/`, "POST", payload),
+
+  editInventoryLocation: (id: string, payload: EditInventoryLocationRequest, version?: string) =>
+    request<InventoryLocation>(`inventory/locations/${id}/`, "PATCH", payload, { ifMatch: version }),
+
+  deleteInventoryLocation: (id: string, version?: string) =>
+    request<void>(`inventory/locations/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Entities --- */
   getEntities: (params?: GetEntitiesParams) =>

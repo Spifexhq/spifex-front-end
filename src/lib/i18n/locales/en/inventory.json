@@ -1,0 +1,348 @@
+{
+  "section": {
+    "title": "Inventory",
+    "navigation": "Inventory navigation",
+    "settings": "Settings",
+    "back": "Back to workspace",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "close": "Close",
+    "groups": {
+      "workspace": "Workspace",
+      "operations": "Operations"
+    }
+  },
+  "nav": {
+    "overview": "Overview",
+    "items": "Items",
+    "stock": "Stock",
+    "locations": "Locations"
+  },
+  "common": {
+    "search": "Search",
+    "status": "Status",
+    "location": "Location",
+    "item": "Item",
+    "quantity": "Quantity",
+    "reference": "Reference",
+    "reason": "Reason",
+    "date": "Date",
+    "notes": "Notes",
+    "code": "Code",
+    "name": "Name",
+    "description": "Description",
+    "active": "Active",
+    "inactive": "Inactive",
+    "default": "Default",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "apply": "Apply",
+    "clear": "Clear",
+    "retry": "Try again",
+    "add": "Add",
+    "loading": "Loading...",
+    "empty": "No records found.",
+    "all": "All",
+    "none": "None"
+  },
+  "status": {
+    "ok": "In stock",
+    "low": "Low stock",
+    "out": "Out of stock",
+    "active": "Active",
+    "inactive": "Inactive",
+    "default": "Default"
+  },
+  "movementType": {
+    "opening": "Opening balance",
+    "receipt": "Receipt",
+    "issue": "Issue",
+    "adjustment": "Adjustment",
+    "transfer_in": "Transfer in",
+    "transfer_out": "Transfer out"
+  },
+  "overview": {
+    "title": "Inventory overview",
+    "metrics": {
+      "items": "Items",
+      "active": "Active items",
+      "units": "Units on hand",
+      "lowStock": "Needs attention",
+      "value": "Stock value",
+      "locations": "Locations",
+      "movements": "Movements (30d)"
+    },
+    "lowStockTitle": "Low and out of stock",
+    "lowStockDescription": "Items at or below their reorder point.",
+    "recentMovementsTitle": "Recent movements",
+    "recentMovementsDescription": "The latest stock ledger entries.",
+    "byLocationTitle": "Stock by location",
+    "byLocationDescription": "Units and tracked items per location.",
+    "itemsLabel": "{{count}} items",
+    "viewStock": "View stock",
+    "emptyLowStock": "Nothing needs attention.",
+    "emptyMovements": "No movements yet.",
+    "emptyLocations": "No locations yet."
+  },
+  "items": {
+    "add": "Add item",
+    "empty": "No items found.",
+    "columns": {
+      "item": "Item",
+      "sku": "SKU",
+      "description": "Description",
+      "uom": "Unit",
+      "quantity": "On hand",
+      "reorderPoint": "Reorder point",
+      "unitCost": "Unit cost",
+      "status": "Status"
+    },
+    "filters": {
+      "status": "Status",
+      "stock": "Stock",
+      "uom": "Unit"
+    },
+    "panel": {
+      "createTitle": "Add item",
+      "editTitle": "Edit item",
+      "subtitle": "Master data, threshold and reference cost.",
+      "openingQuantity": "Opening quantity",
+      "openingQuantityHint": "Recorded at the default location as an opening movement.",
+      "reorderPointHint": "Warn when on hand is at or below this value. Zero disables the warning.",
+      "unitCostHint": "Reference cost per unit in the workspace currency.",
+      "stockReadOnly": "Stock is changed through receipts, issues, adjustments and transfers.",
+      "priceHistoryHint": "Changing the price records a new effective price. Use price history to correct an earlier price."
+    },
+    "preview": {
+      "stockTitle": "Stock by location",
+      "movementTitle": "Recent movements",
+      "emptyStock": "No stock at any location.",
+      "emptyMovements": "No movements for this item."
+    },
+    "toast": {
+      "created": "Item created.",
+      "updated": "Item updated.",
+      "deleted": "Item deleted."
+    },
+    "errors": {
+      "load": "Could not load items.",
+      "save": "Could not save the item.",
+      "delete": "Could not delete the item.",
+      "validation": "SKU and name are required.",
+      "quantity": "Opening quantity must be a whole number equal to or greater than zero.",
+      "concurrent": "This item changed while you were editing it. Reload and try again."
+    }
+  },
+  "stock": {
+    "tabs": {
+      "balances": "Balances",
+      "movements": "Movements"
+    },
+    "addMovement": "Adjust stock",
+    "transfer": "Transfer",
+    "emptyBalances": "No stock balances found.",
+    "emptyMovements": "No stock movements found.",
+    "balanceColumns": {
+      "item": "Item",
+      "location": "Location",
+      "quantity": "On hand",
+      "reorderPoint": "Reorder point",
+      "status": "Status"
+    },
+    "movementColumns": {
+      "date": "Date",
+      "item": "Item",
+      "type": "Type",
+      "location": "Location",
+      "quantity": "Change",
+      "reference": "Reference",
+      "reason": "Reason",
+      "user": "User"
+    },
+    "filters": {
+      "status": "Stock status",
+      "location": "Location",
+      "type": "Movement type",
+      "from": "From date",
+      "to": "To date",
+      "item": "Item"
+    },
+    "adjust": {
+      "title": "Adjust stock",
+      "subtitle": "Record a receipt, issue or exact count.",
+      "mode": "Movement",
+      "receipt": "Receipt",
+      "issue": "Issue",
+      "adjustment": "Set quantity",
+      "item": "Item",
+      "location": "Location",
+      "quantity": "Quantity",
+      "targetQuantity": "New quantity",
+      "currentQuantity": "Current at location: {{quantity}}",
+      "reference": "Reference",
+      "reason": "Reason",
+      "reasonPlaceholder": "e.g. Cycle count, supplier delivery",
+      "date": "Date",
+      "submitReceipt": "Record receipt",
+      "submitIssue": "Record issue",
+      "submitAdjustment": "Set quantity"
+    },
+    "transferPanel": {
+      "title": "Transfer stock",
+      "subtitle": "Move quantity between locations without changing the item total.",
+      "item": "Item",
+      "from": "From location",
+      "to": "To location",
+      "quantity": "Quantity",
+      "reference": "Reference",
+      "reason": "Reason",
+      "submit": "Transfer stock"
+    },
+    "toast": {
+      "recorded": "Stock movement recorded.",
+      "transferred": "Stock transferred."
+    },
+    "errors": {
+      "load": "Could not load stock.",
+      "save": "Could not record the stock movement.",
+      "transfer": "Could not transfer stock.",
+      "quantity": "Quantity must be greater than zero.",
+      "target": "New quantity must be zero or greater.",
+      "adjustment": "Choose a different quantity to create an adjustment.",
+      "sameLocation": "Choose two different locations."
+    },
+    "levelPreviewTitle": "Stock level",
+    "movementPreviewTitle": "Movement details",
+    "stockValue": "Stock value",
+    "locationMovements": "Recent movements at this location"
+  },
+  "locations": {
+    "add": "Add location",
+    "empty": "No locations found.",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "stock": "On hand",
+      "default": "Default",
+      "status": "Status"
+    },
+    "panel": {
+      "createTitle": "Add location",
+      "editTitle": "Edit location",
+      "subtitle": "Warehouses, stores and stockrooms.",
+      "defaultHint": "New stock is recorded here unless another location is selected.",
+      "activeHint": "Inactive locations stay in history but are not offered for new movements."
+    },
+    "deleteTitle": "Delete location \"{{name}}\"?",
+    "toast": {
+      "created": "Location created.",
+      "updated": "Location updated.",
+      "deleted": "Location deleted."
+    },
+    "errors": {
+      "load": "Could not load locations.",
+      "save": "Could not save the location.",
+      "delete": "Could not delete the location.",
+      "defaultDelete": "The default location cannot be deleted.",
+      "stockDelete": "Move or adjust the stock before deleting this location.",
+      "concurrent": "This location changed while you were editing it. Reload and try again.",
+      "validation": "Code and name are required."
+    },
+    "previewTitle": "Location details",
+    "stockTitle": "Stock at this location",
+    "filters": {
+      "default": "Default",
+      "custom": "Not default"
+    }
+  },
+  "panel": {
+    "close": "Close",
+    "discard": "Discard",
+    "discardTitle": "Discard changes?",
+    "discardMessage": "You have unsaved changes. Do you want to discard them?",
+    "ok": "OK",
+    "shortcuts": "Shortcuts: Esc close · Ctrl/⌘+S save"
+  },
+  "empty": "No records found.",
+  "units": {
+    "none": "No unit",
+    "pcs": "Pieces",
+    "unit": "Unit",
+    "pair": "Pair",
+    "set": "Set",
+    "dozen": "Dozen",
+    "pack": "Pack",
+    "box": "Box",
+    "case": "Case",
+    "carton": "Carton",
+    "pallet": "Pallet",
+    "bundle": "Bundle",
+    "roll": "Roll",
+    "sheet": "Sheet",
+    "bag": "Bag",
+    "bottle": "Bottle",
+    "can": "Can",
+    "kit": "Kit",
+    "mg": "Milligram",
+    "g": "Gram",
+    "kg": "Kilogram",
+    "t": "Tonne",
+    "oz": "Ounce",
+    "lb": "Pound",
+    "ml": "Millilitre",
+    "cl": "Centilitre",
+    "dl": "Decilitre",
+    "l": "Litre",
+    "m3": "Cubic metre",
+    "gal": "Gallon",
+    "fl_oz": "Fluid ounce",
+    "mm": "Millimetre",
+    "cm": "Centimetre",
+    "m": "Metre",
+    "km": "Kilometre",
+    "in": "Inch",
+    "ft": "Foot",
+    "yd": "Yard",
+    "cm2": "Square centimetre",
+    "m2": "Square metre",
+    "ft2": "Square foot",
+    "min": "Minute",
+    "h": "Hour",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "kwh": "Kilowatt-hour",
+    "mwh": "Megawatt-hour",
+    "other": "Other unit"
+  },
+  "prices": {
+    "historyTitle": "Price history",
+    "manage": "Manage",
+    "effectiveAt": "Effective date",
+    "unitCost": "Unit cost",
+    "change": "Change",
+    "empty": "No price history yet.",
+    "current": "Current price",
+    "perUnit": "Per {{unit}}",
+    "currentTag": "Current",
+    "correct": "Correct",
+    "add": "Add price",
+    "addTitle": "Add price change",
+    "correctTitle": "Correct price",
+    "reason": "Reason",
+    "reasonPlaceholder": "e.g. Supplier increase, correction",
+    "invalidPrice": "Enter a valid price.",
+    "added": "Price change recorded.",
+    "corrected": "Price corrected.",
+    "concurrent": "This price entry changed while you were editing it. Reload and try again.",
+    "saveError": "Could not save the price.",
+    "loadError": "Could not load the price history.",
+    "currentHint": "Current price: {{price}}. Saving a change appends a new effective price.",
+    "back": "Back"
+  }
+}

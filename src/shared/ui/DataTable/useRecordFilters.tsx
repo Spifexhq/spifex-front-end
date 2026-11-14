@@ -25,6 +25,7 @@ export function useRecordFilters<T>(
   remote?: {
     key: string;
     enabled?: boolean;
+    initialApplied?: Record<string, string>;
     fetchPage(filters: Record<string, string>, cursor?: string, pageSize?: number): ReturnType<FetchPage<T, { options: Record<string, string[]>; optionLabels: Record<string, Record<string, string>> }>>;
     placeholder: string;
     onItems(items: T[]): void;
@@ -32,8 +33,9 @@ export function useRecordFilters<T>(
   actions?: ReactNode
 ) {
   const { t } = useTranslation("common");
-  const [draft, setDraft] = useState<Record<string, string>>({});
-  const [applied, setApplied] = useState<Record<string, string>>({});
+  const initialApplied = remote?.initialApplied;
+  const [draft, setDraft] = useState<Record<string, string>>(initialApplied ?? {});
+  const [applied, setApplied] = useState<Record<string, string>>(initialApplied ?? {});
   const [openKey, setOpenKey] = useState<string | null>(null);
   const anchors = useRef<Record<string, HTMLDivElement | null>>({});
   const searchAnchor = useRef<HTMLDivElement | null>(null);

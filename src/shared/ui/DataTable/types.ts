@@ -27,6 +27,8 @@ export type TableSelection<T> = {
 export type DataTableProps<T> = {
     getRowName?(item: T): string;
     fillHeight?: boolean;
+    /** Render the full table without an inner vertical scroll. Use for compact overview tables. */
+    fitContent?: boolean;
     virtualize?: boolean;
     rowHeight?: number | ((item: T) => number);
     loadingMore?: boolean;

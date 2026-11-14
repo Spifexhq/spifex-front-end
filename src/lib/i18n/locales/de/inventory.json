@@ -1,0 +1,348 @@
+{
+  "section": {
+    "title": "Lager",
+    "navigation": "Lager-Navigation",
+    "settings": "Einstellungen",
+    "back": "Zurück zum Arbeitsbereich",
+    "expand": "Seitenleiste ausklappen",
+    "collapse": "Seitenleiste einklappen",
+    "close": "Schlie?en",
+    "groups": {
+      "workspace": "Arbeitsbereich",
+      "operations": "Vorg?nge"
+    }
+  },
+  "nav": {
+    "overview": "Übersicht",
+    "items": "Artikel",
+    "stock": "Bestand",
+    "locations": "Lagerorte"
+  },
+  "common": {
+    "search": "Suchen",
+    "status": "Status",
+    "location": "Lagerort",
+    "item": "Artikel",
+    "quantity": "Menge",
+    "reference": "Referenz",
+    "reason": "Grund",
+    "date": "Datum",
+    "notes": "Notizen",
+    "code": "Code",
+    "name": "Name",
+    "description": "Beschreibung",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "default": "Standard",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "apply": "Anwenden",
+    "clear": "Zurücksetzen",
+    "retry": "Erneut versuchen",
+    "add": "Hinzufügen",
+    "loading": "Wird geladen...",
+    "empty": "Keine Einträge gefunden.",
+    "all": "Alle",
+    "none": "Keine"
+  },
+  "status": {
+    "ok": "Auf Lager",
+    "low": "Niedriger Bestand",
+    "out": "Nicht auf Lager",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "default": "Standard"
+  },
+  "movementType": {
+    "opening": "Anfangssaldo",
+    "receipt": "Zugang",
+    "issue": "Abgang",
+    "adjustment": "Korrektur",
+    "transfer_in": "Umbuchung eingang",
+    "transfer_out": "Umbuchung ausgang"
+  },
+  "overview": {
+    "title": "Lagerübersicht",
+    "metrics": {
+      "items": "Artikel",
+      "active": "Aktive Artikel",
+      "units": "Einheiten auf Lager",
+      "lowStock": "Achtung erforderlich",
+      "value": "Lagerwert",
+      "locations": "Lagerorte",
+      "movements": "Bewegungen (30 T.)"
+    },
+    "lowStockTitle": "Niedriger und kein Bestand",
+    "lowStockDescription": "Artikel auf oder unter dem Meldebestand.",
+    "recentMovementsTitle": "Letzte Bewegungen",
+    "recentMovementsDescription": "Die neuesten Einträge im Lagerjournal.",
+    "byLocationTitle": "Bestand nach Lagerort",
+    "byLocationDescription": "Einheiten und geführte Artikel pro Lagerort.",
+    "itemsLabel": "{{count}} Artikel",
+    "viewStock": "Bestand anzeigen",
+    "emptyLowStock": "Keine Auffälligkeiten.",
+    "emptyMovements": "Noch keine Bewegungen.",
+    "emptyLocations": "Noch keine Lagerorte."
+  },
+  "items": {
+    "add": "Artikel hinzufügen",
+    "empty": "Keine Artikel gefunden.",
+    "columns": {
+      "item": "Artikel",
+      "sku": "SKU",
+      "description": "Beschreibung",
+      "uom": "Einheit",
+      "quantity": "Auf Lager",
+      "reorderPoint": "Meldebestand",
+      "unitCost": "Stückkosten",
+      "status": "Status"
+    },
+    "filters": {
+      "status": "Status",
+      "stock": "Bestand",
+      "uom": "Einheit"
+    },
+    "panel": {
+      "createTitle": "Artikel hinzufügen",
+      "editTitle": "Artikel bearbeiten",
+      "subtitle": "Stammdaten, Schwellenwert und Referenzkosten.",
+      "openingQuantity": "Anfangsmenge",
+      "openingQuantityHint": "Wird am Standardlagerort als Anfangsbewegung erfasst.",
+      "reorderPointHint": "Warnt, wenn der Bestand auf oder unter diesem Wert liegt. Null deaktiviert die Warnung.",
+      "unitCostHint": "Referenzkosten pro Einheit in der Arbeitsbereichswährung.",
+      "stockReadOnly": "Der Bestand wird über Zugänge, Abgänge, Korrekturen und Umbuchungen geändert.",
+      "priceHistoryHint": "Eine Preis?nderung erzeugt einen neuen g?ltigen Preis. Nutzen Sie den Preisverlauf, um einen fr?heren Preis zu korrigieren."
+    },
+    "preview": {
+      "stockTitle": "Bestand nach Lagerort",
+      "movementTitle": "Letzte Bewegungen",
+      "emptyStock": "Kein Bestand an Lagerorten.",
+      "emptyMovements": "Keine Bewegungen für diesen Artikel."
+    },
+    "toast": {
+      "created": "Artikel erstellt.",
+      "updated": "Artikel aktualisiert.",
+      "deleted": "Artikel gelöscht."
+    },
+    "errors": {
+      "load": "Artikel konnten nicht geladen werden.",
+      "save": "Artikel konnte nicht gespeichert werden.",
+      "delete": "Artikel konnte nicht gelöscht werden.",
+      "validation": "SKU und Name sind erforderlich.",
+      "quantity": "Die Anfangsmenge muss eine ganze Zahl größer oder gleich null sein.",
+      "concurrent": "Dieser Artikel wurde während der Bearbeitung geändert. Neu laden und erneut versuchen."
+    }
+  },
+  "stock": {
+    "tabs": {
+      "balances": "Bestände",
+      "movements": "Bewegungen"
+    },
+    "addMovement": "Bestand korrigieren",
+    "transfer": "Umbuchen",
+    "emptyBalances": "Keine Bestände gefunden.",
+    "emptyMovements": "Keine Lagerbewegungen gefunden.",
+    "balanceColumns": {
+      "item": "Artikel",
+      "location": "Lagerort",
+      "quantity": "Auf Lager",
+      "reorderPoint": "Meldebestand",
+      "status": "Status"
+    },
+    "movementColumns": {
+      "date": "Datum",
+      "item": "Artikel",
+      "type": "Typ",
+      "location": "Lagerort",
+      "quantity": "Änderung",
+      "reference": "Referenz",
+      "reason": "Grund",
+      "user": "Benutzer"
+    },
+    "filters": {
+      "status": "Bestandsstatus",
+      "location": "Lagerort",
+      "type": "Bewegungstyp",
+      "from": "Von Datum",
+      "to": "Bis Datum",
+      "item": "Artikel"
+    },
+    "adjust": {
+      "title": "Bestand korrigieren",
+      "subtitle": "Zugang, Abgang oder exakte Zählung erfassen.",
+      "mode": "Bewegung",
+      "receipt": "Zugang",
+      "issue": "Abgang",
+      "adjustment": "Menge festlegen",
+      "item": "Artikel",
+      "location": "Lagerort",
+      "quantity": "Menge",
+      "targetQuantity": "Neue Menge",
+      "currentQuantity": "Aktuell am Lagerort: {{quantity}}",
+      "reference": "Referenz",
+      "reason": "Grund",
+      "reasonPlaceholder": "z. B. Inventur, Lieferung",
+      "date": "Datum",
+      "submitReceipt": "Zugang erfassen",
+      "submitIssue": "Abgang erfassen",
+      "submitAdjustment": "Menge festlegen"
+    },
+    "transferPanel": {
+      "title": "Bestand umbuchen",
+      "subtitle": "Menge zwischen Lagerorten bewegen, ohne die Artikelgesamtmenge zu ändern.",
+      "item": "Artikel",
+      "from": "Von Lagerort",
+      "to": "Nach Lagerort",
+      "quantity": "Menge",
+      "reference": "Referenz",
+      "reason": "Grund",
+      "submit": "Bestand umbuchen"
+    },
+    "toast": {
+      "recorded": "Lagerbewegung erfasst.",
+      "transferred": "Bestand umgebucht."
+    },
+    "errors": {
+      "load": "Bestand konnte nicht geladen werden.",
+      "save": "Lagerbewegung konnte nicht erfasst werden.",
+      "transfer": "Bestand konnte nicht umgebucht werden.",
+      "quantity": "Die Menge muss größer als null sein.",
+      "target": "Die neue Menge muss null oder größer sein.",
+      "adjustment": "Wählen Sie eine andere Menge für die Korrektur.",
+      "sameLocation": "Wählen Sie zwei verschiedene Lagerorte."
+    },
+    "levelPreviewTitle": "Bestandsstand",
+    "movementPreviewTitle": "Bewegungsdetails",
+    "stockValue": "Lagerwert",
+    "locationMovements": "Letzte Bewegungen an diesem Lagerort"
+  },
+  "locations": {
+    "add": "Lagerort hinzufügen",
+    "empty": "Keine Lagerorte gefunden.",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Beschreibung",
+      "stock": "Auf Lager",
+      "default": "Standard",
+      "status": "Status"
+    },
+    "panel": {
+      "createTitle": "Lagerort hinzufügen",
+      "editTitle": "Lagerort bearbeiten",
+      "subtitle": "Lagerhäuser, Filialen und Bestandsräume.",
+      "defaultHint": "Neuer Bestand wird hier erfasst, sofern kein anderer Lagerort gewählt wird.",
+      "activeHint": "Inaktive Lagerorte bleiben in der Historie, werden aber nicht für neue Bewegungen angeboten."
+    },
+    "deleteTitle": "Lagerort \"{{name}}\" löschen?",
+    "toast": {
+      "created": "Lagerort erstellt.",
+      "updated": "Lagerort aktualisiert.",
+      "deleted": "Lagerort gelöscht."
+    },
+    "errors": {
+      "load": "Lagerorte konnten nicht geladen werden.",
+      "save": "Lagerort konnte nicht gespeichert werden.",
+      "delete": "Lagerort konnte nicht gelöscht werden.",
+      "defaultDelete": "Der Standardlagerort kann nicht gelöscht werden.",
+      "stockDelete": "Bestand verschieben oder korrigieren, bevor dieser Lagerort gelöscht wird.",
+      "concurrent": "Dieser Lagerort wurde während der Bearbeitung geändert. Neu laden und erneut versuchen.",
+      "validation": "Code und Name sind erforderlich."
+    },
+    "previewTitle": "Lagerortdetails",
+    "stockTitle": "Bestand an diesem Lagerort",
+    "filters": {
+      "default": "Standard",
+      "custom": "Nicht Standard"
+    }
+  },
+  "panel": {
+    "close": "Schließen",
+    "discard": "Verwerfen",
+    "discardTitle": "Änderungen verwerfen?",
+    "discardMessage": "Es gibt ungespeicherte Änderungen. Möchten Sie sie verwerfen?",
+    "ok": "OK",
+    "shortcuts": "Tastenkürzel: Esc schließen · Ctrl/⌘+S speichern"
+  },
+  "empty": "Keine Einträge gefunden.",
+  "units": {
+    "none": "Keine Einheit",
+    "pcs": "St?ck",
+    "unit": "Einheit",
+    "pair": "Paar",
+    "set": "Satz",
+    "dozen": "Dutzend",
+    "pack": "Packung",
+    "box": "Kiste",
+    "case": "Kasten",
+    "carton": "Karton",
+    "pallet": "Palette",
+    "bundle": "B?ndel",
+    "roll": "Rolle",
+    "sheet": "Blatt",
+    "bag": "Beutel",
+    "bottle": "Flasche",
+    "can": "Dose",
+    "kit": "Set",
+    "mg": "Milligramm",
+    "g": "Gramm",
+    "kg": "Kilogramm",
+    "t": "Tonne",
+    "oz": "Unze",
+    "lb": "Pfund",
+    "ml": "Milliliter",
+    "cl": "Zentiliter",
+    "dl": "Deziliter",
+    "l": "Liter",
+    "m3": "Kubikmeter",
+    "gal": "Gallone",
+    "fl_oz": "Fl?ssigunze",
+    "mm": "Millimeter",
+    "cm": "Zentimeter",
+    "m": "Meter",
+    "km": "Kilometer",
+    "in": "Zoll",
+    "ft": "Fu?",
+    "yd": "Yard",
+    "cm2": "Quadratzentimeter",
+    "m2": "Quadratmeter",
+    "ft2": "Quadratfu?",
+    "min": "Minute",
+    "h": "Stunde",
+    "day": "Tag",
+    "week": "Woche",
+    "month": "Monat",
+    "year": "Jahr",
+    "kwh": "Kilowattstunde",
+    "mwh": "Megawattstunde",
+    "other": "Andere Einheit"
+  },
+  "prices": {
+    "historyTitle": "Preisverlauf",
+    "manage": "Verwalten",
+    "effectiveAt": "G?ltig ab",
+    "unitCost": "St?ckkosten",
+    "change": "?nderung",
+    "empty": "Noch kein Preisverlauf.",
+    "current": "Aktueller Preis",
+    "perUnit": "Pro {{unit}}",
+    "currentTag": "Aktuell",
+    "correct": "Korrigieren",
+    "add": "Preis hinzuf?gen",
+    "addTitle": "Preis?nderung hinzuf?gen",
+    "correctTitle": "Preis korrigieren",
+    "reason": "Grund",
+    "reasonPlaceholder": "z. B. Lieferantenerh?hung, Korrektur",
+    "invalidPrice": "Geben Sie einen g?ltigen Preis ein.",
+    "added": "Preis?nderung erfasst.",
+    "corrected": "Preis korrigiert.",
+    "concurrent": "Dieser Preis wurde w?hrend der Bearbeitung ge?ndert. Neu laden und erneut versuchen.",
+    "saveError": "Preis konnte nicht gespeichert werden.",
+    "loadError": "Preisverlauf konnte nicht geladen werden.",
+    "currentHint": "Aktueller Preis: {{price}}. Beim Speichern einer ?nderung wird ein neuer g?ltiger Preis angeh?ngt.",
+    "back": "Zur?ck"
+  }
+}

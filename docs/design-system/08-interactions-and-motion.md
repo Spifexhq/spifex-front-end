@@ -116,7 +116,7 @@ At `max-width: 767px`, never focus a field automatically.
 | --- | --- | --- |
 | Tooltip open | immediate, close after 120ms | `InfoTooltip` |
 | Popover close delay | 150ms | `Popover` `CLOSE_MS` |
-| Preview stack | 220ms width/page edges, 180ms content fade | Opening pushes page edges left; closing slides them right |
+| Preview stack | 260ms width/page edges, 200ms content slide | Opening pushes page edges left; closing slides them right without fading |
 | Snackbar | 5s default (`autoHideDuration`) | pause on hover and focus; errors persist (`persistOnError`); dismiss button |
 | ConfirmToast | persists until action | mobile collapse available |
 | Feedback stack | 12px gap | Snackbar, ConfirmToast and selection bars share one bottom-center stack |

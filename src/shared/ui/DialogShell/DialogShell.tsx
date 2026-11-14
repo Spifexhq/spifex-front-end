@@ -125,10 +125,10 @@ export default function DialogShell({
                   key={index}
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-y-0 right-0 w-[min(640px,100vw)] border border-slate-200 bg-white shadow-[-10px_0_30px_#182a4214]"
-                  initial={{ opacity: 0, x: 0 }}
-                  animate={{ opacity: 1 - index * 0.12, x: -offset }}
-                  exit={{ opacity: 0, x: 0 }}
-                  transition={{ duration: reduced ? 0 : 0.22, ease: "easeOut" }}
+                  initial={{ x: 0 }}
+                  animate={{ x: -offset }}
+                  exit={{ x: 0 }}
+                  transition={{ duration: reduced ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
                 />
               );
             })}
