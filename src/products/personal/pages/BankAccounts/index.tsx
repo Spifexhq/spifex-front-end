@@ -114,15 +114,15 @@ export default function PersonalBankAccountsPage() {
   const columns = useMemo<Column<PersonalAccount>[]>(() => [
     { key: "name", label: personalT("name"), render: account => account.name },
     { key: "account_type", label: personalT("account_type"), render: account => bankT(`accountType.${account.account_type}`, { defaultValue: account.account_type }) },
-    { key: "account_number", label: bankT("field.accountNumber"), render: account => account.account_number || "∅" },
+    { key: "account_number", label: bankT("field.accountNumber"), render: account => account.account_number || "" },
   ], [bankT, personalT]);
 
   const previewColumns = useMemo<Column<PersonalAccount>[]>(() => [
     { key: "institution", label: bankT("preview.fields.institution"), render: account => account.institution || account.name },
     { key: "account_type", label: bankT("preview.fields.account_type"), render: account => bankT(`accountType.${account.account_type}`, { defaultValue: account.account_type }) },
-    { key: "branch", label: bankT("preview.fields.branch"), render: account => account.branch || "∅" },
-    { key: "account_number", label: bankT("preview.fields.account_number"), render: account => account.account_number || "∅" },
-    { key: "iban", label: bankT("preview.fields.iban"), render: account => account.iban || "∅" },
+    { key: "branch", label: bankT("preview.fields.branch"), render: account => account.branch || "" },
+    { key: "account_number", label: bankT("preview.fields.account_number"), render: account => account.account_number || "" },
+    { key: "iban", label: bankT("preview.fields.iban"), render: account => account.iban || "" },
     { key: "currency", label: bankT("preview.fields.currency"), render: account => account.currency },
     { key: "initial_balance", label: bankT("preview.fields.initial_balance"), render: account => formatCurrency(account.initial_balance, currency) },
     { key: "current_balance", label: bankT("preview.fields.current_balance"), render: account => formatCurrency(account.current_balance, currency) },

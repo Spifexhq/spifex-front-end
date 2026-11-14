@@ -241,8 +241,8 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
   const rowAdapters = normalizeRows(items);
   const secondColumnLabel = t(settled ? "personal:bank_name" : "personal:category_name");
   const renderSecondary = (record: FinancialActivityRecord<TableItem>) => {
-    if (record.activityKind === "entry" && "category_name" in record.source) return record.source.category_name || <span className="text-gray-400">∅</span>;
-    return record.bankName || ("bank_name" in record.source ? record.source.bank_name : null) || <span className="text-gray-400">∅</span>;
+    if (record.activityKind === "entry" && "category_name" in record.source) return record.source.category_name || null;
+    return record.bankName || ("bank_name" in record.source ? record.source.bank_name : null) || null;
   };
   const inspect = (row: TableItem) => onInspect(row);
   const edit = (row: TableItem) => { if (!settled) onEdit(row as PersonalTransaction); };
