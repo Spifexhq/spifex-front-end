@@ -13,7 +13,6 @@ const Personal = lazy(() => import("@/features/account-settings/pages/PersonalSe
 const Billing = lazy(() => import("@/products/business/pages/Settings/Billing"));
 const LimitsAndUsage = lazy(() => import("@/features/account-settings/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
-const Integrations = lazy(() => import("@/products/business/pages/Settings/Integrations"));
 const OrganizationSettings = lazy(() => import("@/products/business/pages/Settings/OrganizationSettings"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const DepartmentSettings = lazy(() => import("@/products/business/pages/Settings/DepartmentSettings"));
@@ -151,14 +150,6 @@ export const businessRoutes: RouteObject[] = [
                     ),
                 },
                 {
-                    path: 'ai-connections',
-                    element: (
-                    <PermissionMiddleware codeName="view_ai_connections" behavior="redirect" redirectTo={'/settings'}>
-                        <Integrations />
-                    </PermissionMiddleware>
-                    ),
-                },
-                {
                     path: 'banks',
                     element: (
                     <PermissionMiddleware codeName="view_bank_settings_page" behavior="redirect" redirectTo={'/settings'}>
@@ -226,7 +217,7 @@ export const businessRoutes: RouteObject[] = [
                     path: 'ledger-accounts',
                     element: (
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/accounting/chart" replace />
+                        <Navigate to="/accounting/chart-of-accounts" replace />
                     </PermissionMiddleware>
                     ),
                 },
@@ -234,7 +225,7 @@ export const businessRoutes: RouteObject[] = [
                     path: 'register/ledger-accounts',
                     element: (
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/accounting/setup/chart" replace />
+                        <Navigate to="/accounting/chart-of-accounts" replace />
                     </PermissionMiddleware>
                     ),
                 },

@@ -73,7 +73,8 @@
     "reconciliation": "Prüfleitfaden",
     "overview": "Übersicht",
     "setup": "Einrichtung",
-    "periods": "Perioden"
+    "periods": "Perioden",
+    "assistant": "KI-Einrichtung"
   },
   "shell": {
     "title": "Buchhaltungseinstellungen",
@@ -405,7 +406,9 @@
       "reversed": "Storniert",
       "reversedDetail": "Bereits stornierte Einträge.",
       "lines": "Zeilen",
-      "linesDetail": "Gesamtzahl der Journalzeilen in sichtbaren Einträgen."
+      "linesDetail": "Gesamtzahl der Journalzeilen in sichtbaren Einträgen.",
+      "posted": "Gebucht",
+      "postedDetail": "Aktuell im Hauptbuch gebuchte Journalzeilen."
     },
     "columns": {
       "entry": "Eintrag",
@@ -865,7 +868,12 @@
     "all": "Alle Konten",
     "status": "Kontostatus",
     "noAccess": "Sie haben keine Berechtigung, den Kontenplan anzuzeigen.",
-    "description": "Prüfen Sie die Konten Ihrer Buchungsbücher und Buchungsregeln."
+    "description": "Prüfen Sie die Konten Ihrer Buchungsbücher und Buchungsregeln.",
+    "emptyTitle": "Kontenplan starten",
+    "relatedSetup": "Zugehörige Einrichtung",
+    "guidedHint": "Beantworten Sie einen kurzen Fragebogen und sehen Sie sich den vorgeschlagenen Kontenplan, die Bücher und Verknüpfungen an.",
+    "configureHint": "Laden Sie die Unternehmensvorlage, eine Datei oder eingefügte Zeilen.",
+    "addHint": "Erstellen Sie Konten einzeln, wenn die Struktur bereits bekannt ist."
   },
   "setupFlow": {
     "setupTitle": "Buchhaltung einrichten",
@@ -970,7 +978,19 @@
     },
     "continueStep": "Weiter",
     "editPeriod": "Periode bearbeiten",
-    "scopeLocked": "Bank oder Kategorie und Buch bestimmen diese Konfiguration. Legen Sie für einen anderen Geltungsbereich eine neue Konfiguration an."
+    "scopeLocked": "Bank oder Kategorie und Buch bestimmen diese Konfiguration. Legen Sie für einen anderen Geltungsbereich eine neue Konfiguration an.",
+    "setupDescription": "Richten Sie Kontenplan und Bücher einmal ein. Nach der Aktivierung wird diese Seite zur Buchhaltungsübersicht.",
+    "openChart": "Kontenplan öffnen",
+    "openWorkspaceSettings": "Workspace-Einstellungen öffnen",
+    "progressHelp": "Der Fortschritt wird anhand der gespeicherten Konfiguration geprüft.",
+    "currencyPrerequisite": "Vor dem Start der Buchhaltung ist eine Workspace-Währung erforderlich.",
+    "nextAction": "Nächste Aktion",
+    "relatedSetup": "Konfiguration",
+    "configDescription": "Konfigurieren Sie zuerst die Pflichtschritte und ergänzen Sie dann die Kontrollen, die Ihre Transaktionen benötigen.",
+    "available": "Verfügbar",
+    "reviewIssue": "Prüfen",
+    "issueCount": "{{count}} Elemente benötigen Aufmerksamkeit",
+    "openStep": "Öffnen"
   },
   "footer": {
     "book": "Buch",
@@ -989,7 +1009,8 @@
     "expand": "Navigation erweitern",
     "collapse": "Navigation reduzieren",
     "close": "Navigation schließen",
-    "brand": "Spifex"
+    "brand": "Spifex",
+    "locked": "Schließen Sie den vorherigen Schritt ab"
   },
   "table": {
     "actions": "Aktionen",
@@ -1010,5 +1031,347 @@
       "bank-connections": "Banken, Bücher oder Konten suchen…",
       "category-rules": "Kategorien, Bücher oder Buchungskonten suchen…"
     }
+  },
+  "guidedSetup": {
+    "progress": "Einrichtungsfortschritt",
+    "steps": {
+      "level": "Niveau",
+      "questions": "Fragen",
+      "review": "Prüfen",
+      "preview": "Vorschau"
+    },
+    "eyebrow": "KI-Buchhaltungseinrichtung",
+    "title": "Buchhaltung einrichten",
+    "description": "Beantworten Sie geführte Fragen. Wir erzeugen Bücher, Kontenplan, Kategorie-Regeln und Bankverknüpfungen; vor dem Anwenden prüfen Sie alles.",
+    "backToChart": "Zurück zum Kontenplan",
+    "levelTitle": "Wie sollen wir Sie führen?",
+    "levelBody": "Die Fragen passen sich Ihrer Erfahrung an. Das Niveau kann später geändert werden.",
+    "levelLabel": "Buchhaltungsniveau",
+    "accountLanguage": "Kontosprache",
+    "currencyLabel": "Workspace-Währung",
+    "levels": {
+      "none": {
+        "title": "Ich beginne bei null",
+        "description": "Einfache Fragen und eine kompakte, sichere Einrichtung."
+      },
+      "basic": {
+        "title": "Ich kenne die Grundlagen",
+        "description": "Praktische Fragen für die tägliche Buchhaltung."
+      },
+      "average": {
+        "title": "Ich führe Konten regelmäßig",
+        "description": "Mehr Kontrolle über Kunden, Lieferanten, Lohn und Steuern."
+      },
+      "accountant": {
+        "title": "Ich bin Buchhalter",
+        "description": "Detaillierte Bücher, Abgrenzungen, Dimensionen und Eröffnungssalden."
+      }
+    },
+    "languages": {
+      "en": "Englisch",
+      "pt": "Portugiesisch",
+      "fr": "Französisch",
+      "de": "Deutsch"
+    },
+    "questionsTitle": "Einige Fragen",
+    "questionsBody": "Wählen Sie die passendste Antwort. Alles kann nach der Erstellung angepasst werden.",
+    "sections": {
+      "business": {
+        "title": "Unternehmen",
+        "description": "Das Wesentliche für den Kontenplan."
+      },
+      "operations": {
+        "title": "Betrieb",
+        "description": "Wie Geld hereinkommt und wofür Sie es ausgeben."
+      },
+      "controls": {
+        "title": "Kontrollen",
+        "description": "Steuern, Kredit und Lohn."
+      },
+      "advanced": {
+        "title": "Erweitert",
+        "description": "Basis, Dimensionen und Eröffnungsdaten."
+      }
+    },
+    "questions": {
+      "entity_type": {
+        "label": "Wie ist das Unternehmen organisiert?",
+        "help": "Wählen Sie die passendste Rechtsform."
+      },
+      "main_activity": {
+        "label": "Was ist die Haupttätigkeit?",
+        "help": "Sie bestimmt Erlös- und Kostenkonten."
+      },
+      "inventory": {
+        "label": "Verkaufen Sie physische Bestände?",
+        "help": "Lager, Material oder Handelsware."
+      },
+      "employees": {
+        "label": "Beschäftigen Sie Mitarbeiter?",
+        "help": "Einschließlich Lohn und Lohnnebenkosten."
+      },
+      "vat_registered": {
+        "label": "Sind Sie umsatzsteuerpflichtig?",
+        "help": "Später änderbar."
+      },
+      "sales_channels": {
+        "label": "Wie zahlen Ihre Kunden?",
+        "help": "Mehrfachauswahl möglich."
+      },
+      "expense_profile": {
+        "label": "Was sind die wichtigsten laufenden Kosten?",
+        "help": "Wählen Sie die größten regelmäßigen Ausgaben."
+      },
+      "fixed_assets": {
+        "label": "Besitzen Sie Geräte, Fahrzeuge oder Immobilien?",
+        "help": "Wirtschaftsgüter für mehr als ein Jahr."
+      },
+      "loans": {
+        "label": "Haben Sie Kredite oder Kreditlinien?",
+        "help": "Bankkredite, Leasing oder Gesellschafterdarlehen."
+      },
+      "receivables": {
+        "label": "Zahlen Kunden später?",
+        "help": "Sie stellen Rechnungen mit Zahlungsziel."
+      },
+      "payables": {
+        "label": "Zahlen Sie Lieferanten später?",
+        "help": "Lieferantenrechnungen mit Zahlungsziel."
+      },
+      "payroll": {
+        "label": "Führen Sie die Lohnbuchhaltung?",
+        "help": "Gehälter, Sozialabgaben und Einbehalte."
+      },
+      "inventory_type": {
+        "label": "Welche Bestände führen Sie?",
+        "help": "Wählen Sie die nächste Option."
+      },
+      "multi_currency": {
+        "label": "Handeln Sie in mehreren Währungen?",
+        "help": "Ausländische Kunden, Lieferanten oder Konten."
+      },
+      "deferred_revenue": {
+        "label": "Erhalten Sie Geld vor der Lieferung?",
+        "help": "Anzahlungen, Abos oder Vorschüsse."
+      },
+      "tax_regime": {
+        "label": "Welche indirekte Steuer gilt?",
+        "help": "Wählen Sie das nächste System."
+      },
+      "book_basis": {
+        "label": "Welche Basis soll das Hauptbuch nutzen?",
+        "help": "Management ist eine sichere Standardwahl."
+      },
+      "dimensions": {
+        "label": "Benötigen Sie Berichtsdimensionen?",
+        "help": "Abteilungen, Projekte oder Kostenstellen."
+      },
+      "consolidation": {
+        "label": "Benötigen Sie konsolidierte Berichte?",
+        "help": "Mehr als ein Buch oder Unternehmen."
+      },
+      "opening_balances": {
+        "label": "Haben Sie Eröffnungssalden?",
+        "help": "Wir bereiten nur die Einrichtung vor; Werte werden später erfasst."
+      },
+      "chart_depth": {
+        "label": "Wie detailliert soll der Kontenplan sein?",
+        "help": "Kompakt ist für kleine Teams einfacher."
+      },
+      "recognition": {
+        "label": "Wie erfassen Sie Erträge und Aufwendungen?",
+        "help": "Bei Geldfluss oder bei Entstehung."
+      },
+      "country": {
+        "label": "In welchem Land sind Sie tätig?",
+        "help": "Steuer- und Berichtsstandards hängen vom Land ab."
+      },
+      "revenue_model": {
+        "label": "Wie erzielen Sie normalerweise Umsatz?",
+        "help": "Hilft, Einmalverkäufe von wiederkehrenden Erlösen zu trennen."
+      },
+      "customer_type": {
+        "label": "Wer sind Ihre Kunden?",
+        "help": "Verbraucher, Unternehmen oder beides."
+      },
+      "unusual_activity": {
+        "label": "Gibt es etwas Ungewöhnliches zu berücksichtigen?",
+        "help": "Optionale kurze Notiz: Zuschüsse, regulierte Tätigkeit, Saisonalität, besondere Vermögenswerte."
+      },
+      "payment_terms": {
+        "label": "Wann zahlen Kunden normalerweise?",
+        "help": "Die häufigste Zahlungsfrist."
+      },
+      "fiscal_year_end": {
+        "label": "Wann endet Ihr Geschäftsjahr?",
+        "help": "Wird für die Periodenstruktur verwendet."
+      },
+      "accounting_standard": {
+        "label": "Welcher Rechnungslegungsstandard gilt?",
+        "help": "Lokaler Standard, IFRS oder US GAAP."
+      },
+      "audit_required": {
+        "label": "Wird der Abschluss geprüft?",
+        "help": "Eine Prüfung kann mehr Detail und Nachweise erfordern."
+      }
+    },
+    "options": {
+      "freelancer": "Freiberufler oder Einzelunternehmer",
+      "company": "Kapitalgesellschaft",
+      "partnership": "Personengesellschaft",
+      "nonprofit": "Gemeinnützige Organisation",
+      "services": "Dienstleistungen",
+      "retail": "Einzelhandel",
+      "ecommerce": "Onlineshop",
+      "manufacturing": "Produktion",
+      "construction": "Bau",
+      "technology": "Technologie",
+      "food": "Gastronomie",
+      "other": "Sonstiges",
+      "cash": "Bargeld",
+      "card": "Karte",
+      "bank_transfer": "Überweisung",
+      "online": "Online-Zahlung",
+      "invoices": "Rechnungen",
+      "subscriptions": "Abonnements",
+      "rent": "Miete oder Büro",
+      "utilities": "Nebenkosten",
+      "software": "Software",
+      "travel": "Reisen",
+      "marketing": "Marketing",
+      "materials": "Material oder Lager",
+      "shipping": "Versand",
+      "goods": "Physische Waren",
+      "both": "Verbraucher und Unternehmen",
+      "none": "Keine",
+      "vat": "Umsatzsteuer",
+      "sales_tax": "Verkaufssteuer",
+      "gst": "GST",
+      "management": "Management",
+      "accrual": "Periodengerecht",
+      "tax": "Steuerlich",
+      "departments": "Abteilungen",
+      "projects": "Projekte",
+      "cost_centers": "Kostenstellen",
+      "compact": "Kompakt",
+      "standard": "Standard",
+      "detailed": "Detailliert",
+      "one_off": "Einmalverkäufe",
+      "recurring": "Wiederkehrende Erlöse",
+      "mixed": "Gemischte Erlöse",
+      "consumers": "Verbraucher",
+      "business": "Unternehmen",
+      "immediate": "Zahlung bei Lieferung",
+      "15": "Bis 15 Tage",
+      "30": "Bis 30 Tage",
+      "60": "Mehr als 30 Tage",
+      "dec": "31. Dezember",
+      "mar": "31. März",
+      "jun": "30. Juni",
+      "sep": "30. September",
+      "local": "Lokaler Standard",
+      "ifrs": "IFRS",
+      "us_gaap": "US GAAP"
+    },
+    "summary": {
+      "books": "Bücher",
+      "accounts": "Konten",
+      "categories": "Kategorien",
+      "rules": "Regeln",
+      "banks": "Banken"
+    },
+    "blockersTitle": "Bitte prüfen",
+    "previewTabs": "Einrichtungsvorschau",
+    "previewBooks": "Bücher",
+    "previewChart": "Plan",
+    "previewRules": "Regeln",
+    "previewBanks": "Banken",
+    "primaryBook": "Hauptbuch",
+    "bankControl": "Bankkonto",
+    "debitAccount": "Soll",
+    "creditAccount": "Haben",
+    "noBanks": "Noch keine Bankkonten zum Verknüpfen.",
+    "warningsTitle": "Hinweise",
+    "assumptionsTitle": "Annahmen",
+    "statementSections": {
+      "asset": "Aktiva",
+      "liability": "Passiva",
+      "equity": "Eigenkapital",
+      "income": "Erträge",
+      "expense": "Aufwendungen",
+      "off_balance": "Außerbilanz",
+      "statistical": "Statistisch"
+    },
+    "bookBasis": {
+      "management": "Management",
+      "cash": "Bargeld",
+      "accrual": "Periodengerecht",
+      "tax": "Steuerlich"
+    },
+    "generating": "Bücher, Kontenplan, Kategorien und Bankverknüpfungen werden erstellt…",
+    "reviewTitle": "Antworten prüfen",
+    "reviewBody": "Die Einrichtung wird erst nach Prüfung der Vorschau und dem Anwenden erstellt.",
+    "previewTitle": "Ihre vorgeschlagene Einrichtung",
+    "previewBody": "Es werden nur die benötigten Bereiche angezeigt. Klappen Sie eine Gruppe zum Prüfen auf.",
+    "successTitle": "Buchhaltung eingerichtet",
+    "successBody": "{{accounts}} Konten, {{books}} Bücher und {{rules}} Kategorie-Regeln wurden erstellt. Prüfen Sie das Ergebnis in der Buchhaltung.",
+    "openAccounting": "Buchhaltung öffnen",
+    "back": "Zurück",
+    "continue": "Weiter",
+    "generate": "Einrichtung erzeugen",
+    "apply": "Anwenden und aktivieren",
+    "regenerate": "Erneut erzeugen",
+    "retry": "Erneut versuchen",
+    "notAnswered": "Nicht beantwortet",
+    "yes": "Ja",
+    "no": "Nein",
+    "blockedTitle": "KI-Einrichtung ist noch nicht verfügbar",
+    "providerUnavailable": "Der Buchhaltungs-KI-Anbieter ist nicht konfiguriert.",
+    "continueSetup": "Einrichtung fortsetzen",
+    "unavailableTitle": "KI-Einrichtung konnte nicht geladen werden",
+    "unavailableBody": "Prüfen Sie die Verbindung und versuchen Sie es erneut.",
+    "loadError": "KI-Einrichtung konnte nicht geladen werden.",
+    "generateError": "Einrichtung konnte nicht erzeugt werden.",
+    "applyError": "Einrichtung konnte nicht angewendet werden.",
+    "body": "Kontenplan und Bücher mit einem geführten KI-Fragebogen einrichten.",
+    "questionnaire": "KI-Einrichtung starten",
+    "otherExplanation": "Bitte erläutern",
+    "closeTitle": "KI-Einrichtung schließen?",
+    "closeBody": "Es gibt noch nicht angewendete Antworten. Wählen Sie, ob ein Entwurf in diesem Browser bleiben oder verworfen werden soll.",
+    "scratchNotice": "Der Entwurf bleibt nur in diesem Browser. Er wird nie in der Datenbank gespeichert.",
+    "continueEditing": "Weiter bearbeiten",
+    "keepScratch": "Entwurf behalten",
+    "discardAnswers": "Antworten verwerfen"
+  },
+  "overview": {
+    "title": "Buchhaltungsübersicht",
+    "description": "Ein Überblick über Kontenplan, Journale und aktuelle Salden.",
+    "loadError": "Die Übersicht konnte nicht aktualisiert werden.",
+    "trialBalance": "Saldenliste",
+    "openChart": "Kontenplan öffnen",
+    "recentJournals": "Letzte Journale",
+    "viewAll": "Alle anzeigen",
+    "noBalances": "Noch keine Kontosalden.",
+    "noJournals": "Noch keine Journale.",
+    "metrics": {
+      "debits": "Soll gesamt",
+      "credits": "Haben gesamt",
+      "journals": "Journale",
+      "posted": "Gebucht"
+    },
+    "account": "Konto",
+    "debit": "Soll",
+    "credit": "Haben",
+    "balance": "Saldo",
+    "total": "Summe",
+    "trialBalanceDescription": "Salden aus gebuchten Journalen.",
+    "lastPosting": "Letzte Buchung {{date}}",
+    "quickActions": "Schnellaktionen",
+    "quickActionsDescription": "Häufige Buchhaltungsaufgaben und Prüfwerkzeuge.",
+    "quickJournals": "Journale und Eröffnungssalden prüfen.",
+    "quickReview": "Finden Sie die Einstellung hinter einem Bank- oder Kategorieproblem.",
+    "quickRules": "Prüfen Sie die Konten der Zahlungskategorien.",
+    "quickBanks": "Ordnen Sie Bankkonten den Kontrollkonten zu.",
+    "showingAccounts": "{{shown}} von {{total}} Konten werden angezeigt."
   }
 }

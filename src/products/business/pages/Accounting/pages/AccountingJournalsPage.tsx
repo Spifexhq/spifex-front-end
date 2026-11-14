@@ -4,11 +4,14 @@ import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import DataTable from "@/shared/ui/DataTable";
 import Card from "@/shared/ui/Card";
 import AccountingStatus from "../components/AccountingStatus";
+import AccountingMetricCard from "../components/AccountingMetricCard";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm, SidePanelDetails } from "@/components/Modal/SidePanel";
 import AccountingTerm from "@/products/business/pages/Accounting/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { ArrowRight, BookOpen, CheckCheck, ListTree, LockKeyhole, Plus, RotateCcw } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -140,6 +143,13 @@ const AccountingJournalsPage: React.FC = () => {
 
   const balanced = totals.debit === totals.credit && totals.debit > 0;
 
+  const metrics = React.useMemo(() => [
+    { key: "entries", value: items.length, Icon: BookOpen, detail: t("journalsPage.metrics.entriesDetail", "Journals visible in the current search slice.") },
+    { key: "posted", value: items.filter((item) => item.status === "posted").length, Icon: CheckCheck, detail: t("journalsPage.metrics.postedDetail", "Entries currently posted to the ledger.") },
+    { key: "reversed", value: items.filter((item) => item.status === "reversed").length, Icon: RotateCcw, detail: t("journalsPage.metrics.reversedDetail", "Entries already reversed.") },
+    { key: "lines", value: items.reduce((sum, item) => sum + (item.lines?.length || 0), 0), Icon: ListTree, detail: t("journalsPage.metrics.linesDetail", "Total journal lines across visible entries.") },
+  ], [items, t]);
+
   const source = useAccountingSource<JournalEntry>("journals");
   const recordFilters = useRecordFilters(items, [
  {key:"status",label:t("table.status","Status"),value:item=>item.status,format:value=>t(`enums.status.${value}`,value)},
@@ -242,37 +252,55 @@ const AccountingJournalsPage: React.FC = () => {
     }
   };
 
+  if (!setupStatus) return <PageSkeleton variant="accounting" rows={6} />;
+  if (!setupStatus.operational) return <Card as="section" radius="xl" tone="slate" padding="default" className="space-y-4">
+    <div className="flex items-start gap-3">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500"><LockKeyhole size={17} aria-hidden="true"/></span>
+      <div className="min-w-0">
+        <h2 className="text-base font-semibold text-slate-900">{t("setupFlow.blockedTitle", "Complete the earlier steps first")}</h2>
+        <p className="mt-1 text-sm leading-6 text-slate-500">{t("setupFlow.notActive", "Finish setup before creating accounting entries.")}</p>
+      </div>
+    </div>
+    <Link to="/accounting/overview" className="inline-flex min-h-9 w-fit items-center gap-2 rounded-md bg-gray-900 px-3 text-xs font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400">{t("setupFlow.continue", "Continue setup")}<ArrowRight size={14} aria-hidden="true"/></Link>
+  </Card>;
   if (loading && !items.length) return <PageSkeleton variant="accounting" rows={6} />;
 
   return (
     <>
-      <section className="space-y-4">
-        <div className="accounting-page-header">
-
-          <div className="flex flex-col gap-5 py-1">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                
-                <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  {t("journalsPage.description", "Inspect accounting output, create controlled manual entries, and reverse posted journals that require correction.")}
-                </p>
-              </div>
-
-              <Button type="button" disabled={!setupStatus?.operational || !canManage} onClick={openManualJournal}>{t("journalsPage.newButton", "New journal")}</Button>
-            </div>
-
-
+      <section className="space-y-5">
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 max-w-3xl">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t("section.operations", "Operations")}</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              {t("journalsPage.description", "Inspect accounting output, create controlled manual entries, and reverse posted journals that require correction.")}
+            </p>
           </div>
+          <Button type="button" className="gap-2" disabled={!canManage} onClick={openManualJournal}><Plus size={15} aria-hidden="true"/>{t("journalsPage.newButton", "Manual journal")}</Button>
+        </header>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {metrics.map(({ key, value, Icon, detail }) => <AccountingMetricCard key={key} label={t(`journalsPage.metrics.${key}`, key)} value={value.toLocaleString(language)} Icon={Icon} hint={detail}/>)}
         </div>
 
-        {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
-{ key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => item.entry_number || item.id },
-{ key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
-{ key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
-{ key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
-{ key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
-]} actions={item => <Button type="button" variant="outline" size="sm" disabled={!setupStatus?.operational || !canManage || reversingId === item.id || item.status !== "posted"} onClick={() => void reverseJournal(item.id)}>{t("journalsPage.actions.reverse", "Reverse")}</Button>} />
+        {recordFilters.pager.error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+          <span>{recordFilters.pager.error}</span>
+          <Button variant="outline" size="sm" onClick={() => void load()}>{t("redesign.retry", "Retry")}</Button>
+        </div> : null}
+
+        {recordFilters.filters}
+
+        <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.listTitle", "Journal list")}>
+          <div className="p-4 sm:p-5">
+            <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
+              { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => item.entry_number || item.id },
+              { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
+              { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
+              { key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
+              { key: "lines", label: t("journalsPage.columns.lines", "Lines"), render: item => String(item.lines?.length ?? 0) },
+              { key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
+            ]} actions={item => <Button type="button" variant="outline" size="sm" disabled={!canManage || reversingId === item.id || item.status !== "posted"} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button>} />
+          </div>
+        </Card>
 
         {snackbar ? (
           <Snackbar
@@ -300,8 +328,8 @@ const AccountingJournalsPage: React.FC = () => {
           <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={5} /></div>
         ) : (
           <SidePanelForm recordLabel={t("footer.journal", "Journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.headerSection", "Journal header")}</div>
               </div>
 
@@ -359,8 +387,8 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
                   <Button
@@ -479,8 +507,8 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <Card as="section" padding="default">
-              <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
+            <section className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.debit / 100).toFixed(2)}</div>
@@ -496,7 +524,7 @@ const AccountingJournalsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </Card>
+            </section>
 
             <div className="flex items-center justify-end gap-2">
               <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>

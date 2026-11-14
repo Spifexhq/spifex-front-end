@@ -91,7 +91,7 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
     {accounting && <><p className="mt-3 flex items-center gap-2 text-xs font-medium text-gray-800"><span className={`h-2 w-2 rounded-full ${status ? accountingColors[status] : "bg-gray-300"}`}/>{status ? t(`statuses.${status}`) : "—"}</p>{accounting.message && <p className="mt-2 text-xs leading-5 text-gray-500">{accounting.message}</p>}<SidePanelDetails fields={[
                     { label: t("mapping"), value: accounting.ledger_account_name || "—" }, { label: t("policy"), value: typeof accounting.policy_configured === "boolean" ? t(accounting.policy_configured ? "configured" : "missing") : t("unknown") }, { label: t("bankMapping"), value: typeof accounting.bank_mapping_configured === "boolean" ? t(accounting.bank_mapping_configured ? "configured" : "missing") : t("unknown") }, { label: t("book"), value: accounting.book_code || "—" }, { label: t("journal"), value: accounting.linked_journal?.entry_number || "—" },
                 ]}/>{accounting.next_action && <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3"><h4 className="text-xs font-medium text-gray-800">{t("nextAction")}</h4><p className="mt-1 text-xs leading-5 text-gray-500">{accounting.next_action}</p></div>}</>}
-    <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/accounting/reconciliation")}>{t("openAccounting")}</Button>
+    <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/accounting/overview")}>{t("openAccounting")}</Button>
    </section>
   </div>}
  </SidePanel>;

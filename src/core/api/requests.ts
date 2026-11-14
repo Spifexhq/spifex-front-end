@@ -3,6 +3,13 @@ import type { RecurrenceEntry } from "@/models/entries/entries";
 // src/api/requests.ts
 import { request, http } from '@/core/api/http';
 import type { AccountingSetupStatus, FiscalPeriod } from '@/models/settings/accountingSetup';
+import type {
+  AiSetupApplyRequest,
+  AiSetupApplyResponse,
+  AiSetupContext,
+  AiSetupPreviewRequest,
+  AiSetupPreviewResponse,
+} from '@/models/settings/accountingAiSetup';
 import type { AxiosProgressEvent } from 'axios'
 import type { MfaRequiredPayload, SignInRequest, SignInResend2FARequest,
   SignInResend2FAResponse, SignInResponse, SignInVerify2FARequest, SignOutResponse,
@@ -556,7 +563,7 @@ export const api = {
   importLedgerAccounts: (formData: FormData) =>
     request<ImportLedgerAccountsResponse>("ledger/accounts/import/", "POST", formData),
 
-  importStandardLedgerAccounts: (plan: "personal" | "organizational" | "default") =>
+  importStandardLedgerAccounts: (plan: "organizational") =>
     request<ImportStandardLedgerAccountsResponse>("ledger/accounts/import-standard/", "POST", {
       plan,
     } satisfies ImportStandardLedgerAccountsRequest),
@@ -574,6 +581,9 @@ export const api = {
   getAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/', 'GET', undefined, { fresh: true }),
   startAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/start/', 'POST', {}),
   activateAccounting: (revision: string) => request<AccountingSetupStatus>('ledger/setup/activate/', 'POST', { revision }),
+  getAccountingAiSetupContext: () => request<AiSetupContext>('ledger/setup/ai-guide/context/', 'GET', undefined, { fresh: true }),
+  previewAccountingAiSetup: (payload: AiSetupPreviewRequest) => request<AiSetupPreviewResponse>('ledger/setup/ai-guide/preview/', 'POST', payload),
+  applyAccountingAiSetup: (payload: AiSetupApplyRequest) => request<AiSetupApplyResponse>('ledger/setup/ai-guide/apply/', 'POST', payload),
   deleteAccountingBook: (id: string) => request(`ledger/books/${id}/`, "DELETE"),
   deleteBankAccountLedgerMap: (id: string) => request(`ledger/bank-account-maps/${id}/`, "DELETE"),
   deleteCategoryPostingPolicy: (id: string) => request(`ledger/category-policies/${id}/`, "DELETE"),

@@ -152,6 +152,10 @@ together or extract a constant.
   pattern; do not add a tab bar without a product decision.
 - **Collapsed rails** use `SidebarTooltip` for every icon-only control. Do not
   fall back to native `title`; keep the control's localized `aria-label`.
+- **Accounting section navigation** keeps rows visible but disables/locks them
+  until the corresponding setup phase is available. The Review guide and AI
+  setup guide open in side panels from Overview (and AI setup also from the
+  chart page); neither is listed as a sidebar row.
 - **Desktop rail collapse persistence** is stored per mode; whether Personal
   shares the same keys needs verification.
 - **Navbar page icon** (`PanelsTopLeft`) is decorative and hidden below `sm`;

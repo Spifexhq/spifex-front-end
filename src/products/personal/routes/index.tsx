@@ -19,7 +19,6 @@ const Notifications = lazy(() => import("@/features/account-settings/pages/Notif
 const Formats = lazy(() => import("@/features/account-settings/pages/FormatSettings"));
 const Currency = lazy(() => import("@/features/account-settings/pages/CurrencySettings"));
 const Billing = lazy(() => import("@/features/account-settings/pages/Billing"));
-const Integrations = lazy(() => import("@/products/personal/pages/Settings/Integrations"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const Help = lazy(() => import("@/pages/Help"));
 
@@ -41,7 +40,6 @@ export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layo
     { path: "address", element: <Navigate to="/personal/settings/personal" replace/> },
     { path: "personal-data", element: <Navigate to="/personal/settings/personal" replace/> },
     { path: "security", element: <Security/> },
-    { path: "ai-connections", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settings}><Integrations/></PersonalPermissionRoute> },
     { path: "notifications", element: <Notifications/> },
     { path: "accounts", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.bankAccounts}><BankAccounts/></PersonalPermissionRoute> },
     { path: "categories", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.categories}><Categories/></PersonalPermissionRoute> },

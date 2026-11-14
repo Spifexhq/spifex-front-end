@@ -1,14 +1,12 @@
 const settingsPages = new Set(["personal", "organization-settings", "workspaces", "billing", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
-const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", reconciliation: "reconciliation", correlation: "correlation", setup: "setup", periods: "periods" };
+const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", "chart-of-accounts": "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", periods: "periods" };
 export function getPageTitleKey(pathname: string): string {
-  const [, root, page, detail, phase] = pathname.split("/");
+  const [, root, page, detail] = pathname.split("/");
   if (root === "accounting") {
-    if (page === "setup" && ["profile", "chart", "books", "review"].includes(detail)) return `accountingSettings:setupFlow.phases.${detail}`;
     return `accountingSettings:nav.${accountingPages[page || "overview"] || "overview"}`;
   }
   if (root === "settings") {
     if (page === "ledger-accounts") return "accountingSettings:nav.chart";
-    if (page === "accounting" && detail === "setup" && ["profile", "chart", "books", "review"].includes(phase)) return `accountingSettings:setupFlow.phases.${phase}`;
     if (page === "accounting") return `accountingSettings:nav.${accountingPages[detail || "overview"] || "overview"}`;
     if (page === "register" && detail === "ledger-accounts") return "accountingSettings:nav.setup";
     if (settingsPages.has(page)) return `settingsSidebar:items.${page}`;
@@ -25,7 +23,7 @@ export type PageCrumb = { titleKey: string; to?: string };
 export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
   const titleKey = getPageTitleKey(pathname);
   if (pathname.startsWith("/bank-imports/")) return [{ titleKey: "navbar:pages.bankImports", to: "/bank-imports" }, { titleKey: "statements:workspace.reviewTitle" }];
-  if (pathname.startsWith("/accounting/setup/")) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey: "accountingSettings:nav.setup", to: "/accounting/setup" }, { titleKey }];
+  if (pathname.startsWith("/accounting/setup/")) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey: "accountingSettings:nav.overview", to: "/accounting/overview" }];
   if ((pathname === "/accounting" || pathname.startsWith("/accounting/"))) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey }];
   const parents: Record<string, PageCrumb> = {
     "/settings/manage-currency": { titleKey: "settingsSidebar:items.organization-settings", to: "/settings/organization-settings" },

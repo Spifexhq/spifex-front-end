@@ -1,4 +1,4 @@
-export type SetupPhase = "profile" | "chart" | "books" | "review";
+export type SetupPhase = "chart" | "books" | "review";
 export type SetupIssue = { code: string; account_id?: string; account_code?: string };
 export type SetupStep = { key: SetupPhase; complete: boolean; available: boolean; issues: SetupIssue[] };
 export interface AccountingSetupStatus {

@@ -98,7 +98,7 @@ export interface ImportLedgerAccountsResponse {
 }
 
 export interface ImportStandardLedgerAccountsRequest {
-  plan: "personal" | "organizational" | "default";
+  plan: "organizational";
 }
 
 export type ImportStandardLedgerAccountsResponse = ImportLedgerAccountsResponse;

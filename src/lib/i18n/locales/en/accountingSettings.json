@@ -73,7 +73,8 @@
     "reconciliation": "Review guide",
     "overview": "Overview",
     "setup": "Setup",
-    "periods": "Periods"
+    "periods": "Periods",
+    "assistant": "AI setup"
   },
   "shell": {
     "title": "Accounting settings",
@@ -405,7 +406,9 @@
       "reversed": "Reversed",
       "reversedDetail": "Entries already reversed.",
       "lines": "Lines",
-      "linesDetail": "Total journal lines across visible entries."
+      "linesDetail": "Total journal lines across visible entries.",
+      "posted": "Posted",
+      "postedDetail": "Entries currently posted to the ledger."
     },
     "columns": {
       "entry": "Entry",
@@ -865,7 +868,12 @@
     "all": "All accounts",
     "status": "Account status",
     "noAccess": "You do not have permission to view the chart of accounts.",
-    "description": "Review the accounts used by your accounting books and posting rules."
+    "description": "Review the accounts used by your accounting books and posting rules.",
+    "emptyTitle": "Start your chart of accounts",
+    "relatedSetup": "Related setup",
+    "guidedHint": "Answer a short questionnaire and preview the suggested chart, books and connections.",
+    "configureHint": "Load the business starter template, upload a file or paste rows.",
+    "addHint": "Create accounts one at a time when you already know the structure."
   },
   "setupFlow": {
     "setupTitle": "Set up your accounting workspace",
@@ -970,7 +978,19 @@
     },
     "continueStep": "Continue",
     "editPeriod": "Edit period",
-    "scopeLocked": "The bank or category and book identify this configuration. Create a new configuration to use a different scope."
+    "scopeLocked": "The bank or category and book identify this configuration. Create a new configuration to use a different scope.",
+    "setupDescription": "Set up the chart and books once. After activation, this page becomes your accounting overview.",
+    "openChart": "Open chart",
+    "openWorkspaceSettings": "Open workspace settings",
+    "progressHelp": "Progress is validated against your saved configuration.",
+    "currencyPrerequisite": "A workspace currency is required before accounting can start.",
+    "nextAction": "Next action",
+    "relatedSetup": "Configuration",
+    "configDescription": "Configure the required steps first, then add the controls your transactions need.",
+    "available": "Available",
+    "reviewIssue": "Review",
+    "issueCount": "{{count}} items need attention",
+    "openStep": "Open"
   },
   "footer": {
     "book": "Book",
@@ -989,7 +1009,8 @@
     "expand": "Expand navigation",
     "collapse": "Collapse navigation",
     "close": "Close navigation",
-    "brand": "Spifex"
+    "brand": "Spifex",
+    "locked": "Complete the previous step"
   },
   "table": {
     "actions": "Actions",
@@ -1010,5 +1031,347 @@
       "bank-connections": "Search banks, books or ledger accounts…",
       "category-rules": "Search categories, books or posting accounts…"
     }
+  },
+  "guidedSetup": {
+    "progress": "Setup progress",
+    "steps": {
+      "level": "Level",
+      "questions": "Questions",
+      "review": "Review",
+      "preview": "Preview"
+    },
+    "eyebrow": "AI accounting setup",
+    "title": "Build your accounting setup",
+    "description": "Answer guided questions. We generate the books, chart, category rules and bank links, then you review everything before applying.",
+    "backToChart": "Back to chart",
+    "levelTitle": "How should we guide you?",
+    "levelBody": "The questions adapt to your accounting experience. You can change the level later.",
+    "levelLabel": "Accounting level",
+    "accountLanguage": "Account language",
+    "currencyLabel": "Workspace currency",
+    "levels": {
+      "none": {
+        "title": "I am starting from zero",
+        "description": "Plain-language questions and a compact, safe setup."
+      },
+      "basic": {
+        "title": "I know the basics",
+        "description": "Practical questions for everyday bookkeeping."
+      },
+      "average": {
+        "title": "I manage accounts regularly",
+        "description": "More control over customers, suppliers, payroll and tax."
+      },
+      "accountant": {
+        "title": "I am an accountant",
+        "description": "Detailed books, accruals, dimensions and opening balances."
+      }
+    },
+    "languages": {
+      "en": "English",
+      "pt": "Portuguese",
+      "fr": "French",
+      "de": "German"
+    },
+    "questionsTitle": "A few questions",
+    "questionsBody": "Choose the closest answers. Everything can be adjusted after the setup is created.",
+    "sections": {
+      "business": {
+        "title": "Business",
+        "description": "The essentials that shape your chart."
+      },
+      "operations": {
+        "title": "Operations",
+        "description": "How money comes in and what you spend it on."
+      },
+      "controls": {
+        "title": "Controls",
+        "description": "Tax, credit and payroll details."
+      },
+      "advanced": {
+        "title": "Advanced",
+        "description": "Basis, dimensions and opening data."
+      }
+    },
+    "questions": {
+      "entity_type": {
+        "label": "How is the business organised?",
+        "help": "Choose the legal shape that best matches the workspace."
+      },
+      "main_activity": {
+        "label": "What is the main activity?",
+        "help": "This drives the revenue and cost accounts."
+      },
+      "inventory": {
+        "label": "Do you sell physical inventory?",
+        "help": "Stock, materials or goods held for sale."
+      },
+      "employees": {
+        "label": "Do you employ people?",
+        "help": "Includes payroll and employer costs."
+      },
+      "vat_registered": {
+        "label": "Are you registered for VAT or indirect tax?",
+        "help": "You can change this later."
+      },
+      "sales_channels": {
+        "label": "How do customers pay you?",
+        "help": "Select all that apply."
+      },
+      "expense_profile": {
+        "label": "What are your main running costs?",
+        "help": "Select the largest regular expenses."
+      },
+      "fixed_assets": {
+        "label": "Do you own equipment, vehicles or property?",
+        "help": "Assets used by the business for more than one year."
+      },
+      "loans": {
+        "label": "Do you have business loans or credit lines?",
+        "help": "Bank loans, leases or shareholder loans."
+      },
+      "receivables": {
+        "label": "Do customers pay later?",
+        "help": "You issue invoices with payment terms."
+      },
+      "payables": {
+        "label": "Do you pay suppliers later?",
+        "help": "Supplier bills with payment terms."
+      },
+      "payroll": {
+        "label": "Do you run payroll?",
+        "help": "Salaries, social contributions and withholding."
+      },
+      "inventory_type": {
+        "label": "What inventory do you keep?",
+        "help": "Choose the closest match."
+      },
+      "multi_currency": {
+        "label": "Do you trade in more than one currency?",
+        "help": "Foreign customers, suppliers or bank accounts."
+      },
+      "deferred_revenue": {
+        "label": "Do you receive money before delivering?",
+        "help": "Prepayments, subscriptions or retainers."
+      },
+      "tax_regime": {
+        "label": "Which indirect tax applies?",
+        "help": "Choose the closest regime."
+      },
+      "book_basis": {
+        "label": "Which accounting basis should the main book use?",
+        "help": "Management is a safe default."
+      },
+      "dimensions": {
+        "label": "Do you need extra reporting dimensions?",
+        "help": "Departments, projects or cost centres."
+      },
+      "consolidation": {
+        "label": "Do you need consolidated reporting?",
+        "help": "More than one book or entity."
+      },
+      "opening_balances": {
+        "label": "Do you have opening balances?",
+        "help": "We only prepare the setup; values are entered later."
+      },
+      "chart_depth": {
+        "label": "How detailed should the chart be?",
+        "help": "Compact is easier for small teams."
+      },
+      "recognition": {
+        "label": "How do you recognise income and costs?",
+        "help": "When money moves or when it is earned."
+      },
+      "country": {
+        "label": "Which country do you operate in?",
+        "help": "Tax and reporting defaults are shaped by the country."
+      },
+      "revenue_model": {
+        "label": "How do you usually earn revenue?",
+        "help": "This helps separate one-off sales from recurring income."
+      },
+      "customer_type": {
+        "label": "Who are your customers?",
+        "help": "Consumers, other businesses or both."
+      },
+      "unusual_activity": {
+        "label": "Anything unusual we should account for?",
+        "help": "Optional short note: grants, regulated activity, seasonal peaks, unusual assets."
+      },
+      "payment_terms": {
+        "label": "When do customers usually pay?",
+        "help": "The most common payment term."
+      },
+      "fiscal_year_end": {
+        "label": "When does your fiscal year end?",
+        "help": "Used to prepare the period structure."
+      },
+      "accounting_standard": {
+        "label": "Which accounting standard applies?",
+        "help": "Local statutory, IFRS or US GAAP."
+      },
+      "audit_required": {
+        "label": "Will the accounts be audited?",
+        "help": "Audit support may need more detailed accounts and evidence."
+      }
+    },
+    "options": {
+      "freelancer": "Freelancer or sole trader",
+      "company": "Limited company",
+      "partnership": "Partnership",
+      "nonprofit": "Non-profit organisation",
+      "services": "Services",
+      "retail": "Retail",
+      "ecommerce": "Online store",
+      "manufacturing": "Manufacturing",
+      "construction": "Construction",
+      "technology": "Technology",
+      "food": "Food and hospitality",
+      "other": "Other",
+      "cash": "Cash",
+      "card": "Card",
+      "bank_transfer": "Bank transfer",
+      "online": "Online checkout",
+      "invoices": "Invoices",
+      "subscriptions": "Subscriptions",
+      "rent": "Rent or workspace",
+      "utilities": "Utilities",
+      "software": "Software",
+      "travel": "Travel",
+      "marketing": "Marketing",
+      "materials": "Materials or stock",
+      "shipping": "Shipping",
+      "goods": "Physical goods",
+      "both": "Consumers and businesses",
+      "none": "None",
+      "vat": "VAT",
+      "sales_tax": "Sales tax",
+      "gst": "GST",
+      "management": "Management",
+      "accrual": "Accrual",
+      "tax": "Tax",
+      "departments": "Departments",
+      "projects": "Projects",
+      "cost_centers": "Cost centres",
+      "compact": "Compact",
+      "standard": "Standard",
+      "detailed": "Detailed",
+      "one_off": "One-off sales",
+      "recurring": "Recurring or subscription",
+      "mixed": "Mixed revenue",
+      "consumers": "Consumers",
+      "business": "Businesses",
+      "immediate": "Payment on delivery",
+      "15": "Up to 15 days",
+      "30": "Up to 30 days",
+      "60": "More than 30 days",
+      "dec": "31 December",
+      "mar": "31 March",
+      "jun": "30 June",
+      "sep": "30 September",
+      "local": "Local statutory standard",
+      "ifrs": "IFRS",
+      "us_gaap": "US GAAP"
+    },
+    "summary": {
+      "books": "Books",
+      "accounts": "Accounts",
+      "categories": "Categories",
+      "rules": "Rules",
+      "banks": "Banks"
+    },
+    "blockersTitle": "Review these points",
+    "previewTabs": "Setup preview",
+    "previewBooks": "Books",
+    "previewChart": "Chart",
+    "previewRules": "Rules",
+    "previewBanks": "Banks",
+    "primaryBook": "Primary",
+    "bankControl": "Bank control",
+    "debitAccount": "Debit",
+    "creditAccount": "Credit",
+    "noBanks": "No bank accounts to link yet.",
+    "warningsTitle": "Warnings",
+    "assumptionsTitle": "Assumptions",
+    "statementSections": {
+      "asset": "Assets",
+      "liability": "Liabilities",
+      "equity": "Equity",
+      "income": "Income",
+      "expense": "Expenses",
+      "off_balance": "Off balance",
+      "statistical": "Statistical"
+    },
+    "bookBasis": {
+      "management": "Management",
+      "cash": "Cash",
+      "accrual": "Accrual",
+      "tax": "Tax"
+    },
+    "generating": "Building your books, chart, categories and bank links…",
+    "reviewTitle": "Review your answers",
+    "reviewBody": "We will create the setup only after you review the preview and apply it.",
+    "previewTitle": "Your proposed setup",
+    "previewBody": "Only the sections you need are shown. Expand a group to inspect it.",
+    "successTitle": "Accounting setup created",
+    "successBody": "{{accounts}} accounts, {{books}} books and {{rules}} category rules were created. Review the result in Accounting.",
+    "openAccounting": "Open accounting",
+    "back": "Back",
+    "continue": "Continue",
+    "generate": "Generate setup",
+    "apply": "Apply and activate",
+    "regenerate": "Generate again",
+    "retry": "Try again",
+    "notAnswered": "Not answered",
+    "yes": "Yes",
+    "no": "No",
+    "blockedTitle": "AI setup is not available yet",
+    "providerUnavailable": "The accounting AI provider is not configured.",
+    "continueSetup": "Continue setup",
+    "unavailableTitle": "Could not load AI setup",
+    "unavailableBody": "Check your connection and try again.",
+    "loadError": "Could not load the AI setup.",
+    "generateError": "Could not generate the setup.",
+    "applyError": "Could not apply the setup.",
+    "body": "Set up your chart and books with a guided AI questionnaire.",
+    "questionnaire": "Start AI setup",
+    "otherExplanation": "Please explain",
+    "closeTitle": "Close AI setup?",
+    "closeBody": "You have answers that have not been applied. Choose whether to keep a scratch copy in this browser or discard them.",
+    "scratchNotice": "Scratch stays in this browser only. It is never saved to the database.",
+    "continueEditing": "Continue editing",
+    "keepScratch": "Keep scratch",
+    "discardAnswers": "Discard answers"
+  },
+  "overview": {
+    "title": "Accounting overview",
+    "description": "A snapshot of your chart, journals and current balances.",
+    "loadError": "Could not refresh the overview.",
+    "trialBalance": "Trial balance",
+    "openChart": "Open chart",
+    "recentJournals": "Recent journals",
+    "viewAll": "View all",
+    "noBalances": "No account balances yet.",
+    "noJournals": "No journals yet.",
+    "metrics": {
+      "debits": "Total debits",
+      "credits": "Total credits",
+      "journals": "Journals",
+      "posted": "Posted"
+    },
+    "account": "Account",
+    "debit": "Debit",
+    "credit": "Credit",
+    "balance": "Balance",
+    "total": "Total",
+    "trialBalanceDescription": "Balances from posted journals.",
+    "lastPosting": "Last posting {{date}}",
+    "quickActions": "Quick actions",
+    "quickActionsDescription": "Common accounting tasks and review tools.",
+    "quickJournals": "Inspect journals and opening balances.",
+    "quickReview": "Find the setting behind a bank or category issue.",
+    "quickRules": "Check the accounts used by payment categories.",
+    "quickBanks": "Map bank accounts to control accounts.",
+    "showingAccounts": "Showing {{shown}} of {{total}} accounts."
   }
 }

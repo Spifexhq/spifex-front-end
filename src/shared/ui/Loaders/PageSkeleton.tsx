@@ -17,7 +17,6 @@ export type PageSkeletonVariant =
   | "onboarding"
   | "review"
   | "accounting"
-  | "correlations"
   | "fields";
 
 export type PageSkeletonProps = {
@@ -462,33 +461,6 @@ function PageBody({ variant, rows, pagination }: Required<Pick<PageSkeletonProps
           <SkeletonLine className="h-9 w-24 rounded-md" />
         </div>
         <DataTableSkeleton rows={rows} columns={5} pagination={pagination} announce={false} />
-      </div>;
-
-    case "correlations":
-      return <div className="space-y-5">
-        <Panel>
-          <PanelHeading />
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-4xl flex-1 space-y-2">
-              <SkeletonLine className="h-3 w-72 max-w-full" />
-              <SkeletonLine className="h-3 w-full" />
-              <SkeletonLine className="h-3 w-2/3" />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {Array.from({ length: 4 }, (_, index) => <SkeletonLine key={index} className="h-8 w-20 rounded-md" />)}
-            </div>
-          </div>
-        </Panel>
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <Panel>
-            <PanelHeading />
-            <div className="p-4 sm:p-5"><SkeletonLine className="h-80 w-full" /></div>
-          </Panel>
-          <Panel>
-            <PanelHeading />
-            <PanelRows count={rows} action={false} />
-          </Panel>
-        </div>
       </div>;
 
     case "fields":

@@ -73,7 +73,8 @@
     "reconciliation": "Guide de vérification",
     "overview": "Vue générale",
     "setup": "Configuration",
-    "periods": "Périodes"
+    "periods": "Périodes",
+    "assistant": "Configuration IA"
   },
   "shell": {
     "title": "Paramètres comptables",
@@ -405,7 +406,9 @@
       "reversed": "Contrepassés",
       "reversedDetail": "Écritures déjà contrepassées.",
       "lines": "Lignes",
-      "linesDetail": "Nombre total de lignes de journal dans les écritures visibles."
+      "linesDetail": "Nombre total de lignes de journal dans les écritures visibles.",
+      "posted": "Comptabilisées",
+      "postedDetail": "Écritures actuellement comptabilisées dans le grand livre."
     },
     "columns": {
       "entry": "Écriture",
@@ -865,7 +868,12 @@
     "all": "Tous les comptes",
     "status": "Statut du compte",
     "noAccess": "Vous n'avez pas l'autorisation de consulter le plan comptable.",
-    "description": "Consultez les comptes utilisés par vos livres comptables et vos règles de comptabilisation."
+    "description": "Consultez les comptes utilisés par vos livres comptables et vos règles de comptabilisation.",
+    "emptyTitle": "Commencez votre plan comptable",
+    "relatedSetup": "Configuration associée",
+    "guidedHint": "Répondez à un court questionnaire et prévisualisez le plan, les livres et les connexions suggérés.",
+    "configureHint": "Chargez le modèle d’entreprise, importez un fichier ou collez des lignes.",
+    "addHint": "Créez les comptes un par un lorsque la structure est déjà connue."
   },
   "setupFlow": {
     "setupTitle": "Configurez votre espace comptable",
@@ -970,7 +978,19 @@
     },
     "continueStep": "Continuer",
     "editPeriod": "Modifier la période",
-    "scopeLocked": "La banque ou la catégorie et le livre identifient cette configuration. Créez une nouvelle configuration pour changer de périmètre."
+    "scopeLocked": "La banque ou la catégorie et le livre identifient cette configuration. Créez une nouvelle configuration pour changer de périmètre.",
+    "setupDescription": "Configurez le plan et les livres une fois. Après activation, cette page devient la vue d’ensemble comptable.",
+    "openChart": "Ouvrir le plan",
+    "openWorkspaceSettings": "Ouvrir les paramètres de l’espace",
+    "progressHelp": "La progression est validée avec la configuration enregistrée.",
+    "currencyPrerequisite": "Une devise d’espace est nécessaire pour démarrer la comptabilité.",
+    "nextAction": "Prochaine action",
+    "relatedSetup": "Configuration",
+    "configDescription": "Configurez d’abord les étapes obligatoires, puis ajoutez les contrôles nécessaires à vos transactions.",
+    "available": "Disponible",
+    "reviewIssue": "Vérifier",
+    "issueCount": "{{count}} éléments nécessitent votre attention",
+    "openStep": "Ouvrir"
   },
   "footer": {
     "book": "Livre",
@@ -989,7 +1009,8 @@
     "expand": "Développer la navigation",
     "collapse": "Réduire la navigation",
     "close": "Fermer la navigation",
-    "brand": "Spifex"
+    "brand": "Spifex",
+    "locked": "Terminez l’étape précédente"
   },
   "table": {
     "actions": "Actions",
@@ -1010,5 +1031,347 @@
       "bank-connections": "Rechercher une banque, un livre ou un compte…",
       "category-rules": "Rechercher une catégorie, un livre ou un compte…"
     }
+  },
+  "guidedSetup": {
+    "progress": "Progression de la configuration",
+    "steps": {
+      "level": "Niveau",
+      "questions": "Questions",
+      "review": "Vérification",
+      "preview": "Aperçu"
+    },
+    "eyebrow": "Configuration comptable par IA",
+    "title": "Créez votre configuration comptable",
+    "description": "Répondez à des questions guidées. Nous générons les livres, le plan comptable, les règles de catégories et les liens bancaires, puis vous vérifiez avant d’appliquer.",
+    "backToChart": "Retour au plan comptable",
+    "levelTitle": "Comment devons-nous vous guider ?",
+    "levelBody": "Les questions s’adaptent à votre expérience. Vous pouvez changer de niveau plus tard.",
+    "levelLabel": "Niveau comptable",
+    "accountLanguage": "Langue des comptes",
+    "currencyLabel": "Devise de l’espace",
+    "levels": {
+      "none": {
+        "title": "Je débute",
+        "description": "Questions simples et configuration compacte et sûre."
+      },
+      "basic": {
+        "title": "Je connais les bases",
+        "description": "Questions pratiques pour la comptabilité quotidienne."
+      },
+      "average": {
+        "title": "Je gère les comptes régulièrement",
+        "description": "Plus de contrôle sur clients, fournisseurs, paie et taxes."
+      },
+      "accountant": {
+        "title": "Je suis comptable",
+        "description": "Livres détaillés, régularisations, dimensions et soldes d’ouverture."
+      }
+    },
+    "languages": {
+      "en": "Anglais",
+      "pt": "Portugais",
+      "fr": "Français",
+      "de": "Allemand"
+    },
+    "questionsTitle": "Quelques questions",
+    "questionsBody": "Choisissez les réponses les plus proches. Tout peut être ajusté après la création.",
+    "sections": {
+      "business": {
+        "title": "Entreprise",
+        "description": "L’essentiel qui façonne le plan comptable."
+      },
+      "operations": {
+        "title": "Opérations",
+        "description": "Comment l’argent entre et ce que vous dépensez."
+      },
+      "controls": {
+        "title": "Contrôles",
+        "description": "Taxes, crédit et paie."
+      },
+      "advanced": {
+        "title": "Avancé",
+        "description": "Base, dimensions et données d’ouverture."
+      }
+    },
+    "questions": {
+      "entity_type": {
+        "label": "Comment l’entreprise est-elle organisée ?",
+        "help": "Choisissez la forme juridique la plus proche."
+      },
+      "main_activity": {
+        "label": "Quelle est l’activité principale ?",
+        "help": "Cela détermine les comptes de produits et de charges."
+      },
+      "inventory": {
+        "label": "Vendez-vous du stock physique ?",
+        "help": "Stock, matières ou biens destinés à la vente."
+      },
+      "employees": {
+        "label": "Employez-vous du personnel ?",
+        "help": "Inclut la paie et les charges."
+      },
+      "vat_registered": {
+        "label": "Êtes-vous assujetti à la TVA ou à une taxe indirecte ?",
+        "help": "Modifiable plus tard."
+      },
+      "sales_channels": {
+        "label": "Comment les clients paient-ils ?",
+        "help": "Sélectionnez toutes les options."
+      },
+      "expense_profile": {
+        "label": "Quels sont vos principaux frais courants ?",
+        "help": "Sélectionnez les dépenses régulières les plus importantes."
+      },
+      "fixed_assets": {
+        "label": "Possédez-vous des équipements, véhicules ou locaux ?",
+        "help": "Biens utilisés plus d’un an."
+      },
+      "loans": {
+        "label": "Avez-vous des emprunts ou crédits ?",
+        "help": "Emprunts bancaires, crédit-bail ou comptes courants d’associés."
+      },
+      "receivables": {
+        "label": "Les clients paient-ils plus tard ?",
+        "help": "Vous émettez des factures avec délai."
+      },
+      "payables": {
+        "label": "Payez-vous les fournisseurs plus tard ?",
+        "help": "Factures fournisseurs avec délai."
+      },
+      "payroll": {
+        "label": "Gérez-vous la paie ?",
+        "help": "Salaires, cotisations et retenues."
+      },
+      "inventory_type": {
+        "label": "Quel stock conservez-vous ?",
+        "help": "Choisissez l’option la plus proche."
+      },
+      "multi_currency": {
+        "label": "Travaillez-vous en plusieurs devises ?",
+        "help": "Clients, fournisseurs ou comptes étrangers."
+      },
+      "deferred_revenue": {
+        "label": "Recevez-vous avant de livrer ?",
+        "help": "Acomptes, abonnements ou provisions."
+      },
+      "tax_regime": {
+        "label": "Quelle taxe indirecte s’applique ?",
+        "help": "Choisissez le régime le plus proche."
+      },
+      "book_basis": {
+        "label": "Quelle base pour le livre principal ?",
+        "help": "La gestion est un choix sûr."
+      },
+      "dimensions": {
+        "label": "Avez-vous besoin de dimensions ?",
+        "help": "Départements, projets ou centres de coûts."
+      },
+      "consolidation": {
+        "label": "Avez-vous besoin de rapports consolidés ?",
+        "help": "Plusieurs livres ou entités."
+      },
+      "opening_balances": {
+        "label": "Avez-vous des soldes d’ouverture ?",
+        "help": "Nous préparons seulement la configuration ; les valeurs sont saisies ensuite."
+      },
+      "chart_depth": {
+        "label": "Quel niveau de détail ?",
+        "help": "Compact est plus simple pour les petites équipes."
+      },
+      "recognition": {
+        "label": "Comment reconnaissez-vous produits et charges ?",
+        "help": "Au mouvement de trésorerie ou à l’engagement."
+      },
+      "country": {
+        "label": "Dans quel pays opérez-vous ?",
+        "help": "Les règles fiscales et les rapports dépendent du pays."
+      },
+      "revenue_model": {
+        "label": "Comment générez-vous vos revenus ?",
+        "help": "Cela aide à distinguer les ventes ponctuelles des revenus récurrents."
+      },
+      "customer_type": {
+        "label": "Qui sont vos clients ?",
+        "help": "Particuliers, entreprises ou les deux."
+      },
+      "unusual_activity": {
+        "label": "Y a-t-il un élément inhabituel à comptabiliser ?",
+        "help": "Note courte facultative : subventions, activité réglementée, saisonnalité, actifs inhabituels."
+      },
+      "payment_terms": {
+        "label": "Quand les clients paient-ils habituellement ?",
+        "help": "Le délai le plus courant."
+      },
+      "fiscal_year_end": {
+        "label": "Quand se termine votre exercice ?",
+        "help": "Utilisé pour préparer les périodes."
+      },
+      "accounting_standard": {
+        "label": "Quelle norme comptable s’applique ?",
+        "help": "Norme locale, IFRS ou US GAAP."
+      },
+      "audit_required": {
+        "label": "Les comptes seront-ils audités ?",
+        "help": "L’audit peut nécessiter plus de détail et de justificatifs."
+      }
+    },
+    "options": {
+      "freelancer": "Indépendant",
+      "company": "Société",
+      "partnership": "Société de personnes",
+      "nonprofit": "Association",
+      "services": "Services",
+      "retail": "Commerce",
+      "ecommerce": "Boutique en ligne",
+      "manufacturing": "Industrie",
+      "construction": "Construction",
+      "technology": "Technologie",
+      "food": "Restauration",
+      "other": "Autre",
+      "cash": "Espèces",
+      "card": "Carte",
+      "bank_transfer": "Virement",
+      "online": "Paiement en ligne",
+      "invoices": "Factures",
+      "subscriptions": "Abonnements",
+      "rent": "Loyer ou local",
+      "utilities": "Énergie et services",
+      "software": "Logiciels",
+      "travel": "Déplacements",
+      "marketing": "Marketing",
+      "materials": "Matières ou stock",
+      "shipping": "Livraison",
+      "goods": "Biens physiques",
+      "both": "Particuliers et entreprises",
+      "none": "Aucun",
+      "vat": "TVA",
+      "sales_tax": "Taxe sur les ventes",
+      "gst": "TPS",
+      "management": "Gestion",
+      "accrual": "Engagement",
+      "tax": "Fiscal",
+      "departments": "Départements",
+      "projects": "Projets",
+      "cost_centers": "Centres de coûts",
+      "compact": "Compact",
+      "standard": "Standard",
+      "detailed": "Détaillé",
+      "one_off": "Ventes ponctuelles",
+      "recurring": "Revenus récurrents",
+      "mixed": "Revenus mixtes",
+      "consumers": "Particuliers",
+      "business": "Entreprises",
+      "immediate": "Paiement à la livraison",
+      "15": "Jusqu’à 15 jours",
+      "30": "Jusqu’à 30 jours",
+      "60": "Plus de 30 jours",
+      "dec": "31 décembre",
+      "mar": "31 mars",
+      "jun": "30 juin",
+      "sep": "30 septembre",
+      "local": "Norme locale",
+      "ifrs": "IFRS",
+      "us_gaap": "US GAAP"
+    },
+    "summary": {
+      "books": "Livres",
+      "accounts": "Comptes",
+      "categories": "Catégories",
+      "rules": "Règles",
+      "banks": "Banques"
+    },
+    "blockersTitle": "Vérifiez ces points",
+    "previewTabs": "Aperçu de la configuration",
+    "previewBooks": "Livres",
+    "previewChart": "Plan",
+    "previewRules": "Règles",
+    "previewBanks": "Banques",
+    "primaryBook": "Principal",
+    "bankControl": "Contrôle bancaire",
+    "debitAccount": "Débit",
+    "creditAccount": "Crédit",
+    "noBanks": "Aucun compte bancaire à lier pour l’instant.",
+    "warningsTitle": "Avertissements",
+    "assumptionsTitle": "Hypothèses",
+    "statementSections": {
+      "asset": "Actif",
+      "liability": "Passif",
+      "equity": "Capitaux propres",
+      "income": "Produits",
+      "expense": "Charges",
+      "off_balance": "Hors bilan",
+      "statistical": "Statistique"
+    },
+    "bookBasis": {
+      "management": "Gestion",
+      "cash": "Trésorerie",
+      "accrual": "Engagement",
+      "tax": "Fiscal"
+    },
+    "generating": "Création des livres, du plan, des catégories et des liens bancaires…",
+    "reviewTitle": "Vérifiez vos réponses",
+    "reviewBody": "La configuration n’est créée qu’après vérification de l’aperçu et application.",
+    "previewTitle": "Votre configuration proposée",
+    "previewBody": "Seules les sections utiles sont affichées. Dépliez un groupe pour l’inspecter.",
+    "successTitle": "Configuration comptable créée",
+    "successBody": "{{accounts}} comptes, {{books}} livres et {{rules}} règles de catégories ont été créés. Vérifiez le résultat dans Comptabilité.",
+    "openAccounting": "Ouvrir la comptabilité",
+    "back": "Retour",
+    "continue": "Continuer",
+    "generate": "Générer la configuration",
+    "apply": "Appliquer et activer",
+    "regenerate": "Générer à nouveau",
+    "retry": "Réessayer",
+    "notAnswered": "Sans réponse",
+    "yes": "Oui",
+    "no": "Non",
+    "blockedTitle": "La configuration IA n’est pas encore disponible",
+    "providerUnavailable": "Le fournisseur d’IA comptable n’est pas configuré.",
+    "continueSetup": "Continuer la configuration",
+    "unavailableTitle": "Impossible de charger la configuration IA",
+    "unavailableBody": "Vérifiez la connexion et réessayez.",
+    "loadError": "Impossible de charger la configuration IA.",
+    "generateError": "Impossible de générer la configuration.",
+    "applyError": "Impossible d’appliquer la configuration.",
+    "body": "Configurez votre plan comptable et vos livres avec un questionnaire guidé par IA.",
+    "questionnaire": "Démarrer la configuration IA",
+    "otherExplanation": "Veuillez préciser",
+    "closeTitle": "Fermer la configuration IA ?",
+    "closeBody": "Des réponses n’ont pas encore été appliquées. Choisissez de conserver un brouillon dans ce navigateur ou de les supprimer.",
+    "scratchNotice": "Le brouillon reste uniquement dans ce navigateur. Il n’est jamais enregistré dans la base de données.",
+    "continueEditing": "Continuer la saisie",
+    "keepScratch": "Conserver le brouillon",
+    "discardAnswers": "Supprimer les réponses"
+  },
+  "overview": {
+    "title": "Vue d’ensemble comptable",
+    "description": "Un aperçu du plan, des journaux et des soldes actuels.",
+    "loadError": "Impossible d’actualiser la vue d’ensemble.",
+    "trialBalance": "Balance",
+    "openChart": "Ouvrir le plan",
+    "recentJournals": "Journaux récents",
+    "viewAll": "Tout voir",
+    "noBalances": "Aucun solde pour l’instant.",
+    "noJournals": "Aucun journal pour l’instant.",
+    "metrics": {
+      "debits": "Débits totaux",
+      "credits": "Crédits totaux",
+      "journals": "Journaux",
+      "posted": "Comptabilisés"
+    },
+    "account": "Compte",
+    "debit": "Débit",
+    "credit": "Crédit",
+    "balance": "Solde",
+    "total": "Total",
+    "trialBalanceDescription": "Soldes des écritures comptabilisées.",
+    "lastPosting": "Dernière écriture {{date}}",
+    "quickActions": "Actions rapides",
+    "quickActionsDescription": "Tâches comptables courantes et outils de révision.",
+    "quickJournals": "Consultez les écritures et les soldes d’ouverture.",
+    "quickReview": "Trouvez le paramètre à l’origine d’un problème de banque ou de catégorie.",
+    "quickRules": "Vérifiez les comptes utilisés par les catégories de paiement.",
+    "quickBanks": "Associez les comptes bancaires aux comptes de contrôle.",
+    "showingAccounts": "Affichage de {{shown}} comptes sur {{total}}."
   }
 }

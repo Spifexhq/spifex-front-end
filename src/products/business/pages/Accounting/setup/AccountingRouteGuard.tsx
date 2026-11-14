@@ -16,8 +16,8 @@ export default function AccountingRouteGuard({ children }: { children: ReactNode
   </div>;
   const page = pathname.split("/")[2] || "overview";
   if (!accountingRouteAllowed(status, page)) return <div className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6" aria-busy={loading}>
-    <h2>{t("setupFlow.blockedTitle")}</h2><p>{t("setupFlow.blockedDescription")}</p>
-    <Link className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:underline underline-offset-4" to={`/accounting/setup/${status.current_phase}`}>{t("setupFlow.continue")}</Link>
+    <h2>{t("setupFlow.blockedTitle")}</h2><p>{page === "journals" ? t("setupFlow.notActive") : t("setupFlow.blockedDescription")}</p>
+    <Link className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:underline underline-offset-4" to="/accounting/overview">{t("setupFlow.continue")}</Link>
   </div>;
   return children;
 }
