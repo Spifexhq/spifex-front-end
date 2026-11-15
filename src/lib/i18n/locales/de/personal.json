@@ -372,5 +372,10 @@
   "tabRecurrence": "Wiederholung",
   "notRecurring": "Diese Transaktion gehört nicht zu einer wiederkehrenden Serie.",
   "applyTheseChangesTo": "Diese Änderungen anwenden auf",
-  "applyTheseChangesHint": "Nur geänderte Felder werden übernommen. Datumsänderungen verschieben die ausgewählten Fälligkeitsdaten um dieselbe Anzahl von Tagen."
+  "applyTheseChangesHint": "Nur geänderte Felder werden übernommen. Datumsänderungen verschieben die ausgewählten Fälligkeitsdaten um dieselbe Anzahl von Tagen.",
+  "attachToSeries": "Diese Dateien auch an allen {{count}} Raten anhängen",
+  "attachToSeriesHint": "Deaktivieren Sie dies, um die Dateien nur an der ersten Rate zu behalten.",
+  "uploadFailed": "Die Transaktionen wurden gespeichert, aber die Anhänge konnten nicht hochgeladen werden. Versuchen Sie es erneut oder öffnen Sie die Vorschau, um sie hinzuzufügen.",
+  "pendingAttachmentHint": "PDF, PNG oder JPEG. Bis zu {{count}} Dateien, je {{size}} MB. Die Dateien werden beim Speichern hochgeladen.",
+  "attachAllInstallments": "Alle {{count}} Raten"
 }

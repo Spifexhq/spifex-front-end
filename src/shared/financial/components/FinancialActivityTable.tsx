@@ -17,6 +17,7 @@ export type FinancialActivityRecord<T> = {
   installmentCount?: number | null;
   bankName?: string | null;
   activityKind: "entry" | "settlement" | "transfer";
+  hasAttachment?: boolean;
   source: T;
 };
 

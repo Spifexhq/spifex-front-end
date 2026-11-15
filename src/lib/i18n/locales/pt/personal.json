@@ -372,5 +372,10 @@
   "tabRecurrence": "Recorrência",
   "notRecurring": "Esta transação não faz parte de uma série recorrente.",
   "applyTheseChangesTo": "Aplicar estas alterações a",
-  "applyTheseChangesHint": "Apenas os campos alterados são copiados. As alterações de data deslocam as datas selecionadas pelo mesmo número de dias."
+  "applyTheseChangesHint": "Apenas os campos alterados são copiados. As alterações de data deslocam as datas selecionadas pelo mesmo número de dias.",
+  "attachToSeries": "Anexar também estes ficheiros a todas as {{count}} prestações",
+  "attachToSeriesHint": "Desative para manter os ficheiros apenas na primeira prestação.",
+  "uploadFailed": "As transações foram guardadas, mas não foi possível carregar os anexos. Tente novamente ou abra a pré-visualização da transação para os adicionar.",
+  "pendingAttachmentHint": "PDF, PNG ou JPEG. Até {{count}} ficheiros, {{size}} MB cada. Os ficheiros são carregados ao guardar.",
+  "attachAllInstallments": "Todas as {{count}} prestações"
 }

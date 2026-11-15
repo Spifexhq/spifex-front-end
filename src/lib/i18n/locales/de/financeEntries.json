@@ -66,5 +66,21 @@
   "unavailable": "Nicht verfügbar",
   "unknown": "Unbekannt",
   "monthPartial": "{{month}} · geladene Zwischensumme",
-  "installmentNumber": "Rate {{index}} von {{count}}"
+  "installmentNumber": "Rate {{index}} von {{count}}",
+  "attachments": "Anhänge",
+  "addFile": "Datei hinzufügen",
+  "attachmentHint": "PDF, PNG oder JPEG. Bis zu {{count}} Dateien, je {{size}} MB.",
+  "noAttachments": "Keine Anhänge.",
+  "downloadFile": "{{name}} herunterladen",
+  "removeFile": "{{name}} entfernen",
+  "removeFileConfirm": "{{name}} von diesem Eintrag entfernen?",
+  "fileTooLarge": "Wählen Sie eine Datei unter {{size}} MB.",
+  "error": "Diese Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen.",
+  "remove": "Entfernen",
+  "hasAttachment": "Enthält einen Anhang",
+  "attachToSeries": "Diese Dateien auch an allen {{count}} Raten anhängen",
+  "attachToSeriesHint": "Deaktivieren Sie dies, um die Dateien nur an der ersten Rate zu behalten.",
+  "uploadFailed": "Der Eintrag wurde gespeichert, aber die Anhänge konnten nicht hochgeladen werden. Öffnen Sie die Vorschau, um es erneut zu versuchen.",
+  "pendingAttachmentHint": "PDF, PNG oder JPEG. Bis zu {{count}} Dateien, je {{size}} MB. Die Dateien werden beim Speichern hochgeladen.",
+  "attachAllInstallments": "Alle {{count}} Raten"
 }

@@ -66,5 +66,21 @@
   "unavailable": "Indisponível",
   "unknown": "Desconhecido",
   "monthPartial": "{{month}} · subtotal carregado",
-  "installmentNumber": "Prestação {{index}} de {{count}}"
+  "installmentNumber": "Prestação {{index}} de {{count}}",
+  "attachments": "Anexos",
+  "addFile": "Adicionar ficheiro",
+  "attachmentHint": "PDF, PNG ou JPEG. Até {{count}} ficheiros, {{size}} MB cada.",
+  "noAttachments": "Sem anexos.",
+  "downloadFile": "Transferir {{name}}",
+  "removeFile": "Remover {{name}}",
+  "removeFileConfirm": "Remover {{name}} deste lançamento?",
+  "fileTooLarge": "Escolha um ficheiro com menos de {{size}} MB.",
+  "error": "Não foi possível concluir este pedido. Tente novamente.",
+  "remove": "Remover",
+  "hasAttachment": "Tem anexo",
+  "attachToSeries": "Anexar também estes ficheiros a todas as {{count}} prestações",
+  "attachToSeriesHint": "Desative para manter os ficheiros apenas na primeira prestação.",
+  "uploadFailed": "O lançamento foi guardado, mas não foi possível carregar os anexos. Abra a pré-visualização do lançamento para tentar novamente.",
+  "pendingAttachmentHint": "PDF, PNG ou JPEG. Até {{count}} ficheiros, {{size}} MB cada. Os ficheiros são carregados ao guardar.",
+  "attachAllInstallments": "Todas as {{count}} prestações"
 }

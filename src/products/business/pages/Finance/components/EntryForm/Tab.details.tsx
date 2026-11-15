@@ -25,6 +25,7 @@ type Props = {
   documentTypes: DocumentTypeItem[];
 
   isFinancialLocked: boolean;
+  attachmentsSlot?: React.ReactNode;
 };
 
 const DetailsTab: React.FC<Props> = ({
@@ -37,6 +38,7 @@ const DetailsTab: React.FC<Props> = ({
   categoryWrapId,
   documentTypes,
   isFinancialLocked,
+  attachmentsSlot,
 }) => {
   const selectedCategories = useMemo(() => {
     const id = String((formData.details as Record<string, unknown>).cashflowCategory || "");
@@ -202,6 +204,8 @@ const DetailsTab: React.FC<Props> = ({
           onChange={handleNotesChange}
         />
       </div>
+
+      {attachmentsSlot && <div className="md:col-span-3">{attachmentsSlot}</div>}
     </div>
   );
 };

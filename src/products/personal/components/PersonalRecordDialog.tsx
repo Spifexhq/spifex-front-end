@@ -1,4 +1,5 @@
 import TransactionAttachments from "./TransactionAttachments";
+import PendingAttachments, { type PendingAttachment } from "@/shared/financial/components/PendingAttachments";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -13,13 +14,14 @@ import SegmentedControl from "@/shared/ui/SegmentedControl";
 import { personalApi } from "@/products/personal/services/api";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { formatCurrency, formatDateFromISO } from "@/lib";
-import type { PersonalAccount, PersonalCategory, PersonalCollection, PersonalRecord } from "@/products/personal/types";
+import type { PersonalAccount, PersonalCategory, PersonalCollection, PersonalRecord, PersonalTransaction } from "@/products/personal/types";
 import type { RecurrenceEntry } from "@/models/entries/entries";
 import { allPersonal, today } from "../services/personalData";
 
 type DialogKind = Exclude<PersonalCollection, "accounts" | "transfers"> | "settle" | "contribute" | "transfer";
 type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; transactionKind?: "income" | "expense"; onClose(): void; onSaved(): void; onEditRelated?(id: string): Promise<void> };
 const SERIES_PAGE_SIZE = 10;
+const ATTACHMENT_LIMITS = { maxFiles: 10, maxBytes: 10 * 1024 * 1024 };
 
 export default function PersonalRecordDialog({ kind, record, currency, transactionKind, onClose, onSaved, onEditRelated }: Props) {
   const { t } = useTranslation(["personal", "entriesModal"]);
@@ -44,6 +46,8 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   const [seriesPage, setSeriesPage] = useState(0);
   const [seriesRetry, setSeriesRetry] = useState(0);
   const [activeTab, setActiveTab] = useState<"details" | "recurrence">("details");
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const createdRef = useRef<string[] | null>(null);
   const key = useRef(crypto.randomUUID());
   const lock = useRef(false);
   useEffect(() => {
@@ -103,6 +107,31 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
 
   const seriesStatus = (row: RecurrenceEntry) => row.is_settled ? t("settled") : row.settled_count > 0 || row.last_settled_on ? t("partial") : row.financial_locked ? t("seriesPosted") : t("seriesOpen");
 
+  useEffect(() => { createdRef.current = null; setPendingAttachments([]); }, [kind, record?.id]);
+
+  const addAttachmentFiles = (selected: File[]) => {
+    const oversized = selected.filter(file => file.size > ATTACHMENT_LIMITS.maxBytes);
+    if (oversized.length) setError(t("fileTooLarge", { size: ATTACHMENT_LIMITS.maxBytes / 1024 / 1024 }));
+    const accepted = selected.filter(file => file.size > 0 && file.size <= ATTACHMENT_LIMITS.maxBytes);
+    setPendingAttachments(previous => {
+      const next = [...previous];
+      for (const file of accepted) {
+        if (next.length >= ATTACHMENT_LIMITS.maxFiles) break;
+        if (!next.some(item => item.file.name === file.name && item.file.size === file.size)) next.push({ file, shareToSeries: true });
+      }
+      return next;
+    });
+  };
+
+  const closeDialog = () => {
+    if (busy) return;
+    if (createdRef.current) {
+      createdRef.current = null;
+      onSaved();
+    }
+    onClose();
+  };
+
   const update = (name: string, value: string) => setForm(previous => ({ ...previous, [name]: value }));
   const text = (name: string, required = true) => <Input key={name} kind="text" label={t(name)} value={form[name] || ""} required={required} maxLength={name === "notes" ? 500 : 120} disabled={busy} onChange={event => update(name, event.target.value)} />;
   const amount = (name: string, required = true) => <Input key={name} kind="amount" allowNegative={name === "initial_balance" || kind === "contribute"} currency={currency} label={t(name)} value={form[name] || ""} required={required} disabled={busy} onValueChange={(value: string) => update(name, value)} />;
@@ -161,22 +190,51 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
           return;
         }
         if (record) await personalApi.edit(kind, record.id, payload);
-        else await personalApi.create(kind, payload);
+        else if (kind === "transactions") {
+          if (!createdRef.current) {
+            const { data: created } = await personalApi.create(kind, payload);
+            const rows = "transactions" in created ? created.transactions : [created as PersonalTransaction];
+            createdRef.current = rows.map(row => row.id);
+          }
+          const ids = createdRef.current;
+          if (ids && ids.length && pendingAttachments.length) {
+            const [anchor, ...siblings] = ids;
+            const uploaded: { id: string; shareToSeries: boolean }[] = [];
+            for (const item of pendingAttachments) {
+              const { data } = await personalApi.uploadAttachment(anchor, item.file);
+              uploaded.push({ id: data.id, shareToSeries: item.shareToSeries });
+            }
+            const shared = uploaded.filter(item => item.shareToSeries).map(item => item.id);
+            if (shared.length && siblings.length) {
+              await personalApi.shareAttachments(anchor, shared, siblings);
+            }
+          }
+        } else await personalApi.create(kind, payload);
       }
+      createdRef.current = null;
       onSaved();
       onClose();
-    } catch (cause) { setError(apiErrorMessage(cause, t("error"))); }
+    } catch (cause) { setError(apiErrorMessage(cause, createdRef.current ? t("uploadFailed") : t("error"))); }
     finally { lock.current = false; setBusy(false); }
   };
 
-  return <FloatingDialog isOpen title={kind === "transactions" && !record && transactionKind ? t(transactionKind === "income" ? "createCreditEntry" : "createDebitEntry") : t(["settle", "contribute", "transfer"].includes(kind) ? kind : record ? "edit" : "create")} description={t(record && kind === "transactions" ? "editDialogHint" : `${kind}DialogHint`)} closeLabel={t("close")} onClose={() => { if (!busy) onClose(); }} onSubmit={save} busy={busy} loading={loading} width={600} height={650} tabs={kind === "transactions" ? <SegmentedControl<"details" | "recurrence"> id="personal-record-tabs" value={activeTab} onChange={setActiveTab} label={t("tabs")} items={[{ value: "details", label: t("tabDetails"), panelId: "personal-record-panel" }, { value: "recurrence", label: t("tabRecurrence"), panelId: "personal-record-panel" }]} /> : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t("cancel")}</Button><Button type="submit" disabled={busy || loading || optionsFailed} isLoading={busy}>{t("save")}</Button></div>}>
+  return <FloatingDialog isOpen title={kind === "transactions" && !record && transactionKind ? t(transactionKind === "income" ? "createCreditEntry" : "createDebitEntry") : t(["settle", "contribute", "transfer"].includes(kind) ? kind : record ? "edit" : "create")} description={t(record && kind === "transactions" ? "editDialogHint" : `${kind}DialogHint`)} closeLabel={t("close")} onClose={closeDialog} onSubmit={save} busy={busy} loading={loading} width={600} height={650} tabs={kind === "transactions" ? <SegmentedControl<"details" | "recurrence"> id="personal-record-tabs" value={activeTab} onChange={setActiveTab} label={t("tabs")} items={[{ value: "details", label: t("tabDetails"), panelId: "personal-record-panel" }, { value: "recurrence", label: t("tabRecurrence"), panelId: "personal-record-panel" }]} /> : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={closeDialog}>{t("cancel")}</Button><Button type="submit" disabled={busy || loading || optionsFailed} isLoading={busy}>{t("save")}</Button></div>}>
     {error && <ErrorState message={error} size="sm" className="mb-5 leading-6" action={optionsFailed ? <Button type="button" variant="outline" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button> : undefined} />}
     {loading ? <DialogSkeleton label={t("loading")} /> : <div id="personal-record-panel" role="tabpanel" aria-labelledby={`personal-record-tabs-${activeTab}`} className="grid gap-5 sm:grid-cols-2">
       {activeTab === "details" && <>
         {kind === "transactions" && <>
           <div className="sm:col-span-2">{text("description")}</div>
           {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind), true)}</>}
-          <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id}/> : <p className="mt-3 text-[11px] leading-5 text-slate-400">{t("saveBeforeFiles")}</p>}</div>
+          <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id} editable/> : kind === "transactions" ? <PendingAttachments
+            files={pendingAttachments}
+            maxFiles={ATTACHMENT_LIMITS.maxFiles}
+            maxBytes={ATTACHMENT_LIMITS.maxBytes}
+            namespace="personal"
+            seriesCount={form.recurrence_enabled === "true" && Number(form.installment_count) > 1 ? Number(form.installment_count) : 1}
+            onAdd={addAttachmentFiles}
+            onRemove={index => setPendingAttachments(previous => previous.filter((_, position) => position !== index))}
+            onToggleShare={(index, checked) => setPendingAttachments(previous => previous.map((item, position) => position === index ? { ...item, shareToSeries: checked } : item))}
+          /> : null}</div>
           {editLocked && <p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("lockedTransaction")}</p>}
         </>}
         {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}

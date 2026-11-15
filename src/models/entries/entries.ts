@@ -67,6 +67,7 @@ export interface Entry {
 
   running_balance?: string | null;
   accounting?: AccountingReadiness | null;
+  has_attachment?: boolean;
 }
 
 export type EntryTxTypeLabel = "credit" | "debit" | string;

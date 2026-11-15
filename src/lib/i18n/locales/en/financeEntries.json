@@ -66,5 +66,21 @@
   "unavailable": "Unavailable",
   "unknown": "Unknown",
   "monthPartial": "{{month}} · loaded subtotal",
-  "installmentNumber": "Installment {{index}} of {{count}}"
+  "installmentNumber": "Installment {{index}} of {{count}}",
+  "attachments": "Attachments",
+  "addFile": "Add file",
+  "attachmentHint": "PDF, PNG or JPEG. Up to {{count}} files, {{size}} MB each.",
+  "noAttachments": "No attachments.",
+  "downloadFile": "Download {{name}}",
+  "removeFile": "Remove {{name}}",
+  "removeFileConfirm": "Remove {{name}} from this entry?",
+  "fileTooLarge": "Choose a file smaller than {{size}} MB.",
+  "error": "We couldn’t complete this request. Please try again.",
+  "remove": "Remove",
+  "hasAttachment": "Has attachment",
+  "attachToSeries": "Also attach these files to all {{count}} installments",
+  "attachToSeriesHint": "Turn this off to keep the files only on the first installment.",
+  "uploadFailed": "The entry was saved, but the attachments could not be uploaded. Open the entry preview to try again.",
+  "pendingAttachmentHint": "PDF, PNG or JPEG. Up to {{count}} files, {{size}} MB each. Files upload when you save.",
+  "attachAllInstallments": "All {{count}} installments"
 }

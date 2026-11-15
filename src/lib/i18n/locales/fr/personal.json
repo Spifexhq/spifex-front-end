@@ -372,5 +372,10 @@
   "tabRecurrence": "Récurrence",
   "notRecurring": "Cette transaction ne fait pas partie d'une série récurrente.",
   "applyTheseChangesTo": "Appliquer ces modifications à",
-  "applyTheseChangesHint": "Seuls les champs modifiés sont copiés. Les changements de date décalent les dates sélectionnées du même nombre de jours."
+  "applyTheseChangesHint": "Seuls les champs modifiés sont copiés. Les changements de date décalent les dates sélectionnées du même nombre de jours.",
+  "attachToSeries": "Joindre également ces fichiers aux {{count}} échéances",
+  "attachToSeriesHint": "Désactivez cette option pour conserver les fichiers uniquement sur la première échéance.",
+  "uploadFailed": "Les transactions ont été enregistrées, mais les pièces jointes n’ont pas pu être téléversées. Réessayez ou ouvrez l’aperçu de la transaction pour les ajouter.",
+  "pendingAttachmentHint": "PDF, PNG ou JPEG. Jusqu’à {{count}} fichiers, {{size}} Mo chacun. Les fichiers sont téléversés lors de l’enregistrement.",
+  "attachAllInstallments": "Les {{count}} échéances"
 }

@@ -372,5 +372,10 @@
   "tabRecurrence": "Recurrence",
   "notRecurring": "This transaction is not part of a recurring series.",
   "applyTheseChangesTo": "Apply these changes to",
-  "applyTheseChangesHint": "Only the fields you change are copied. Date changes shift the selected due dates by the same number of days."
+  "applyTheseChangesHint": "Only the fields you change are copied. Date changes shift the selected due dates by the same number of days.",
+  "attachToSeries": "Also attach these files to all {{count}} installments",
+  "attachToSeriesHint": "Turn this off to keep the files only on the first installment.",
+  "uploadFailed": "The transactions were saved, but the attachments could not be uploaded. Retry, or open the transaction preview to add them.",
+  "pendingAttachmentHint": "PDF, PNG or JPEG. Up to {{count}} files, {{size}} MB each. Files upload when you save.",
+  "attachAllInstallments": "All {{count}} installments"
 }

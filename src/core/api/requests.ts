@@ -2,6 +2,9 @@ import type { SettlementSource } from "@/models/entries/settlements";
 import type { RecurrenceEntry } from "@/models/entries/entries";
 // src/api/requests.ts
 import { request, http } from '@/core/api/http';
+import { getAuthGeneration } from '@/core/authentication/authGeneration';
+import { getOrgExternalIdStored } from '@/lib/tokens';
+import type { EntryAttachment } from '@/shared/financial/types';
 import type { AccountingSetupStatus, FiscalPeriod } from '@/models/settings/accountingSetup';
 import type {
   AiSetupApplyRequest,
@@ -410,6 +413,28 @@ export const api = {
 
   addEntry: (payload: AddEntryRequest) =>
     request<EntryWriteResponse>(`cashflow/entries/`, "POST", payload),
+
+  getEntryAttachments: (id: string) =>
+    request<{ results: EntryAttachment[]; max_files: number; max_bytes: number }>(`cashflow/entries/${id}/attachments/`, "GET"),
+
+  uploadEntryAttachment: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<EntryAttachment>(`cashflow/entries/${id}/attachments/`, "POST", form);
+  },
+
+  removeEntryAttachment: (id: string, attachment: string) =>
+    request<void>(`cashflow/entries/${id}/attachments/${attachment}/`, "DELETE"),
+
+  shareEntryAttachments: (id: string, attachmentIds: string[], entryIds: string[]) =>
+    request<{ results: EntryAttachment[] }>(`cashflow/entries/${id}/share-attachments/`, "POST", { attachment_ids: attachmentIds, entry_ids: entryIds }),
+
+  downloadEntryAttachment: async (id: string, attachment: string, signal?: AbortSignal) => {
+    const generation = getAuthGeneration(), workspace = getOrgExternalIdStored();
+    const response = await http.get<Blob>(`cashflow/entries/${id}/attachments/${attachment}/download/`, { responseType: "blob", signal });
+    if (generation !== getAuthGeneration() || workspace !== getOrgExternalIdStored()) throw new Error("Workspace changed during file download");
+    return response.data;
+  },
 
   editEntry: (id: string, payload: Partial<EditEntryRequest>, version?: string) =>
     request<EntryWriteResponse>(`cashflow/entries/${id}/`, "PATCH", payload, { ifMatch: version }),

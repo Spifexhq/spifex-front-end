@@ -9,6 +9,10 @@ import { useTranslation } from "react-i18next";
 import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
 
 import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import EntryAttachments from "@/shared/financial/components/EntryAttachments";
+import PendingAttachments, { type PendingAttachment } from "@/shared/financial/components/PendingAttachments";
+import { entryAttachmentApi } from "../EntryTable/entryAttachmentApi";
 
 
 import { api } from "@/core/api/requests";
@@ -49,6 +53,8 @@ const IDS = {
   entityWrap: "entity-wrap",
   deptPercPrefix: "dept-perc-",
 } as const;
+
+const ATTACHMENT_LIMITS = { maxFiles: 10, maxBytes: 10 * 1024 * 1024 };
 
 const TAB_LIST_BASE: { id: Tab; label: string }[] = [
   { id: "details", label: "entriesModal:tabs.details" },
@@ -161,7 +167,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   initialEntry: providedEntry,
   isLoadingEntry,
 }) => {
-  const { t } = useTranslation(["entriesModal"]);
+  const { t } = useTranslation(["entriesModal", "financeEntries"]);
   const [sourceAttempt, setSourceAttempt] = useState(0);
   const [overrideEntry, setOverrideEntry] = useState<Entry | null>(null);
   const initialEntry = overrideEntry ?? providedEntry;
@@ -171,7 +177,16 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const options = useEntryOptions(isOpen, type, sourceAttempt);
   const { categories: cashflowCategories, departments, projects, inventory: inventoryItems, entities, documents: docTypes, loading: sourcesLoading, issues: sourceIssues } = options;
   const series = useRecurrenceEntries(isOpen, initialEntry);
-  useEffect(() => { setOverrideEntry(null); setScope("single"); setPendingEntryId(null); setRelatedLoading(false); }, [isOpen, providedEntry?.id]);
+  useEffect(() => {
+    setOverrideEntry(null);
+    setScope("single");
+    setPendingEntryId(null);
+    setRelatedLoading(false);
+    if (isOpen) {
+      setPendingAttachments([]);
+      setAttachmentNotice("");
+    }
+  }, [isOpen, providedEntry?.id]);
 
   const PERIOD_OPTIONS = useMemo(
     () => PERIOD_OPTIONS_BASE.map((p) => ({ ...p, label: t(p.label) })),
@@ -205,6 +220,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [attachmentNotice, setAttachmentNotice] = useState("");
 
   const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(
     null
@@ -239,6 +256,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   const hasMeaningfulData = useMemo(() => {
     if (initialEntry) return Object.keys(getEntryChanges(initialEntry, formData)).length > 0;
+    if (pendingAttachments.length > 0) return true;
     if (formData.details.amount > "") return true;
 
     const d = formData.details;
@@ -267,13 +285,14 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     }
 
     return false;
-  }, [formData, initialEntry]);
+  }, [formData, initialEntry, pendingAttachments]);
 
   const resetInternalState = useCallback(() => {
     setFormData(getEmptyFormData());
     setActiveTab("details");
     setWarning(null);
     setShowCloseConfirm(false);
+    setPendingAttachments([]);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -515,6 +534,34 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     return [{ item_id: formData.inventory.product, quantity: String(q) }];
   }, [formData.inventory.product, formData.inventory.quantity]);
 
+  const recurringCount = useMemo(
+    () => (formData.recurrence.recurrence === 1 ? Number(formData.recurrence.installments || 1) : 1),
+    [formData.recurrence.recurrence, formData.recurrence.installments]
+  );
+
+  const addAttachmentFiles = useCallback(
+    (selected: File[]) => {
+      const oversized = selected.filter((file) => file.size > ATTACHMENT_LIMITS.maxBytes);
+      if (oversized.length) {
+        setAttachmentNotice(
+          t("financeEntries:fileTooLarge", { size: ATTACHMENT_LIMITS.maxBytes / 1024 / 1024 })
+        );
+      }
+      const accepted = selected.filter(
+        (file) => file.size > 0 && file.size <= ATTACHMENT_LIMITS.maxBytes
+      );
+      setPendingAttachments((previous) => {
+        const next = [...previous];
+        for (const file of accepted) {
+          if (next.length >= ATTACHMENT_LIMITS.maxFiles) break;
+          if (!next.some((item) => item.file.name === file.name && item.file.size === file.size)) next.push({ file, shareToSeries: true });
+        }
+        return next;
+      });
+    },
+    [t]
+  );
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -578,6 +625,30 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           };
 
           res = await api.addEntry(payload);
+          if ("data" in res && pendingAttachments.length) {
+            const created = (Array.isArray(res.data) ? res.data : [res.data]) as Entry[];
+            const anchor = created[0];
+            if (anchor?.id) {
+              try {
+                const uploaded: { id: string; shareToSeries: boolean }[] = [];
+                for (const item of pendingAttachments) {
+                  const { data } = await api.uploadEntryAttachment(anchor.id, item.file);
+                  uploaded.push({ id: data.id, shareToSeries: item.shareToSeries });
+                }
+                const shared = uploaded.filter((item) => item.shareToSeries).map((item) => item.id);
+                if (shared.length && created.length > 1) {
+                  await api.shareEntryAttachments(
+                    anchor.id,
+                    shared,
+                    created.slice(1).map((item) => item.id)
+                  );
+                }
+                setPendingAttachments([]);
+              } catch (cause) {
+                setAttachmentNotice(apiErrorMessage(cause, t("financeEntries:uploadFailed")));
+              }
+            }
+          }
         } else {
           const ie = initialEntry;
           const changes = getEntryChanges(ie, formData);
@@ -625,6 +696,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       initialEntry,
       formData,
       type,
+      pendingAttachments,
       handleClose,
       onSave,
     ]
@@ -713,6 +785,27 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     </div>
   );
 
+  const attachmentsSlot = initialEntry ? (
+    <EntryAttachments
+      key={`modal-attachments-${initialEntry.id}`}
+      entryId={initialEntry.id}
+      namespace="financeEntries"
+      api={entryAttachmentApi}
+      editable
+    />
+  ) : (
+    <PendingAttachments
+      files={pendingAttachments}
+      maxFiles={ATTACHMENT_LIMITS.maxFiles}
+      maxBytes={ATTACHMENT_LIMITS.maxBytes}
+      namespace="financeEntries"
+      seriesCount={recurringCount}
+      onAdd={addAttachmentFiles}
+      onRemove={(index) => setPendingAttachments((previous) => previous.filter((_, i) => i !== index))}
+      onToggleShare={(index, checked) => setPendingAttachments((previous) => previous.map((item, i) => i === index ? { ...item, shareToSeries: checked } : item))}
+    />
+  );
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "details":
@@ -727,6 +820,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             categoryWrapId={IDS.categoryWrap}
             documentTypes={DOCUMENT_TYPES}
             isFinancialLocked={isFinancialLocked}
+            attachmentsSlot={attachmentsSlot}
           />
         );
 
@@ -797,6 +891,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   };
 
   return (
+    <>
     <FloatingDialog isOpen={isOpen} width={880} height={670} title={type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
       eyebrow={t("entriesModal:header.entry")} description={isFinancialLocked ? (formattedLastSettledOn ? t("entriesModal:settledInfo", { date: formattedLastSettledOn }) : t("entriesModal:guidance.financialLocked")) : t("entriesModal:guidance.intro")}
       closeLabel={t("entriesModal:aria.close")} onClose={attemptClose} busy={isSubmitting} loading={Boolean(isLoadingEntry) || sourcesLoading || relatedLoading} onSubmit={handleSubmit} formId={IDS.form} tabs={renderTabs()}
@@ -912,6 +1007,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         <div id="entry-form-panel" role="tabpanel" aria-labelledby={`entry-tab-${activeTab}`} className="space-y-5">{renderTabContent()}</div>
       </>}
     </FloatingDialog>
+    <Snackbar
+      open={!!attachmentNotice}
+      severity="error"
+      message={attachmentNotice}
+      onClose={() => setAttachmentNotice("")}
+    />
+    </>
   );
 };
 

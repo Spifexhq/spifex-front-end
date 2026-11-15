@@ -7,10 +7,13 @@ import { formatCurrency, formatDateFromISO } from "@/lib";
 import { journalDisplayId } from "@/lib/journalDisplay";
 import SidePanel, { SidePanelDetails } from "@/components/Modal/SidePanel";
 import Button from "@/shared/ui/Button";
+import EntryAttachments from "@/shared/financial/components/EntryAttachments";
+import { useAuthContext } from "@/hooks/useAuth";
 import type { Entry } from "@/models/entries/entries";
 import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 import { type FinancialEntry, isSettlement, entryDate, signedAmount, sourceEntryId, entryId, isOutstandingEntry } from "./entryRows";
 import { accountingColors } from "./accountingColors";
+import { entryAttachmentApi } from "./entryAttachmentApi";
 type Details = {
     entry: FinancialEntry;
     accounting?: AccountingReadiness;
@@ -18,15 +21,19 @@ type Details = {
     project?: string;
     entity?: string;
 };
-export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRevert }: {
+export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRevert, onChanged }: {
     entry: FinancialEntry | null;
     onClose(): void;
     onEdit?(entry: Entry): void;
     onSettle?(entry: Entry): void;
     onRevert?(entry: FinancialEntry): Promise<void>;
+    onChanged?(): void;
 }) {
     const { t } = useTranslation("financeEntries");
     const navigate = useNavigate();
+    const auth = useAuthContext();
+    const workspace = auth.organization?.organization;
+    const canEditAttachments = (!workspace?.lifecycle || workspace.lifecycle === "active") && (auth.isOwner || auth.isSuperUser || auth.permissions.includes("change_cash_flow_entries"));
     const [details, setDetails] = useState<Details | null>(null), [loading, setLoading] = useState(false), [error, setError] = useState(""), [accountingError, setAccountingError] = useState(""), [retry, setRetry] = useState(0);
     const [reverting, setReverting] = useState(false);
     const key = entry ? entryId(entry) : "";
@@ -94,6 +101,7 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
                 ]}/>{accounting.next_action && <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3"><h4 className="text-xs font-medium text-gray-800">{t("nextAction")}</h4><p className="mt-1 text-xs leading-5 text-gray-500">{accounting.next_action}</p></div>}</>}
     <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/accounting/overview")}>{t("openAccounting")}</Button>
    </section>
+   <EntryAttachments key={`attachments-${sourceEntryId(shown)}`} entryId={sourceEntryId(shown)} namespace="financeEntries" api={entryAttachmentApi} editable={canEditAttachments} onChanged={onChanged}/>
   </div>}
  </SidePanel>;
 }

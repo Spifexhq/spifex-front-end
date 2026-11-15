@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Paperclip } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { api } from "@/core/api/requests";
 import { formatDateFromISO } from "@/lib";
@@ -35,6 +36,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
       installmentIndex: entry.installment_index, installmentCount: entry.installment_count,
       bankName: isSettlement(entry) ? entry.bank?.institution : null,
       activityKind: isSettlement(entry) ? "settlement" : "entry", source: entry,
+      hasAttachment: !!entry.has_attachment,
     };
   }), [pager.items]);
   const canEdit = !settled && allowed("change_cash_flow_entries") && !!onEdit;
@@ -49,7 +51,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
       emptyLabel={t("empty")}
       secondColumnLabel={t("bank")}
       showSecondColumn={settled}
-      renderName={record => <div className="min-w-0"><div className="flex min-w-0 items-center gap-1.5"><span className="truncate text-[13px] font-medium leading-4">{record.description || t("untitled")}</span>{(record.installmentCount ?? 0) > 1 && <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium leading-none text-slate-500 tabular-nums" aria-label={t("installmentNumber", { index: record.installmentIndex ?? "?", count: record.installmentCount ?? 1 })}>{record.installmentIndex ?? "?"}/{record.installmentCount}</span>}</div><p className="mt-0.5 truncate text-[10px] font-normal leading-3 text-gray-500">{formatDateFromISO(record.date)}{record.activityKind === "settlement" && record.bankName ? ` · ${record.bankName}` : ""}</p></div>}
+      renderName={record => <div className="min-w-0"><div className="flex min-w-0 items-center gap-1.5">{record.hasAttachment && <span title={t("hasAttachment")} className="shrink-0"><Paperclip size={12} role="img" aria-label={t("hasAttachment")} className="text-gray-400" /></span>}<span className="truncate text-[13px] font-medium leading-4">{record.description || t("untitled")}</span>{(record.installmentCount ?? 0) > 1 && <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium leading-none text-slate-500 tabular-nums" aria-label={t("installmentNumber", { index: record.installmentIndex ?? "?", count: record.installmentCount ?? 1 })}>{record.installmentIndex ?? "?"}/{record.installmentCount}</span>}</div><p className="mt-0.5 truncate text-[10px] font-normal leading-3 text-gray-500">{formatDateFromISO(record.date)}{record.activityKind === "settlement" && record.bankName ? ` · ${record.bankName}` : ""}</p></div>}
       renderSecondColumn={record => record.activityKind === "settlement" ? record.bankName || "—" : null}
       pager={pagerAdapter}
       busy={pager.loading && !pager.items.length}
@@ -78,7 +80,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
       loadMore={pager.loading}
       onRetry={() => void pager.refresh()}
     />
-    <EntryPreview entry={preview} onClose={() => setPreview(null)} onEdit={canEdit ? onEdit : undefined} onRevert={settled && allowed("delete_settled_entries") ? async entry => { await api.deleteSettledEntry(entryId(entry)); onChanged?.(); } : undefined} onSettle={!settled && allowed("add_settled_entries") && onSettle ? entry => onSettle([entry]) : undefined}/>
+    <EntryPreview entry={preview} onClose={() => setPreview(null)} onEdit={canEdit ? onEdit : undefined} onRevert={settled && allowed("delete_settled_entries") ? async entry => { await api.deleteSettledEntry(entryId(entry)); onChanged?.(); } : undefined} onSettle={!settled && allowed("add_settled_entries") && onSettle ? entry => onSettle([entry]) : undefined} onChanged={() => { void pager.refresh(); onChanged?.(); }}/>
   </>;
 });
 

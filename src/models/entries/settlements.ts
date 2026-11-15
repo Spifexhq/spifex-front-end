@@ -82,6 +82,7 @@ export interface SettledEntry {
   bank: BankAccount | null;
 
   running_balance?: string | null;
+  has_attachment?: boolean;
 }
 
 /* ---------------------------------- Write ---------------------------------- */

@@ -20,6 +20,7 @@ export const personalApi = {
   attachments: (id: string) => request<{results:EntryAttachment[];max_files:number;max_bytes:number}>(`personal/transactions/${id}/attachments/`, "GET"),
   uploadAttachment: (id: string, file: File) => { const form = new FormData(); form.append("file", file); return request<EntryAttachment>(`personal/transactions/${id}/attachments/`, "POST", form); },
   removeAttachment: (id: string, attachment: string) => request<void>(`personal/transactions/${id}/attachments/${attachment}/`, "DELETE"),
+  shareAttachments: (id: string, attachmentIds: string[], entryIds: string[]) => request<{results:EntryAttachment[]}>(`personal/transactions/${id}/share-attachments/`, "POST", { attachment_ids: attachmentIds, entry_ids: entryIds }),
   downloadAttachment: async (id: string, attachment: string, signal?: AbortSignal) => {
     const generation = getAuthGeneration(), workspace = getOrgExternalIdStored();
     const response = await http.get<Blob>(`personal/transactions/${id}/attachments/${attachment}/download/`, {responseType:"blob",signal});

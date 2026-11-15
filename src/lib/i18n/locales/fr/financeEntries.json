@@ -66,5 +66,21 @@
   "unavailable": "Indisponible",
   "unknown": "Inconnu",
   "monthPartial": "{{month}} · sous-total chargé",
-  "installmentNumber": "Échéance {{index}} sur {{count}}"
+  "installmentNumber": "Échéance {{index}} sur {{count}}",
+  "attachments": "Pièces jointes",
+  "addFile": "Ajouter un fichier",
+  "attachmentHint": "PDF, PNG ou JPEG. Jusqu’à {{count}} fichiers, {{size}} Mo chacun.",
+  "noAttachments": "Aucune pièce jointe.",
+  "downloadFile": "Télécharger {{name}}",
+  "removeFile": "Supprimer {{name}}",
+  "removeFileConfirm": "Supprimer {{name}} de cette écriture ?",
+  "fileTooLarge": "Choisissez un fichier de moins de {{size}} Mo.",
+  "error": "Impossible de terminer cette demande. Réessayez.",
+  "remove": "Supprimer",
+  "hasAttachment": "Contient une pièce jointe",
+  "attachToSeries": "Joindre également ces fichiers aux {{count}} échéances",
+  "attachToSeriesHint": "Désactivez cette option pour conserver les fichiers uniquement sur la première échéance.",
+  "uploadFailed": "L’écriture a été enregistrée, mais les pièces jointes n’ont pas pu être téléversées. Ouvrez l’aperçu de l’écriture pour réessayer.",
+  "pendingAttachmentHint": "PDF, PNG ou JPEG. Jusqu’à {{count}} fichiers, {{size}} Mo chacun. Les fichiers sont téléversés lors de l’enregistrement.",
+  "attachAllInstallments": "Les {{count}} échéances"
 }
