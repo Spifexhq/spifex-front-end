@@ -1100,6 +1100,38 @@
       "advanced": {
         "title": "Advanced",
         "description": "Basis, dimensions and opening data."
+      },
+      "company": {
+        "title": "Company",
+        "description": "Legal shape, size and activity."
+      },
+      "tax": {
+        "title": "Tax & compliance",
+        "description": "Indirect tax, payroll and filing obligations."
+      },
+      "sales": {
+        "title": "Sales & customers",
+        "description": "How revenue arrives and when customers pay."
+      },
+      "purchases": {
+        "title": "Purchases & operations",
+        "description": "Running costs, suppliers, stock and assets."
+      },
+      "team": {
+        "title": "Team & payroll",
+        "description": "Employees, contractors and planned hiring."
+      },
+      "finance": {
+        "title": "Finance & funding",
+        "description": "Loans, credit lines, owner funding and currency."
+      },
+      "growth": {
+        "title": "Growth plans",
+        "description": "Changes expected in the next 12–24 months."
+      },
+      "accounting": {
+        "title": "Accounting",
+        "description": "Basis, chart depth and reporting structure."
       }
     },
     "questions": {
@@ -1222,6 +1254,70 @@
       "audit_required": {
         "label": "Will the accounts be audited?",
         "help": "Audit support may need more detailed accounts and evidence."
+      },
+      "company_size": {
+        "label": "How many people work in the business?",
+        "help": "Choose the closest size; include owners who work in it."
+      },
+      "payroll_tax": {
+        "label": "Do you withhold payroll taxes or social contributions?",
+        "help": "PAYE, social security or similar payroll obligations."
+      },
+      "withholding_tax": {
+        "label": "Do you withhold tax from supplier or contractor payments?",
+        "help": "Common for services, rent or cross-border payments."
+      },
+      "e_invoicing": {
+        "label": "Are you required to issue electronic invoices?",
+        "help": "Government or customer-mandated e-invoicing."
+      },
+      "refunds": {
+        "label": "Do you issue refunds, credits or returns?",
+        "help": "Customer refunds and sales returns."
+      },
+      "contractors": {
+        "label": "Do you use contractors or freelancers?",
+        "help": "Self-employed suppliers paid for work."
+      },
+      "employees_future": {
+        "label": "Do you plan to hire employees in the next 12 months?",
+        "help": "Planned hiring changes payroll and employer accounts."
+      },
+      "benefits": {
+        "label": "Do you provide employee benefits?",
+        "help": "Health insurance, allowances or similar benefits."
+      },
+      "commissions": {
+        "label": "Do you pay sales commissions?",
+        "help": "Variable payments tied to sales."
+      },
+      "credit_line_future": {
+        "label": "Do you expect a loan or credit line in the next 12 months?",
+        "help": "Planned financing still needs the right liability accounts."
+      },
+      "owner_funding": {
+        "label": "Do owners lend money to the business?",
+        "help": "Director or shareholder loans and repayments."
+      },
+      "grants": {
+        "label": "Do you receive or expect grants or subsidies?",
+        "help": "Public grants, incentives or subsidised funding."
+      },
+      "growth_plans": {
+        "label": "What changes do you expect in the next 12–24 months?",
+        "help": "Select all that apply; structures will be prepared even before they happen."
+      },
+      "asset_purchases_future": {
+        "label": "Do you plan major equipment or vehicle purchases?",
+        "help": "Future fixed assets and depreciation."
+      },
+      "fundraising_future": {
+        "label": "Do you plan to raise investment?",
+        "help": "Equity or convertible funding in the next 24 months."
+      },
+      "suppliers": {
+        "label": "Do you buy from suppliers on credit?",
+        "help": "Bills paid after receiving goods or services."
       }
     },
     "options": {
@@ -1280,7 +1376,17 @@
       "sep": "30 September",
       "local": "Local statutory standard",
       "ifrs": "IFRS",
-      "us_gaap": "US GAAP"
+      "us_gaap": "US GAAP",
+      "solo": "Just me",
+      "micro": "2 to 9 people",
+      "small": "10 to 49 people",
+      "medium": "50 or more people",
+      "hire": "Hire employees",
+      "new_markets": "Enter new markets",
+      "new_products": "Launch new products",
+      "equipment": "Buy equipment or vehicles",
+      "fundraising": "Raise investment or a loan",
+      "new_locations": "Open a new location"
     },
     "summary": {
       "books": "Books",
@@ -1350,7 +1456,21 @@
     "scratchNotice": "Scratch stays in this browser only. It is never saved to the database.",
     "continueEditing": "Continue editing",
     "keepScratch": "Keep scratch",
-    "discardAnswers": "Discard answers"
+    "discardAnswers": "Discard answers",
+    "assumptionsHelp": "These are likely needs for your profile, even if they are not true yet. If something is different, explain it and regenerate.",
+    "assumptionPlaceholder": "Explain what is different or confirm it will not happen…",
+    "regenerateWithCorrections": "Regenerate with corrections",
+    "profileAssumptions": {
+      "payroll_readiness": "Prepare payroll and employer accounts for likely hiring in the next 12 months.",
+      "future_credit": "Keep loan, lease and credit-line liability accounts ready; many businesses arrange financing after setup.",
+      "inventory_readiness": "Prepare stock and cost-of-goods accounts for inventory that may be introduced as the business grows.",
+      "asset_readiness": "Prepare fixed-asset and depreciation accounts for equipment that is likely to be purchased later.",
+      "tax_filing": "Prepare indirect-tax control accounts for filing; confirm local rates and rules with an accountant.",
+      "tax_registration": "Confirm whether indirect-tax registration becomes necessary as turnover grows.",
+      "deferred_revenue_readiness": "Prepare deferred-revenue and customer-prepayment accounts for subscriptions or online sales.",
+      "reporting_dimensions": "Prepare department or project reporting dimensions for a growing team.",
+      "country_confirmation": "Confirm tax and reporting requirements with a local accountant."
+    }
   },
   "overview": {
     "title": "Accounting overview",

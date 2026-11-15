@@ -1100,6 +1100,38 @@
       "advanced": {
         "title": "Avancé",
         "description": "Base, dimensions et données d’ouverture."
+      },
+      "company": {
+        "title": "Entreprise",
+        "description": "Forme juridique, taille et activité."
+      },
+      "tax": {
+        "title": "Fiscalité et conformité",
+        "description": "TVA, paie et obligations déclaratives."
+      },
+      "sales": {
+        "title": "Ventes et clients",
+        "description": "Comment les revenus arrivent et quand les clients paient."
+      },
+      "purchases": {
+        "title": "Achats et opérations",
+        "description": "Charges courantes, fournisseurs, stock et actifs."
+      },
+      "team": {
+        "title": "Équipe et paie",
+        "description": "Salariés, prestataires et embauches prévues."
+      },
+      "finance": {
+        "title": "Financement",
+        "description": "Emprunts, lignes de crédit, apports des associés et devises."
+      },
+      "growth": {
+        "title": "Projets de croissance",
+        "description": "Évolutions prévues sur les 12 à 24 prochains mois."
+      },
+      "accounting": {
+        "title": "Comptabilité",
+        "description": "Base, profondeur du plan et structure de reporting."
       }
     },
     "questions": {
@@ -1222,6 +1254,70 @@
       "audit_required": {
         "label": "Les comptes seront-ils audités ?",
         "help": "L’audit peut nécessiter plus de détail et de justificatifs."
+      },
+      "company_size": {
+        "label": "Combien de personnes travaillent dans l'entreprise ?",
+        "help": "Choisissez la taille la plus proche ; incluez les associés actifs."
+      },
+      "payroll_tax": {
+        "label": "Retenez-vous des impôts ou cotisations sur les salaires ?",
+        "help": "Prélèvements à la source, sécurité sociale ou obligations similaires."
+      },
+      "withholding_tax": {
+        "label": "Retenez-vous un impôt sur les paiements aux fournisseurs ou prestataires ?",
+        "help": "Fréquent pour les services, loyers ou paiements internationaux."
+      },
+      "e_invoicing": {
+        "label": "Devez-vous émettre des factures électroniques ?",
+        "help": "Facturation électronique imposée par l'État ou le client."
+      },
+      "refunds": {
+        "label": "Émettez-vous des remboursements, avoirs ou retours ?",
+        "help": "Remboursements clients et retours de ventes."
+      },
+      "contractors": {
+        "label": "Travaillez-vous avec des prestataires ou freelances ?",
+        "help": "Fournisseurs indépendants rémunérés pour une mission."
+      },
+      "employees_future": {
+        "label": "Prévoyez-vous d'embaucher dans les 12 prochains mois ?",
+        "help": "Les embauches prévues modifient la paie et les comptes d'employeur."
+      },
+      "benefits": {
+        "label": "Proposez-vous des avantages aux salariés ?",
+        "help": "Mutuelle, indemnités ou avantages similaires."
+      },
+      "commissions": {
+        "label": "Versez-vous des commissions commerciales ?",
+        "help": "Rémunération variable liée aux ventes."
+      },
+      "credit_line_future": {
+        "label": "Prévoyez-vous un emprunt ou une ligne de crédit dans les 12 prochains mois ?",
+        "help": "Le financement prévu nécessite aussi les bons comptes de passif."
+      },
+      "owner_funding": {
+        "label": "Les associés prêtent-ils de l'argent à l'entreprise ?",
+        "help": "Prêts de gérants ou associés et remboursements."
+      },
+      "grants": {
+        "label": "Recevez-vous ou attendez-vous des subventions ?",
+        "help": "Aides publiques, incitations ou financements subventionnés."
+      },
+      "growth_plans": {
+        "label": "Quelles évolutions attendez-vous sur 12 à 24 mois ?",
+        "help": "Sélectionnez tout ce qui s'applique ; la structure sera préparée à l'avance."
+      },
+      "asset_purchases_future": {
+        "label": "Prévoyez-vous d'acheter des équipements ou véhicules importants ?",
+        "help": "Immobilisations futures et amortissements."
+      },
+      "fundraising_future": {
+        "label": "Prévoyez-vous de lever des fonds ?",
+        "help": "Capital ou financement convertible dans les 24 prochains mois."
+      },
+      "suppliers": {
+        "label": "Achetez-vous auprès de fournisseurs à crédit ?",
+        "help": "Factures payées après réception des biens ou services."
       }
     },
     "options": {
@@ -1280,7 +1376,17 @@
       "sep": "30 septembre",
       "local": "Norme locale",
       "ifrs": "IFRS",
-      "us_gaap": "US GAAP"
+      "us_gaap": "US GAAP",
+      "solo": "Moi seul",
+      "micro": "2 à 9 personnes",
+      "small": "10 à 49 personnes",
+      "medium": "50 personnes ou plus",
+      "hire": "Embaucher des salariés",
+      "new_markets": "Entrer sur de nouveaux marchés",
+      "new_products": "Lancer de nouveaux produits",
+      "equipment": "Acheter des équipements ou véhicules",
+      "fundraising": "Lever des fonds ou un emprunt",
+      "new_locations": "Ouvrir un nouvel établissement"
     },
     "summary": {
       "books": "Livres",
@@ -1350,7 +1456,21 @@
     "scratchNotice": "Le brouillon reste uniquement dans ce navigateur. Il n’est jamais enregistré dans la base de données.",
     "continueEditing": "Continuer la saisie",
     "keepScratch": "Conserver le brouillon",
-    "discardAnswers": "Supprimer les réponses"
+    "discardAnswers": "Supprimer les réponses",
+    "assumptionsHelp": "Ce sont des besoins probables pour votre profil, même s'ils ne sont pas encore réels. Si quelque chose diffère, expliquez-le et relancez la génération.",
+    "assumptionPlaceholder": "Expliquez ce qui est différent ou confirmez que cela n'arrivera pas…",
+    "regenerateWithCorrections": "Régénérer avec les corrections",
+    "profileAssumptions": {
+      "payroll_readiness": "Préparez les comptes de paie et de charges patronales pour les embauches probables dans les 12 prochains mois.",
+      "future_credit": "Gardez les comptes de prêts, crédits-baux et lignes de crédit prêts ; de nombreuses entreprises financent après la configuration.",
+      "inventory_readiness": "Préparez les comptes de stock et de coût des ventes pour un stock qui pourrait être introduit avec la croissance.",
+      "asset_readiness": "Préparez les comptes d'immobilisations et d'amortissements pour des équipements probablement achetés plus tard.",
+      "tax_filing": "Préparez les comptes de contrôle de TVA pour les déclarations ; confirmez les taux et règles locales avec un comptable.",
+      "tax_registration": "Vérifiez si l'immatriculation à la TVA devient nécessaire avec la croissance du chiffre d'affaires.",
+      "deferred_revenue_readiness": "Préparez les comptes de produits constatés d'avance et d'acomptes clients pour les abonnements ou ventes en ligne.",
+      "reporting_dimensions": "Préparez des dimensions par service ou projet pour une équipe en croissance.",
+      "country_confirmation": "Confirmez les obligations fiscales et de reporting avec un comptable local."
+    }
   },
   "overview": {
     "title": "Vue d’ensemble comptable",

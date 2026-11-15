@@ -212,7 +212,7 @@ const AccountingBankMappingsPage: React.FC = () => {
     <>
       <section className="space-y-4">
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteBankAccountLedgerMap(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        <DataTable selectable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteBankAccountLedgerMap(item.id); } : undefined} onDeleted={async ids => { const removed = new Set(ids); setItems(previous => previous.filter(row => !removed.has(row.id))); await load(); }} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("bankMappingsPage.columns.bankAccount", "Bank account"), render: item => bankMap.get(item.bank_account_id) || "—" },
               { key: "book", label: t("bankMappingsPage.columns.book", "Book"), render: item => bookMap.get(item.book_id) || "—" },
               { key: "account", label: t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), render: item => accountMap.get(item.ledger_account_id) || "—" },

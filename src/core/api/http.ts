@@ -584,7 +584,7 @@ function normalizeEndpoint(ep: string): string {
   return String(ep || "").replace(/^\/+/, "");
 }
 
-export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string; organizationId?: string }): Promise<ApiSuccess<T>> {
+export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string; organizationId?: string; timeout?: number }): Promise<ApiSuccess<T>> {
   let requestStillCurrent: (() => boolean) | null = null;
   let requestGeneration = getAuthGeneration();
   let requestOrganization: string | undefined;
@@ -608,6 +608,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       method,
       data: method !== "GET" ? payload : undefined,
       params: method === "GET" ? pruneParams(payload) : undefined,
+      ...(options?.timeout ? { timeout: options.timeout } : {}),
       validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
     };
 

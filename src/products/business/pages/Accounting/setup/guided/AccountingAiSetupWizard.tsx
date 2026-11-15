@@ -8,11 +8,12 @@ import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { getCountries } from "@/lib/location/countries";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
+import Textarea from "@/shared/ui/Input/Textarea";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { Select } from "@/shared/ui/Select";
 import { useAccountingSetup } from "../useAccountingSetup";
 import { useAccountingAiSetup } from "./AccountingAiSetupState";
-import type { AiSetupApplyResponse, AiSetupContext, AiSetupLanguage, AiSetupLevel, AiSetupPreviewResponse, AiSetupQuestion, AiSetupSection } from "@/models/settings/accountingAiSetup";
+import type { AiSetupApplyResponse, AiSetupAssumptionFeedback, AiSetupContext, AiSetupLanguage, AiSetupLevel, AiSetupPreviewResponse, AiSetupQuestion, AiSetupSection } from "@/models/settings/accountingAiSetup";
 import GuidedSetupStepper from "./GuidedSetupStepper";
 import QuestionField from "./QuestionField";
 import BlueprintPreview from "./BlueprintPreview";
@@ -49,6 +50,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
   const [language, setLanguage] = useState<AiSetupLanguage>(scratch?.language || "en");
   const [answers, setAnswers] = useState<Answers>(scratch?.answers || {});
   const [preview, setPreview] = useState<AiSetupPreviewResponse | null>(null);
+  const [assumptionFeedback, setAssumptionFeedback] = useState<Record<string, string>>({});
   const [result, setResult] = useState<AiSetupApplyResponse | null>(null);
   const [error, setError] = useState("");
   const countryOptions = useMemo(() => getCountries(i18n.language).map(country => ({ value: country.label, label: country.label })), [i18n.language]);
@@ -114,6 +116,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
     setLevel(next);
     setAnswers(defaultCountry ? { country: defaultCountry } : {});
     setPreview(null);
+    setAssumptionFeedback({});
     setError("");
   };
   const changeAnswer = (question: AiSetupQuestion, value: Answer) => {
@@ -123,6 +126,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
       return next;
     });
     setPreview(null);
+    setAssumptionFeedback({});
   };
   const labelFor = (question: AiSetupQuestion, value: Answer | undefined) => {
     if (value === undefined) return t("guidedSetup.notAnswered");
@@ -136,7 +140,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
     return selectsOther(value) && typeof other === "string" && other.trim() ? `${base} — ${other}` : base;
   };
 
-  const generate = async () => {
+  const generate = async (feedback: AiSetupAssumptionFeedback[] = []) => {
     if (inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
@@ -144,8 +148,14 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
     setPreview(null);
     setStep(3);
     try {
-      const { data } = await api.previewAccountingAiSetup({ level, language, answers });
+      const { data } = await api.previewAccountingAiSetup({
+        level,
+        language,
+        answers,
+        ...(feedback.length ? { assumption_feedback: feedback } : {}),
+      });
       setPreview(data);
+      setAssumptionFeedback({});
       if (!data.blueprint) setError(data.blockers[0]?.message || t("guidedSetup.generateError"));
     } catch (cause) {
       setError(apiErrorMessage(cause, t("guidedSetup.generateError")));
@@ -154,6 +164,15 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
       setBusy(false);
     }
   };
+
+  const assumptionCorrections = (): AiSetupAssumptionFeedback[] =>
+    (preview?.assumptions || []).flatMap(assumption => {
+      const correction = (assumptionFeedback[assumption.code] || "").trim();
+      return correction.length >= 3
+        ? [{ code: assumption.code, message: assumption.message, correction }]
+        : [];
+    });
+  const hasAssumptionCorrections = assumptionCorrections().length > 0;
 
   const apply = async () => {
     if (inFlight.current || !preview?.blueprint) return;
@@ -261,6 +280,27 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
         <p className="mt-1 text-sm leading-6 text-gray-500">{t("guidedSetup.previewBody")}</p>
       </div>
       <BlueprintPreview preview={preview} banks={context.existing.bank_accounts}/>
+      {preview.assumptions.length > 0 ? <section className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">{t("guidedSetup.assumptionsTitle")}</h3>
+          <p className="mt-1 text-xs leading-5 text-gray-500">{t("guidedSetup.assumptionsHelp")}</p>
+        </div>
+        <div className="space-y-3">
+          {preview.assumptions.map((assumption, index) => <div key={`${assumption.code}-${index}`} className="space-y-1.5">
+            <p className="text-xs leading-5 text-gray-700">{assumption.message}</p>
+            <Textarea
+              value={assumptionFeedback[assumption.code] || ""}
+              onChange={event => setAssumptionFeedback(previous => ({ ...previous, [assumption.code]: event.target.value }))}
+              placeholder={t("guidedSetup.assumptionPlaceholder")}
+              aria-label={`${t("guidedSetup.assumptionPlaceholder")} ${assumption.message}`}
+              rows={2}
+            />
+          </div>)}
+        </div>
+        {hasAssumptionCorrections ? <div className="flex justify-end">
+          <Button type="button" variant="outline" onClick={() => void generate(assumptionCorrections())} disabled={busy}>{t("guidedSetup.regenerateWithCorrections")}</Button>
+        </div> : null}
+      </section> : null}
     </> : null}
   </> : result ? <div className="space-y-4 py-2 text-center">
     <motion.span initial={{ scale: reduced ? 1 : 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: reduced ? 0 : 0.2 }} className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Check size={20} aria-hidden="true" /></motion.span>
@@ -271,7 +311,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
   const primary = step === 0 ? { label: t("guidedSetup.continue"), action: () => setStep(1), disabled: false }
     : step === 1 ? { label: t("guidedSetup.continue"), action: () => setStep(2), disabled: missingRequired.length > 0 }
     : step === 2 ? { label: t("guidedSetup.generate"), action: () => void generate(), disabled: busy }
-    : step === 3 ? preview?.can_apply ? { label: t("guidedSetup.apply"), action: () => void apply(), disabled: busy } : { label: t("guidedSetup.regenerate"), action: () => void generate(), disabled: busy }
+    : step === 3 ? preview?.can_apply && !hasAssumptionCorrections ? { label: t("guidedSetup.apply"), action: () => void apply(), disabled: busy } : { label: hasAssumptionCorrections ? t("guidedSetup.regenerateWithCorrections") : t("guidedSetup.regenerate"), action: () => void generate(assumptionCorrections()), disabled: busy }
     : null;
 
   return <section className="space-y-4">

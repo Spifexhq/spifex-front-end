@@ -1100,6 +1100,38 @@
       "advanced": {
         "title": "Erweitert",
         "description": "Basis, Dimensionen und Eröffnungsdaten."
+      },
+      "company": {
+        "title": "Unternehmen",
+        "description": "Rechtsform, Größe und Tätigkeit."
+      },
+      "tax": {
+        "title": "Steuern und Compliance",
+        "description": "Umsatzsteuer, Lohn und Meldepflichten."
+      },
+      "sales": {
+        "title": "Verkauf und Kunden",
+        "description": "Wie Umsatz entsteht und wann Kunden zahlen."
+      },
+      "purchases": {
+        "title": "Einkauf und Betrieb",
+        "description": "Laufende Kosten, Lieferanten, Bestand und Anlagen."
+      },
+      "team": {
+        "title": "Team und Lohn",
+        "description": "Mitarbeiter, Auftragnehmer und geplante Einstellungen."
+      },
+      "finance": {
+        "title": "Finanzierung",
+        "description": "Kredite, Kreditlinien, Gesellschaftermittel und Währung."
+      },
+      "growth": {
+        "title": "Wachstumspläne",
+        "description": "Erwartete Änderungen in den nächsten 12 bis 24 Monaten."
+      },
+      "accounting": {
+        "title": "Buchhaltung",
+        "description": "Basis, Kontenrahmentiefe und Berichtsstruktur."
       }
     },
     "questions": {
@@ -1222,6 +1254,70 @@
       "audit_required": {
         "label": "Wird der Abschluss geprüft?",
         "help": "Eine Prüfung kann mehr Detail und Nachweise erfordern."
+      },
+      "company_size": {
+        "label": "Wie viele Personen arbeiten im Unternehmen?",
+        "help": "Wählen Sie die nächste Größe; rechnen Sie aktive Inhaber mit."
+      },
+      "payroll_tax": {
+        "label": "Behalten Sie Steuern oder Sozialabgaben vom Lohn ein?",
+        "help": "Lohnsteuer, Sozialversicherung oder ähnliche Pflichten."
+      },
+      "withholding_tax": {
+        "label": "Behalten Sie Steuern bei Lieferanten- oder Auftragnehmerzahlungen ein?",
+        "help": "Häufig bei Dienstleistungen, Miete oder grenzüberschreitenden Zahlungen."
+      },
+      "e_invoicing": {
+        "label": "Müssen Sie elektronische Rechnungen ausstellen?",
+        "help": "Vorgeschriebene E-Rechnung durch Staat oder Kunden."
+      },
+      "refunds": {
+        "label": "Erstatten Sie Käufe oder stellen Gutschriften aus?",
+        "help": "Kundenerstattungen und Warenrücksendungen."
+      },
+      "contractors": {
+        "label": "Arbeiten Sie mit Auftragnehmern oder Freelancern?",
+        "help": "Selbstständige Lieferanten, die für Arbeit bezahlt werden."
+      },
+      "employees_future": {
+        "label": "Planen Sie in den nächsten 12 Monaten Einstellungen?",
+        "help": "Geplante Einstellungen verändern Lohn- und Arbeitgeberkonten."
+      },
+      "benefits": {
+        "label": "Bieten Sie Mitarbeiterleistungen an?",
+        "help": "Krankenversicherung, Zuschüsse oder ähnliche Leistungen."
+      },
+      "commissions": {
+        "label": "Zahlen Sie Verkaufsprovisionen?",
+        "help": "Variable Zahlungen abhängig vom Umsatz."
+      },
+      "credit_line_future": {
+        "label": "Erwarten Sie in den nächsten 12 Monaten einen Kredit oder eine Kreditlinie?",
+        "help": "Geplante Finanzierung braucht trotzdem die richtigen Verbindlichkeitskonten."
+      },
+      "owner_funding": {
+        "label": "Leihen Gesellschafter dem Unternehmen Geld?",
+        "help": "Gesellschafter- oder Geschäftsführerdarlehen und Rückzahlungen."
+      },
+      "grants": {
+        "label": "Erhalten oder erwarten Sie Zuschüsse?",
+        "help": "Öffentliche Förderungen, Anreize oder bezuschusste Finanzierung."
+      },
+      "growth_plans": {
+        "label": "Welche Änderungen erwarten Sie in 12 bis 24 Monaten?",
+        "help": "Wählen Sie alles Zutreffende; die Struktur wird vorbereitet."
+      },
+      "asset_purchases_future": {
+        "label": "Planen Sie größere Anschaffungen von Geräten oder Fahrzeugen?",
+        "help": "Künftige Anlagegüter und Abschreibungen."
+      },
+      "fundraising_future": {
+        "label": "Planen Sie eine Kapitalerhöhung?",
+        "help": "Eigen- oder Wandlungskapital in den nächsten 24 Monaten."
+      },
+      "suppliers": {
+        "label": "Kaufen Sie bei Lieferanten auf Kredit?",
+        "help": "Rechnungen, die nach Erhalt von Waren oder Leistungen bezahlt werden."
       }
     },
     "options": {
@@ -1280,7 +1376,17 @@
       "sep": "30. September",
       "local": "Lokaler Standard",
       "ifrs": "IFRS",
-      "us_gaap": "US GAAP"
+      "us_gaap": "US GAAP",
+      "solo": "Nur ich",
+      "micro": "2 bis 9 Personen",
+      "small": "10 bis 49 Personen",
+      "medium": "50 oder mehr Personen",
+      "hire": "Mitarbeiter einstellen",
+      "new_markets": "Neue Märkte erschließen",
+      "new_products": "Neue Produkte einführen",
+      "equipment": "Geräte oder Fahrzeuge kaufen",
+      "fundraising": "Investition oder Kredit aufnehmen",
+      "new_locations": "Neuen Standort eröffnen"
     },
     "summary": {
       "books": "Bücher",
@@ -1350,7 +1456,21 @@
     "scratchNotice": "Der Entwurf bleibt nur in diesem Browser. Er wird nie in der Datenbank gespeichert.",
     "continueEditing": "Weiter bearbeiten",
     "keepScratch": "Entwurf behalten",
-    "discardAnswers": "Antworten verwerfen"
+    "discardAnswers": "Antworten verwerfen",
+    "assumptionsHelp": "Dies sind wahrscheinliche Anforderungen für Ihr Profil, auch wenn sie noch nicht zutreffen. Wenn etwas anders ist, erklären Sie es und generieren Sie neu.",
+    "assumptionPlaceholder": "Erklären Sie, was anders ist, oder bestätigen Sie, dass es nicht eintritt…",
+    "regenerateWithCorrections": "Mit Korrekturen neu generieren",
+    "profileAssumptions": {
+      "payroll_readiness": "Halten Sie Lohn- und Arbeitgeberkonten für wahrscheinliche Einstellungen in den nächsten 12 Monaten bereit.",
+      "future_credit": "Halten Sie Konten für Darlehen, Leasing und Kreditlinien bereit; viele Unternehmen finanzieren nach der Einrichtung.",
+      "inventory_readiness": "Bereiten Sie Bestands- und Wareneinsatzkonten für Bestände vor, die mit dem Wachstum entstehen können.",
+      "asset_readiness": "Bereiten Sie Anlage- und Abschreibungskonten für später wahrscheinlich gekaufte Geräte vor.",
+      "tax_filing": "Bereiten Sie Umsatzsteuerkontrollkonten für Meldungen vor; prüfen Sie lokale Sätze und Regeln mit einem Steuerberater.",
+      "tax_registration": "Prüfen Sie, ob mit steigendem Umsatz eine Umsatzsteuerregistrierung nötig wird.",
+      "deferred_revenue_readiness": "Bereiten Sie Konten für passive Rechnungsabgrenzung und Kundenanzahlungen für Abonnements oder Onlineverkäufe vor.",
+      "reporting_dimensions": "Bereiten Sie Kostenstellen- oder Projektberichte für ein wachsendes Team vor.",
+      "country_confirmation": "Bestätigen Sie Steuer- und Berichtspflichten mit einem lokalen Steuerberater."
+    }
   },
   "overview": {
     "title": "Buchhaltungsübersicht",

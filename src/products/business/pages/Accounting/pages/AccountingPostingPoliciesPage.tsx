@@ -267,7 +267,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     <>
       <section className="space-y-4">
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteCategoryPostingPolicy(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        <DataTable selectable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteCategoryPostingPolicy(item.id); } : undefined} onDeleted={async ids => { const removed = new Set(ids); setItems(previous => previous.filter(row => !removed.has(row.id))); await load(); }} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("postingPoliciesPage.columns.category", "Category"), render: item => displayValue(item.cashflow_category_label, item.cashflow_category_id) },
               { key: "book", label: t("postingPoliciesPage.columns.book", "Book"), render: item => displayValue(item.book_label, item.book_id) },
               { key: "debit", label: t("redesign.paymentAccount", "Payments · debit"), render: item => displayValue(item.settlement_debit_account_label, item.settlement_debit_account_id) },

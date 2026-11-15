@@ -154,7 +154,7 @@ const AccountingBooksPage: React.FC = () => {
     <>
       <section className="space-y-4">
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteAccountingBook(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        <DataTable selectable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteAccountingBook(item.id); } : undefined} onDeleted={async ids => { const removed = new Set(ids); setItems(previous => previous.filter(row => !removed.has(row.id))); await load(); }} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("booksPage.columns.name", "Name"), render: item => item.name || "—" },
               { key: "code", label: t("booksPage.columns.code", "Code"), render: item => item.code || "—" },
               { key: "basis", label: t("booksPage.columns.basis", "Basis"), render: item => t(`enums.basis.${item.basis}`, item.basis) },

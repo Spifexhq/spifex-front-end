@@ -1100,6 +1100,38 @@
       "advanced": {
         "title": "Avançado",
         "description": "Base, dimensões e dados iniciais."
+      },
+      "company": {
+        "title": "Empresa",
+        "description": "Forma jurídica, dimensão e atividade."
+      },
+      "tax": {
+        "title": "Impostos e conformidade",
+        "description": "IVA, salários e obrigações de declaração."
+      },
+      "sales": {
+        "title": "Vendas e clientes",
+        "description": "Como entra a receita e quando os clientes pagam."
+      },
+      "purchases": {
+        "title": "Compras e operações",
+        "description": "Custos correntes, fornecedores, stock e ativos."
+      },
+      "team": {
+        "title": "Equipa e salários",
+        "description": "Colaboradores, prestadores e contratações previstas."
+      },
+      "finance": {
+        "title": "Financiamento",
+        "description": "Empréstimos, linhas de crédito, fundos dos sócios e moeda."
+      },
+      "growth": {
+        "title": "Planos de crescimento",
+        "description": "Alterações previstas para os próximos 12 a 24 meses."
+      },
+      "accounting": {
+        "title": "Contabilidade",
+        "description": "Regime, profundidade do plano e estrutura de relatórios."
       }
     },
     "questions": {
@@ -1222,6 +1254,70 @@
       "audit_required": {
         "label": "As contas serão auditadas?",
         "help": "A auditoria pode exigir mais detalhe e evidência."
+      },
+      "company_size": {
+        "label": "Quantas pessoas trabalham na empresa?",
+        "help": "Escolha a opção mais próxima; inclua sócios que trabalham na empresa."
+      },
+      "payroll_tax": {
+        "label": "Retém impostos ou contribuições sobre salários?",
+        "help": "IRS/IRC, segurança social ou obrigações salariais semelhantes."
+      },
+      "withholding_tax": {
+        "label": "Retém impostos em pagamentos a fornecedores ou prestadores?",
+        "help": "Comum em serviços, rendas ou pagamentos internacionais."
+      },
+      "e_invoicing": {
+        "label": "É obrigado a emitir faturas eletrónicas?",
+        "help": "Faturação eletrónica exigida pelo Estado ou pelo cliente."
+      },
+      "refunds": {
+        "label": "Emite reembolsos, notas de crédito ou devoluções?",
+        "help": "Reembolsos a clientes e devoluções de vendas."
+      },
+      "contractors": {
+        "label": "Trabalha com prestadores ou freelancers?",
+        "help": "Fornecedores independentes pagos por trabalho."
+      },
+      "employees_future": {
+        "label": "Planeia contratar colaboradores nos próximos 12 meses?",
+        "help": "As contratações previstas alteram salários e contas patronais."
+      },
+      "benefits": {
+        "label": "Oferece benefícios aos colaboradores?",
+        "help": "Seguro de saúde, subsídios ou benefícios semelhantes."
+      },
+      "commissions": {
+        "label": "Paga comissões de vendas?",
+        "help": "Pagamentos variáveis ligados às vendas."
+      },
+      "credit_line_future": {
+        "label": "Espera obter um empréstimo ou linha de crédito nos próximos 12 meses?",
+        "help": "O financiamento previsto também exige as contas de passivo corretas."
+      },
+      "owner_funding": {
+        "label": "Os sócios emprestam dinheiro à empresa?",
+        "help": "Empréstimos de gerentes ou sócios e respetivos reembolsos."
+      },
+      "grants": {
+        "label": "Recebe ou espera receber subsídios ou apoios?",
+        "help": "Apoios públicos, incentivos ou financiamento subsidiado."
+      },
+      "growth_plans": {
+        "label": "Que alterações espera nos próximos 12 a 24 meses?",
+        "help": "Selecione todas as aplicáveis; a estrutura será preparada antecipadamente."
+      },
+      "asset_purchases_future": {
+        "label": "Planeia comprar equipamentos ou veículos importantes?",
+        "help": "Ativos fixos futuros e respetivas depreciações."
+      },
+      "fundraising_future": {
+        "label": "Planeia angariar investimento?",
+        "help": "Capital ou financiamento convertível nos próximos 24 meses."
+      },
+      "suppliers": {
+        "label": "Compra a fornecedores com pagamento a prazo?",
+        "help": "Faturas pagas depois de receber bens ou serviços."
       }
     },
     "options": {
@@ -1280,7 +1376,17 @@
       "sep": "30 de setembro",
       "local": "Norma local",
       "ifrs": "IFRS",
-      "us_gaap": "US GAAP"
+      "us_gaap": "US GAAP",
+      "solo": "Apenas eu",
+      "micro": "2 a 9 pessoas",
+      "small": "10 a 49 pessoas",
+      "medium": "50 ou mais pessoas",
+      "hire": "Contratar colaboradores",
+      "new_markets": "Entrar em novos mercados",
+      "new_products": "Lançar novos produtos",
+      "equipment": "Comprar equipamentos ou veículos",
+      "fundraising": "Angariar investimento ou empréstimo",
+      "new_locations": "Abrir uma nova localização"
     },
     "summary": {
       "books": "Livros",
@@ -1350,7 +1456,21 @@
     "scratchNotice": "O rascunho fica apenas neste navegador. Nunca é guardado na base de dados.",
     "continueEditing": "Continuar a editar",
     "keepScratch": "Manter rascunho",
-    "discardAnswers": "Eliminar respostas"
+    "discardAnswers": "Eliminar respostas",
+    "assumptionsHelp": "Estas são necessidades prováveis para o seu perfil, mesmo que ainda não se verifiquem. Se algo for diferente, explique e gere novamente.",
+    "assumptionPlaceholder": "Explique o que é diferente ou confirme que não vai acontecer…",
+    "regenerateWithCorrections": "Gerar novamente com correções",
+    "profileAssumptions": {
+      "payroll_readiness": "Prepare contas de salários e encargos patronais para contratações prováveis nos próximos 12 meses.",
+      "future_credit": "Mantenha contas de empréstimos, locações e linhas de crédito prontas; muitas empresas obtêm financiamento depois da configuração.",
+      "inventory_readiness": "Prepare contas de stock e custo das vendas para inventário que possa surgir à medida que a empresa cresce.",
+      "asset_readiness": "Prepare contas de ativos fixos e depreciações para equipamentos que possam ser comprados mais tarde.",
+      "tax_filing": "Prepare contas de controlo de impostos indiretos para declarações; confirme taxas e regras locais com um contabilista.",
+      "tax_registration": "Confirme se o registo para impostos indiretos se torna necessário à medida que o volume de negócios cresce.",
+      "deferred_revenue_readiness": "Prepare contas de réditos diferidos e adiantamentos de clientes para subscrições ou vendas online.",
+      "reporting_dimensions": "Prepare dimensões de departamentos ou projetos para uma equipa em crescimento.",
+      "country_confirmation": "Confirme os requisitos fiscais e de relatórios com um contabilista local."
+    }
   },
   "overview": {
     "title": "Visão geral da contabilidade",

@@ -171,6 +171,10 @@ export interface LedgerGuideAccount {
   normal_balance: LedgerNormalBalance;
   report_group: string;
   report_subgroup: string;
+  external_ref?: string;
+  currency_code?: string;
+  is_system?: boolean;
+  is_active?: boolean;
 }
 
 export interface LedgerGuideResponse {

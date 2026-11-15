@@ -52,6 +52,12 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
   }
   const bankLabel = (id: string) => banks.find(bank => bank.id === id)?.label || id;
   const accountLabel = (code?: string) => code || "—";
+  const categoryLabel = (code: string) =>
+    preview.category_labels?.[code]
+    || blueprint.categories.find(category => category.code === code)?.name
+    || code;
+  const bookLabel = (code: string) =>
+    blueprint.books.find(book => book.code === code)?.name || code;
 
   return <div className="space-y-4">
     <Summary preview={preview} />
@@ -92,9 +98,12 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
             return <details key={section} className="rounded-lg border border-gray-200 bg-white">
               <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-gray-700">{t(`guidedSetup.statementSections.${section}`)} ({accounts.length})</summary>
               <ul className="divide-y divide-gray-100 border-t border-gray-100">
-                {accounts.map(account => <li key={account.code} className="flex items-center gap-3 px-3 py-1.5 text-xs">
-                  <span className="w-14 shrink-0 font-mono text-[11px] text-gray-500">{account.code}</span>
-                  <span className={`min-w-0 flex-1 truncate ${account.account_type === "header" ? "font-medium text-gray-900" : "text-gray-700"}`}>{account.name}</span>
+                {accounts.map(account => <li key={account.code} className="flex items-start gap-3 px-3 py-1.5 text-xs">
+                  <span className="w-14 shrink-0 pt-0.5 font-mono text-[11px] text-gray-500">{account.code}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block truncate ${account.account_type === "header" ? "font-medium text-gray-900" : "text-gray-700"}`}>{account.name}</span>
+                    {(account.description || account.report_group || account.report_subgroup) ? <span className="mt-0.5 block truncate text-[10px] text-gray-500">{[account.description, [account.report_group, account.report_subgroup].filter(Boolean).join(" / ")].filter(Boolean).join(" · ")}</span> : null}
+                  </span>
                   {account.is_bank_control ? <Badge tone="neutral" variant="outline">{t("guidedSetup.bankControl")}</Badge> : null}
                 </li>)}
               </ul>
@@ -103,8 +112,8 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
 
           {tab === "rules" ? blueprint.category_rules.map(rule => <div key={`${rule.category_code}-${rule.book_code}`} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-medium text-gray-900">{rule.category_code}</span>
-              <span className="text-gray-500">{rule.book_code}</span>
+              <span className="font-medium text-gray-900">{categoryLabel(rule.category_code)}</span>
+              <span className="text-gray-500">{bookLabel(rule.book_code)}</span>
             </div>
             <p className="mt-1 text-gray-600">{t("guidedSetup.debitAccount")}: {accountLabel(rule.settlement_debit_account_code)} · {t("guidedSetup.creditAccount")}: {accountLabel(rule.settlement_credit_account_code)}</p>
           </div>) : null}
@@ -119,8 +128,6 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
 
     <div className="flex flex-wrap gap-2">
       <MessageList title={t("guidedSetup.warningsTitle")} messages={preview.warnings} />
-      <MessageList title={t("guidedSetup.assumptionsTitle")} messages={preview.assumptions} />
     </div>
-    <p className="text-[11px] text-gray-400">{preview.provider}{preview.model ? ` · ${preview.model}` : ""}{preview.prompt_version ? ` · ${preview.prompt_version}` : ""}</p>
   </div>;
 }

@@ -109,6 +109,13 @@ export interface AiSetupPreviewRequest {
   level: AiSetupLevel;
   language: AiSetupLanguage;
   answers: Record<string, string | string[] | boolean>;
+  assumption_feedback?: AiSetupAssumptionFeedback[];
+}
+
+export interface AiSetupAssumptionFeedback {
+  code: string;
+  message?: string;
+  correction: string;
 }
 
 export interface AiSetupPreviewResponse {
@@ -121,6 +128,7 @@ export interface AiSetupPreviewResponse {
   blockers: AiSetupMessage[];
   warnings: AiSetupMessage[];
   assumptions: AiSetupMessage[];
+  category_labels?: Record<string, string>;
   summary: AiSetupSummary;
   revision: string;
   blueprint: AiSetupBlueprint | null;
