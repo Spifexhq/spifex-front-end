@@ -12,9 +12,10 @@ import SelectionBar from "@/shared/ui/SelectionBar";
 import type { Entry } from "@/models/entries/entries";
 import { type FinancialEntry, entryId, signedAmount, isSettlement } from "./entryRows";
 
-export default function SelectionToolbar({ entries, settled, onClear, onRefresh, onChanged, onSettle, onBusyChange }: {
+export default function SelectionToolbar({ entries, settled, suppressed = false, onClear, onRefresh, onChanged, onSettle, onBusyChange }: {
     entries: FinancialEntry[];
     settled: boolean;
+    suppressed?: boolean;
     onClear(): void;
     onRefresh(): Promise<void>;
     onChanged?(): void;
@@ -89,7 +90,7 @@ export default function SelectionToolbar({ entries, settled, onClear, onRefresh,
         onBusyChange(false);
     } };
     return <>
- <SelectionBar open={entries.length > 0} label={t("selectionActions")} className="max-w-3xl">
+ <SelectionBar open={entries.length > 0 && !suppressed} label={t("selectionActions")} className="max-w-3xl">
 
   {isMobile && <button type="button" disabled={busy} aria-expanded={!collapsed} aria-controls={bodyId} aria-label={t(collapsed ? "expandActions" : "collapseActions")} onClick={() => setCollapsed(value => !value)} className="group -mt-1 mb-1.5 flex min-h-9 w-full flex-col items-center justify-center gap-1.5 rounded-lg py-1 text-gray-500 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
     <span aria-hidden className="h-1 w-9 rounded-full bg-gray-200 transition-colors group-hover:bg-gray-300"/>

@@ -351,5 +351,15 @@
     "managePlan": "Review plan",
     "capacityReached": "Your plan allows up to {{limit}} active accounts. Remove an account or review your plan to add another.",
     "resourceCapacityReached": "Your plan allows up to {{limit}} active records in this section. Remove one or review your plan to add another."
-  }
+  },
+  "recurringSeries": "Recurring series",
+  "loadingSeries": "Loading recurring series?",
+  "onlyThisTransaction": "Only this transaction",
+  "selectedTransactions": "Selected transactions ({{count}})",
+  "selectAll": "Select all",
+  "currentTransaction": "Current transaction",
+  "lockedSeries": "Locked by payments or accounting",
+  "bulkRecurrenceHint": "Bulk edits apply description, amount, due date, notes and category to the selected transactions. Schedule and count cannot change.",
+  "chooseAtLeastOne": "Select at least one transaction to edit.",
+  "seriesLoadError": "Could not load the recurring series."
 }

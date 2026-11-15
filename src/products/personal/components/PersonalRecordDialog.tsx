@@ -4,13 +4,15 @@ import { useTranslation } from "react-i18next";
 import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
+import Checkbox from "@/shared/ui/Checkbox";
 import ToggleSwitch from "@/shared/ui/ToggleSwitch";
 import { ErrorState } from "@/shared/ui/State";
 import { Select } from "@/shared/ui/Select";
 import { personalApi } from "@/products/personal/services/api";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
-import { formatCurrency } from "@/lib";
+import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { PersonalAccount, PersonalCategory, PersonalCollection, PersonalRecord } from "@/products/personal/types";
+import type { RecurrenceEntry } from "@/models/entries/entries";
 import { allPersonal, today } from "../services/personalData";
 
 type DialogKind = Exclude<PersonalCollection, "accounts" | "transfers"> | "settle" | "contribute" | "transfer";
@@ -33,6 +35,10 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   const [retry, setRetry] = useState(0);
   const [accounts, setAccounts] = useState<PersonalAccount[]>([]);
   const [categories, setCategories] = useState<PersonalCategory[]>([]);
+  const [series, setSeries] = useState<{ loading: boolean; error: string; rows: RecurrenceEntry[] }>({ loading: false, error: "", rows: [] });
+  const [scope, setScope] = useState<"single" | "selected">("single");
+  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
+  const [seriesRetry, setSeriesRetry] = useState(0);
   const key = useRef(crypto.randomUUID());
   const lock = useRef(false);
   useEffect(() => {
@@ -53,6 +59,31 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [kind, record, editLocked, retry, t]);
+
+  const recurrenceCount = kind === "transactions" && record && "installment_count" in record ? record.installment_count : 0;
+  useEffect(() => {
+    if (kind !== "transactions" || !record || recurrenceCount <= 1) {
+      setSeries({ loading: false, error: "", rows: [] });
+      setScope("single");
+      setSelectedSeries([]);
+      return;
+    }
+    let active = true;
+    setSeries({ loading: true, error: "", rows: [] });
+    setScope("single");
+    setSelectedSeries([]);
+    void personalApi.recurrence(record.id).then(({ data }) => {
+      if (active) setSeries({ loading: false, error: "", rows: data.results ?? [] });
+    }).catch(cause => {
+      if (active) setSeries({ loading: false, error: apiErrorMessage(cause, t("seriesLoadError")), rows: [] });
+    });
+    return () => { active = false; };
+  }, [kind, record, recurrenceCount, seriesRetry, t]);
+
+  const eligibleSeries = series.rows.filter(row => row.id !== record?.id && !row.financial_locked);
+  const allSeriesSelected = eligibleSeries.length > 0 && eligibleSeries.every(row => selectedSeries.includes(row.id));
+  const toggleSeries = (id: string) => setSelectedSeries(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id]);
+  const toggleAllSeries = () => setSelectedSeries(allSeriesSelected ? [] : eligibleSeries.map(row => row.id));
 
   const update = (name: string, value: string) => setForm(previous => ({ ...previous, [name]: value }));
   const text = (name: string, required = true) => <Input key={name} kind="text" label={t(name)} value={form[name] || ""} required={required} maxLength={name === "notes" ? 500 : 120} disabled={busy} onChange={event => update(name, event.target.value)} />;
@@ -88,6 +119,29 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
         if (kind === "categories") payload = { name: form.name, kind: form.kind || null, is_active: form.is_active === "true" };
         if (kind === "budgets") payload = { name: form.name, month: form.month.slice(0, 7) + "-01", category_id: form.category_id || null, limit: form.limit };
         if (kind === "goals") payload = { name: form.name, target: form.target, target_date: form.target_date || null };
+        if (kind === "transactions" && record && scope === "selected" && series.rows.length > 1) {
+          if (!selectedSeries.length) {
+            setError(t("chooseAtLeastOne"));
+            return;
+          }
+          const versions = Object.fromEntries(series.rows.map(row => [row.id, row.version]));
+          const data: Record<string, unknown> = { description: form.description, notes: form.notes };
+          if (!editLocked) {
+            data.amount = form.amount;
+            data.due_date = form.due_date;
+            if (form.category_id) data.cashflow_category = form.category_id;
+          }
+          await personalApi.editRecurrence(record.id, {
+            ids: [record.id, ...selectedSeries],
+            versions,
+            data,
+            select_all: false,
+            exclude_ids: [],
+          });
+          onSaved();
+          onClose();
+          return;
+        }
         if (record) await personalApi.edit(kind, record.id, payload);
         else await personalApi.create(kind, payload);
       }
@@ -112,6 +166,31 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
             <Select<{id:string;name:string}> label={t("weekend_action")} items={[0,1,-1].map(value => ({id:String(value),name:t(`weekendActions.${value}`)}))} selected={[{id:form.weekend_action,name:t(`weekendActions.${form.weekend_action}`)}]} onChange={items => update("weekend_action", items[0]?.id || "0")} getItemKey={item => item.id} getItemLabel={item => item.name} buttonLabel={t("choose")} singleSelect hideFilter disabled={busy}/>
           </div>}
         </div></details>}
+        {record && kind === "transactions" && (series.loading || series.error || series.rows.length > 1) && <details open className="text-xs text-slate-500 sm:col-span-2">
+          <summary className="cursor-pointer py-2">{t("recurringSeries")}</summary>
+          <div className="mt-3 space-y-3">
+            {series.loading ? <p>{t("loadingSeries")}</p> : series.error ? <div role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p>{series.error}</p><Button type="button" size="xs" variant="outline" className="mt-2" onClick={() => setSeriesRetry(value => value + 1)}>{t("retry")}</Button></div> : <>
+              <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+                <label className="flex min-h-9 items-center gap-2"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="personal-recurrence-scope" checked={scope === "single"} onChange={() => { setScope("single"); setSelectedSeries([]); }} disabled={busy}/>{t("onlyThisTransaction")}</label>
+                <label className="flex min-h-9 items-center gap-2"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="personal-recurrence-scope" checked={scope === "selected"} onChange={() => setScope("selected")} disabled={busy}/>{t("selectedTransactions", { count: selectedSeries.length + 1 })}</label>
+              </div>
+              {scope === "selected" && <div className="max-h-60 overflow-y-auto rounded-lg border border-slate-200">
+                <label className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+                  <Checkbox checked={allSeriesSelected} indeterminate={selectedSeries.length > 0 && !allSeriesSelected} onChange={toggleAllSeries} disabled={busy || !eligibleSeries.length} aria-label={t("selectAll")} />
+                  {t("selectAll")}
+                </label>
+                <div className="divide-y divide-slate-100">
+                  {series.rows.map(row => <label key={row.id} className="flex items-center gap-3 px-3 py-2 text-xs">
+                    <Checkbox checked={row.id === record.id || selectedSeries.includes(row.id)} disabled={busy || row.id === record.id || row.financial_locked} onChange={() => toggleSeries(row.id)} aria-label={`${row.installment_index}/${row.installment_count}`} />
+                    <span className="min-w-0 flex-1"><span className="block font-medium text-slate-700">{row.installment_index}/{row.installment_count} · {formatDateFromISO(row.due_date)}</span>{row.id === record.id ? <span className="text-[10px] text-slate-400">{t("currentTransaction")}</span> : row.financial_locked ? <span className="text-[10px] text-amber-600">{t("lockedSeries")}</span> : null}</span>
+                    <span className="tabular-nums text-slate-700">{formatCurrency(row.amount, currency)}</span>
+                  </label>)}
+                </div>
+              </div>}
+              <p className="text-[11px] leading-5 text-slate-500">{t("bulkRecurrenceHint")}</p>
+            </>}
+          </div>
+        </details>}
         {editLocked && <p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("lockedTransaction")}</p>}
       </>}
       {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}

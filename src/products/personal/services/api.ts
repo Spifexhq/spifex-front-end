@@ -8,6 +8,8 @@ import type { SettlementSource, BulkSettleItem } from "@/models/entries/settleme
 import type { CashflowKpis, SettledKpis } from "@/models/components/cardKpis";
 export const personalApi = {
   transaction: (id: string) => request<PersonalTransaction>(`personal/transactions/${id}/`, "GET"),
+  recurrence: (id: string) => request<{ results: import("@/models/entries/entries").RecurrenceEntry[]; current: import("@/models/entries/entries").RecurrenceEntry; selection_version: string | null }>(`personal/transactions/${id}/recurrence/`, "GET"),
+  editRecurrence: (id: string, payload: Record<string, unknown>) => request<{ updated_count: number }>(`personal/transactions/${id}/recurrence/`, "PATCH", payload),
   account: (id: string) => request<PersonalAccount>(`personal/accounts/${id}/`, "GET"),
   summary: (params: Record<string, string> = {}) => request<CashflowBalance>("personal/transactions/summary/", "GET", params),
   kpis: (params: Record<string, string | undefined> = {}) => request<CashflowKpis | SettledKpis>("personal/transactions/kpis/", "GET", params),

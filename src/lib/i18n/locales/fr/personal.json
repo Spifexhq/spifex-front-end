@@ -351,5 +351,15 @@
     "managePlan": "Voir le forfait",
     "capacityReached": "Votre forfait autorise jusqu’à {{limit}} comptes actifs. Supprimez un compte ou consultez votre forfait pour en ajouter un autre.",
     "resourceCapacityReached": "Votre forfait autorise jusqu’à {{limit}} éléments actifs dans cette section. Supprimez-en un ou consultez votre forfait pour en ajouter un autre."
-  }
+  },
+  "recurringSeries": "S?rie r?currente",
+  "loadingSeries": "Chargement de la s?rie r?currente?",
+  "onlyThisTransaction": "Uniquement cette transaction",
+  "selectedTransactions": "Transactions s?lectionn?es ({{count}})",
+  "selectAll": "Tout s?lectionner",
+  "currentTransaction": "Transaction actuelle",
+  "lockedSeries": "Verrouill?e par des paiements ou la comptabilit?",
+  "bulkRecurrenceHint": "La modification group?e applique la description, le montant, la date d'?ch?ance, les notes et la cat?gorie aux transactions s?lectionn?es. La p?riodicit? et le nombre ne peuvent pas changer.",
+  "chooseAtLeastOne": "S?lectionnez au moins une transaction ? modifier.",
+  "seriesLoadError": "Impossible de charger la s?rie r?currente."
 }

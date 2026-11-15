@@ -532,6 +532,12 @@ collapsed. Variants `default`/`danger`; confirm uses `outlineBlack` by default.
 Do not add a fourth confirmation presentation. New record actions use
 `ConfirmToast`.
 
+**Modal suppression:** a `SelectionBar` or selection toolbar must be hidden
+while a modal/dialog owns the action it triggers (for example, settling entries).
+Keep the selection state, pass a `suppressed`/`selectionSuppressed` flag, and let
+the bar return when the dialog closes. Do not solve this by changing global
+z-index values: the feedback stack intentionally sits above ordinary content.
+
 **Inline alerts** (no component): `rounded-md border px-3 py-2 text-xs` with
 `emerald/amber/red/slate` tones. Use for persistent page-level status
 (quota, onboarding), not for transient results.

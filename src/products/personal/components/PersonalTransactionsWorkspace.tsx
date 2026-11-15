@@ -81,9 +81,9 @@ function normalizeRows(items: TableItem[]): FinancialActivityRecord<TableItem>[]
   });
 }
 
-function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete, onReverse, busy, t }: {
+function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete, onReverse, busy, suppressed = false, t }: {
   basis: Basis; items: FinancialActivityRow<TableItem>[]; currency: string; onClear(): void;
-  onSettle?(ids: string[]): void; onDelete?(rows: PersonalTransaction[]): Promise<void>; onReverse?(rows: PersonalSettledActivity[]): Promise<void>; busy: boolean;
+  onSettle?(ids: string[]): void; onDelete?(rows: PersonalTransaction[]): Promise<void>; onReverse?(rows: PersonalSettledActivity[]): Promise<void>; busy: boolean; suppressed?: boolean;
   t(key: string, options?: Record<string, unknown>): string;
 }) {
   const [confirm, setConfirm] = useState<"delete" | "reverse" | null>(null);
@@ -163,7 +163,7 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
     ? { duration: 0 }
     : { type: "spring" as const, stiffness: 420, damping: 36, mass: 0.7 };
 
-  return <SelectionBar open={records.length > 0} label={t("financeEntries:selectionActions")} className="max-w-3xl">
+  return <SelectionBar open={records.length > 0 && !suppressed} label={t("financeEntries:selectionActions")} className="max-w-3xl">
 
     {isMobile && <button ref={handleRef} type="button" disabled={pending || busy} aria-expanded={!collapsed} aria-controls={bodyId} aria-label={t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")} onClick={() => setCollapsed(value => !value)} className="group -mt-1 mb-1.5 flex min-h-9 w-full flex-col items-center justify-center gap-1.5 rounded-lg py-1 text-gray-500 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
       <span aria-hidden className="h-1 w-9 rounded-full bg-gray-200 transition-colors group-hover:bg-gray-300"/>
@@ -188,9 +188,10 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
   </SelectionBar>;
 }
 
-function ActivityTable({ basis, items, loading, mutating, error, pager, currency, readOnly, onInspect, onEdit, onSettle, onDeleted, onSelectionBusy }: {
+function ActivityTable({ basis, items, loading, mutating, error, pager, currency, readOnly, selectionSuppressed = false, onInspect, onEdit, onSettle, onDeleted, onSelectionBusy }: {
   basis: Basis; items: TableItem[]; loading: boolean; mutating: boolean; error: string | null;
   pager: ReturnType<typeof useCursorPager<TableItem>>; currency: string; readOnly: boolean;
+  selectionSuppressed?: boolean;
   onInspect(item: TableItem): void; onEdit(item: PersonalTransaction): void; onSettle(item: PersonalTransaction[]): void;
   onDeleted(): void; onSelectionBusy(busy: boolean): void;
 }) {
@@ -227,7 +228,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     } finally { onSelectionBusy(false); }
   }, [onDeleted, onSelectionBusy, pager, t]);
   const onSelection = useCallback(({ items, clear }: { ids: string[]; items: FinancialActivityRow<TableItem>[]; clear(): void }) => <SelectionActions
-    basis={basis} items={items} currency={currency} onClear={clear} busy={loading || mutating} t={t}
+    basis={basis} items={items} currency={currency} onClear={clear} busy={loading || mutating} suppressed={selectionSuppressed} t={t}
     onSettle={canSettle ? ids => {
       const byId = new Map(items.flatMap(row => row.record ? [[row.id, row.record.source] as const] : []));
       onSettle(ids.flatMap(id => {
@@ -237,7 +238,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     } : undefined}
     onDelete={canDeletePending ? deleteSelected : undefined}
     onReverse={canReverse ? reverseSelected : undefined}
-  />, [basis, canDeletePending, canReverse, canSettle, currency, deleteSelected, loading, mutating, onSettle, reverseSelected, t]);
+  />, [basis, canDeletePending, canReverse, canSettle, currency, deleteSelected, loading, mutating, onSettle, reverseSelected, selectionSuppressed, t]);
   const rowAdapters = normalizeRows(items);
   const secondColumnLabel = t(settled ? "personal:bank_name" : "personal:category_name");
   const renderSecondary = (record: FinancialActivityRecord<TableItem>) => {
@@ -362,7 +363,7 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
     <h1 className="sr-only">{t(basis === "settled" ? "settledTransactions" : "cashFlow")}</h1>
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
       <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/personal/settings/accounts" excludeObservationFilter>
-        <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
+        <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} selectionSuppressed={settlementOpen} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
       </FinancialActivityPanel>
     </div>
     <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setEntryPreview(null); openSettlement([item as PersonalTransaction]); }} onContribute={() => {}}/>

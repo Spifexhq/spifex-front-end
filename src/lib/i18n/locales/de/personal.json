@@ -351,5 +351,15 @@
     "managePlan": "Tarif ansehen",
     "capacityReached": "Ihr Tarif erlaubt bis zu {{limit}} aktive Konten. Entfernen Sie ein Konto oder prüfen Sie Ihren Tarif, um ein weiteres hinzuzufügen.",
     "resourceCapacityReached": "Ihr Tarif erlaubt bis zu {{limit}} aktive Einträge in diesem Bereich. Entfernen Sie einen Eintrag oder prüfen Sie Ihren Tarif, um einen weiteren hinzuzufügen."
-  }
+  },
+  "recurringSeries": "Wiederkehrende Serie",
+  "loadingSeries": "Wiederkehrende Serie wird geladen?",
+  "onlyThisTransaction": "Nur diese Transaktion",
+  "selectedTransactions": "Ausgew?hlte Transaktionen ({{count}})",
+  "selectAll": "Alle ausw?hlen",
+  "currentTransaction": "Aktuelle Transaktion",
+  "lockedSeries": "Durch Zahlungen oder Buchhaltung gesperrt",
+  "bulkRecurrenceHint": "Sammelbearbeitung ?bertr?gt Beschreibung, Betrag, F?lligkeitsdatum, Notizen und Kategorie auf die ausgew?hlten Transaktionen. Rhythmus und Anzahl k?nnen nicht ge?ndert werden.",
+  "chooseAtLeastOne": "W?hlen Sie mindestens eine Transaktion zum Bearbeiten aus.",
+  "seriesLoadError": "Die wiederkehrende Serie konnte nicht geladen werden."
 }

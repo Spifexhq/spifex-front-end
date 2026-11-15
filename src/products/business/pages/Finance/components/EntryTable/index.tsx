@@ -14,9 +14,9 @@ import { accountingColors } from "./accountingColors";
 import AccountingIndicator, { AccountingLegend } from "./AccountingIndicator";
 
 export type EntryTableHandle = { clearSelection(): void; refresh(): void };
-export type EntryTableProps = { settled: boolean; filters?: EntryFilters; onEdit?(entry: Entry): void; onSettle?(entries: Entry[]): void; onChanged?(): void };
+export type EntryTableProps = { settled: boolean; filters?: EntryFilters; selectionSuppressed?: boolean; onEdit?(entry: Entry): void; onSettle?(entries: Entry[]): void; onChanged?(): void };
 
-const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, filters, onEdit, onSettle, onChanged }, ref) => {
+const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, filters, selectionSuppressed = false, onEdit, onSettle, onChanged }, ref) => {
   const { t, i18n } = useTranslation("financeEntries");
   const auth = useAuthContext();
   const allowed = (permission: string) => auth.isOwner || auth.isSuperUser || auth.permissions.includes(permission);
@@ -72,6 +72,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
       onSelection={selection => <SelectionToolbar
         entries={selection.items.flatMap(row => row.record ? [row.record.source] : [])}
         settled={settled}
+        suppressed={selectionSuppressed}
         onClear={selection.clear}
         onRefresh={pager.refresh}
       onChanged={onChanged}

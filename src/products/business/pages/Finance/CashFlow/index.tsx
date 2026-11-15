@@ -160,6 +160,7 @@ const CashFlow = () => {
                 ref={tableRef}
                 key={cashflowKey}
                 filters={filters}
+                selectionSuppressed={isSettlementModalOpen}
                 onEdit={handleEditEntry}
                 onSettle={entries=>{setSelectedEntries(entries);setIsSettlementModalOpen(true);}}
                 onChanged={bumpKpis}

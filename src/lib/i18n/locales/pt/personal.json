@@ -351,5 +351,15 @@
     "managePlan": "Ver plano",
     "capacityReached": "O seu plano permite até {{limit}} contas ativas. Remova uma conta ou reveja o plano para adicionar outra.",
     "resourceCapacityReached": "O seu plano permite até {{limit}} registos ativos nesta secção. Remova um ou reveja o plano para adicionar outro."
-  }
+  },
+  "recurringSeries": "S?rie recorrente",
+  "loadingSeries": "A carregar a s?rie recorrente?",
+  "onlyThisTransaction": "Apenas esta transa??o",
+  "selectedTransactions": "Transa??es selecionadas ({{count}})",
+  "selectAll": "Selecionar todas",
+  "currentTransaction": "Transa??o atual",
+  "lockedSeries": "Bloqueada por pagamentos ou contabilidade",
+  "bulkRecurrenceHint": "A edi??o em massa aplica descri??o, montante, data de vencimento, notas e categoria ?s transa??es selecionadas. O intervalo e a quantidade n?o podem ser alterados.",
+  "chooseAtLeastOne": "Selecione pelo menos uma transa??o para editar.",
+  "seriesLoadError": "N?o foi poss?vel carregar a s?rie recorrente."
 }
