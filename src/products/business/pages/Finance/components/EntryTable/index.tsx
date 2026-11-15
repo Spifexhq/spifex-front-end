@@ -10,8 +10,6 @@ import { useEntries } from "./useEntries";
 import { entryDate, entryId, isSettlement, signedAmount, type FinancialEntry } from "./entryRows";
 import EntryPreview from "./EntryPreview";
 import SelectionToolbar from "./SelectionToolbar";
-import { accountingColors } from "./accountingColors";
-import AccountingIndicator, { AccountingLegend } from "./AccountingIndicator";
 
 export type EntryTableHandle = { clearSelection(): void; refresh(): void };
 export type EntryTableProps = { settled: boolean; filters?: EntryFilters; selectionSuppressed?: boolean; onEdit?(entry: Entry): void; onSettle?(entries: Entry[]): void; onChanged?(): void };
@@ -49,14 +47,10 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
       currency={auth.organization?.organization?.currency || "EUR"}
       locale={i18n.language}
       emptyLabel={t("empty")}
-      secondColumnLabel={settled ? t("bank") : t("accounting")}
-      secondColumnHeader={!settled ? <AccountingLegend/> : undefined}
-      headerAccessory={!settled ? <span className="inline-flex md:hidden"><AccountingLegend showLabel={false}/></span> : undefined}
-      renderName={record => <div className="min-w-0"><div className="flex min-w-0 items-center gap-1.5">{!settled && <span aria-hidden className={`h-1.5 w-1.5 shrink-0 rounded-full md:hidden ${isSettlement(record.source) ? "bg-gray-300" : accountingColors[record.source.accounting?.status || "uncategorised"]}`}/>}<span className="truncate text-[13px] font-medium leading-4">{record.description || t("untitled")}</span>{(record.installmentCount ?? 0) > 1 && <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium leading-none text-slate-500 tabular-nums" aria-label={t("installmentNumber", { index: record.installmentIndex ?? "?", count: record.installmentCount ?? 1 })}>{record.installmentIndex ?? "?"}/{record.installmentCount}</span>}</div><p className="mt-0.5 truncate text-[10px] font-normal leading-3 text-gray-500">{formatDateFromISO(record.date)}{record.activityKind === "settlement" && record.bankName ? ` · ${record.bankName}` : ""}</p></div>}
-      renderSecondColumn={record => {
-        if (settled) return record.activityKind === "settlement" ? record.bankName || "—" : null;
-        return !isSettlement(record.source) ? <AccountingIndicator accounting={record.source.accounting} onOpen={() => setPreview(record.source)}/> : null;
-      }}
+      secondColumnLabel={t("bank")}
+      showSecondColumn={settled}
+      renderName={record => <div className="min-w-0"><div className="flex min-w-0 items-center gap-1.5"><span className="truncate text-[13px] font-medium leading-4">{record.description || t("untitled")}</span>{(record.installmentCount ?? 0) > 1 && <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium leading-none text-slate-500 tabular-nums" aria-label={t("installmentNumber", { index: record.installmentIndex ?? "?", count: record.installmentCount ?? 1 })}>{record.installmentIndex ?? "?"}/{record.installmentCount}</span>}</div><p className="mt-0.5 truncate text-[10px] font-normal leading-3 text-gray-500">{formatDateFromISO(record.date)}{record.activityKind === "settlement" && record.bankName ? ` · ${record.bankName}` : ""}</p></div>}
+      renderSecondColumn={record => record.activityKind === "settlement" ? record.bankName || "—" : null}
       pager={pagerAdapter}
       busy={pager.loading && !pager.items.length}
       mutating={mutating}

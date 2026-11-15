@@ -8,12 +8,17 @@
 - Selection bars hide while the settlement modal is open in Business and
   Personal; selection state is preserved.
 - Cash-flow entry editing no longer crashes on `validate_changes`; the settled-field guard now receives the correct keyword arguments.
+- Personal sidebar Receipts, Payments and Transfers open the create dialog in
+  place without navigating to Cash Flow.
 - Personal recurring transactions support bulk editing of selected siblings;
   the series list uses 10-row pages, status signals and per-row edit actions;
   recurrence setup, the "Apply these changes to" scope section and the series
   live in a separate Recurrence tab.
 - Bank account deletion soft-deletes accounts with financial history and hides
   them from normal product queries.
+- The Business cash-flow table no longer has an Accounting column; accounting
+  readiness, mapping, policy, book and journal are shown in the entry preview,
+  and settled entries keep the Bank column.
 
 ## Verification
 

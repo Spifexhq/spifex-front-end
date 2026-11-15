@@ -25,6 +25,7 @@ import PersonalRecordPreview from "./PersonalRecordPreview";
 import PersonalSettledActivityPreview from "./PersonalSettledActivityPreview";
 import { usePersonalAccess } from "../access/PersonalAccessProvider";
 import { PERSONAL_PERMISSION } from "../access/permissions";
+import { PERSONAL_FINANCE_CHANGED } from "../events";
 
 type Basis = "outstanding" | "settled";
 export type { Basis };
@@ -329,6 +330,10 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
     setFilters({ ...next, settlement_status: basis === "settled" });
   }, [basis, params, setParams]);
   const refresh = useCallback(() => { setRevision(value => value + 1); setPanelRevision(value => value + 1); }, []);
+  useEffect(() => {
+    window.addEventListener(PERSONAL_FINANCE_CHANGED, refresh);
+    return () => window.removeEventListener(PERSONAL_FINANCE_CHANGED, refresh);
+  }, [refresh]);
   const refreshPanel = useCallback(() => setPanelRevision(value => value + 1), []);
   const reverseActivity = useCallback(async (item: PersonalSettledActivity) => {
     if (item.transfer_id) await personalApi.remove("transfers", item.transfer_id);

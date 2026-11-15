@@ -45,6 +45,7 @@ type Props<T> = {
   secondColumnLabel: string;
   secondColumnHeader?: ReactNode;
   renderSecondColumn(record: FinancialActivityRecord<T>): ReactNode;
+  showSecondColumn?: boolean;
   renderName?(record: FinancialActivityRecord<T>): ReactNode;
   headerAccessory?: ReactNode;
   pager: ActivityPager;
@@ -68,27 +69,47 @@ type Props<T> = {
   clearSelectionToken?: number;
 };
 
-export default function FinancialActivityTable<T>({ records, newestFirst = false, currency, locale, emptyLabel, secondColumnLabel, secondColumnHeader, renderSecondColumn, renderName, headerAccessory, pager, busy = false, error, mutating = false, canSelect, canDelete, canEdit = false, rowCanEdit, rowCanDelete, editLabel, onInspect, onEdit, onDelete, onDeleted, onSelection, onEndReached, loadMore = false, onRetry, clearSelectionToken }: Props<T>) {
+export default function FinancialActivityTable<T>({ records, newestFirst = false, currency, locale, emptyLabel, secondColumnLabel, secondColumnHeader, renderSecondColumn, showSecondColumn = true, renderName, headerAccessory, pager, busy = false, error, mutating = false, canSelect, canDelete, canEdit = false, rowCanEdit, rowCanDelete, editLabel, onInspect, onEdit, onDelete, onDeleted, onSelection, onEndReached, loadMore = false, onRetry, clearSelectionToken }: Props<T>) {
   const { t } = useTranslation("financeEntries");
   const rows = useMemo(() => buildFinancialActivityRows(records, !!pager.canNext, newestFirst), [records, pager.canNext, newestFirst]);
   const loadedCount = rows.filter(row => row.kind === "record").length;
   useFinanceLoading("entries", (!pager.knownPages && !pager.error) || (pager.loading && !records.length));
-  const columns = useMemo<Column<FinancialActivityRow<T>>[]>(() => [
-    {
+  const columns = useMemo<Column<FinancialActivityRow<T>>[]>(() => {
+    const nameColumn: Column<FinancialActivityRow<T>> = {
       key: "name",
       label: t("entries"),
       header: <span className="inline-flex max-w-full min-w-0 items-center gap-1"><span className="truncate">{t("entries")}</span><span className="hidden shrink-0 text-gray-500 md:inline">({loadedCount})</span>{headerAccessory}</span>,
       render: row => row.kind === "summary" ? <span className="text-xs font-semibold text-gray-700">{row.partial ? t("monthPartial", { month: new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(`${row.date}T12:00:00`)) }) : new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(`${row.date}T12:00:00`))}</span> : renderName?.(row.record!) || <div className="min-w-0"><div className="flex min-w-0 items-center gap-1.5"><span className="truncate text-[13px] font-medium leading-4">{row.record?.description || t("untitled")}</span>{(row.record?.installmentCount ?? 0) > 1 && <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium leading-none text-slate-500 tabular-nums">{row.record?.installmentIndex ?? "?"}/{row.record?.installmentCount}</span>}</div><p className="mt-0.5 truncate text-[10px] font-normal leading-3 text-gray-500">{formatDateFromISO(row.date)}{row.record?.activityKind === "settlement" && row.record.bankName ? ` · ${row.record.bankName}` : ""}</p></div>,
-    },
-    { key: "secondary", label: secondColumnLabel, header: secondColumnHeader, render: row => row.record ? renderSecondColumn(row.record) : null },
-    { key: "amount", mobile: true, mobileWidth: "100px", label: t("amount"), render: row => <span className={`font-medium tabular-nums ${row.record?.direction === "transfer" || row.amount === 0 ? "text-gray-700" : row.amount > 0 ? "text-emerald-700" : "text-rose-700"}`}>{formatCurrency(row.amount, currency)}</span> },
-    { key: "balance", mobile: true, mobileWidth: "104px", label: t("balance"), render: row => <span className="tabular-nums">{row.balance == null ? "—" : formatCurrency(row.balance, currency)}</span> },
-  ], [currency, headerAccessory, loadedCount, locale, renderName, renderSecondColumn, secondColumnHeader, secondColumnLabel, t]);
+    };
+    const secondaryColumn: Column<FinancialActivityRow<T>> = {
+      key: "secondary",
+      label: secondColumnLabel,
+      header: secondColumnHeader,
+      render: row => row.record ? renderSecondColumn(row.record) : null,
+    };
+    const amountColumn: Column<FinancialActivityRow<T>> = {
+      key: "amount",
+      mobile: true,
+      mobileWidth: "100px",
+      label: t("amount"),
+      render: row => <span className={`font-medium tabular-nums ${row.record?.direction === "transfer" || row.amount === 0 ? "text-gray-700" : row.amount > 0 ? "text-emerald-700" : "text-rose-700"}`}>{formatCurrency(row.amount, currency)}</span>,
+    };
+    const balanceColumn: Column<FinancialActivityRow<T>> = {
+      key: "balance",
+      mobile: true,
+      mobileWidth: "104px",
+      label: t("balance"),
+      render: row => <span className="tabular-nums">{row.balance == null ? "—" : formatCurrency(row.balance, currency)}</span>,
+    };
+    return showSecondColumn
+      ? [nameColumn, secondaryColumn, amountColumn, balanceColumn]
+      : [nameColumn, amountColumn, balanceColumn];
+  }, [currency, headerAccessory, loadedCount, locale, renderName, renderSecondColumn, secondColumnHeader, secondColumnLabel, showSecondColumn, t]);
   return <DataTable
     mobileActions={false}
     items={rows}
     columns={columns}
-    initialWidths={[48, 16, 18, 18]}
+    initialWidths={showSecondColumn ? [48, 16, 18, 18] : [62, 19, 19]}
     pager={pager}
     emptyLabel={emptyLabel}
     editLabel={editLabel}

@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, LayoutDashboard, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, CircleGauge, Target, ChartNoAxesCombined, CircleCheck, Settings2, Wallet } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -11,6 +11,8 @@ import WorkspaceLifecycleBanner from "@/features/workspaces/components/Workspace
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import SidebarTooltip from "@/shared/ui/SidebarTooltip";
 import PersonalSettingsSidebar from "../components/PersonalSettingsSidebar";
+import PersonalRecordDialog from "../components/PersonalRecordDialog";
+import { notifyPersonalFinanceChanged } from "../events";
 import { PersonalAccessProvider, usePersonalAccess } from "../access/PersonalAccessProvider";
 import { PERSONAL_PERMISSION } from "../access/permissions";
 
@@ -31,7 +33,6 @@ function PersonalLayoutContent() {
   const { t } = useTranslation(["personal", "personalSettings", "sidebar"]);
   const { organization } = useAuthContext();
   const access = usePersonalAccess();
-  const navigate = useNavigate();
   const location = useLocation();
   const section = location.pathname.split("/")[2] || "overview";
   const transactionView = section === "transactions"
@@ -41,9 +42,11 @@ function PersonalLayoutContent() {
   const inSettings = section === "settings";
   const isTransactionsPage = section === "transactions";
   const workspace = organization?.organization;
+  const currency = workspace?.currency || "EUR";
   const readOnly = !!workspace?.lifecycle && workspace.lifecycle !== "active";
   const canCreateEntries = !readOnly && access.can(PERSONAL_PERMISSION.addTransaction);
   const canCreateTransfers = !readOnly && access.can(PERSONAL_PERMISSION.addTransfer);
+  const [actionDialog, setActionDialog] = useState<{ kind: "transactions"; transactionKind: "income" | "expense" } | { kind: "transfer" } | null>(null);
   const [mobile, setMobile] = useState(false);
   const [desktop, setDesktop] = useState(() => matchMedia("(min-width: 768px)").matches);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem("spifex.personal.collapsed") === "true"; } catch { return false; } });
@@ -71,10 +74,10 @@ function PersonalLayoutContent() {
           <div className="sidebar-section-title text-[11px] font-medium text-gray-500"><span className="sidebar-label">{t("sidebar:sidebar.sections.actions")}</span></div>
           <ul className="space-y-1">
             {canCreateEntries && <>
-              <li><SidebarTooltip label={t("sidebar:sidebar.items.credit")} collapsed={railCollapsed}><button type="button" aria-label={t("sidebar:sidebar.items.credit")} onClick={() => { navigate("/personal/transactions?create=credit"); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowDownLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("sidebar:sidebar.items.credit")}</span></button></SidebarTooltip></li>
-              <li><SidebarTooltip label={t("sidebar:sidebar.items.debit")} collapsed={railCollapsed}><button type="button" aria-label={t("sidebar:sidebar.items.debit")} onClick={() => { navigate("/personal/transactions?create=debit"); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowUpRight size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("sidebar:sidebar.items.debit")}</span></button></SidebarTooltip></li>
+              <li><SidebarTooltip label={t("sidebar:sidebar.items.credit")} collapsed={railCollapsed}><button type="button" aria-label={t("sidebar:sidebar.items.credit")} onClick={() => { setActionDialog({ kind: "transactions", transactionKind: "income" }); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowDownLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("sidebar:sidebar.items.credit")}</span></button></SidebarTooltip></li>
+              <li><SidebarTooltip label={t("sidebar:sidebar.items.debit")} collapsed={railCollapsed}><button type="button" aria-label={t("sidebar:sidebar.items.debit")} onClick={() => { setActionDialog({ kind: "transactions", transactionKind: "expense" }); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowUpRight size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("sidebar:sidebar.items.debit")}</span></button></SidebarTooltip></li>
             </>}
-            {canCreateTransfers && <li><SidebarTooltip label={t("sidebar:sidebar.items.transfer")} collapsed={railCollapsed}><button type="button" aria-label={t("sidebar:sidebar.items.transfer")} onClick={() => { navigate("/personal/transactions?create=transfer"); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowLeftRight size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("sidebar:sidebar.items.transfer")}</span></button></SidebarTooltip></li>}
+            {canCreateTransfers && <li><SidebarTooltip label={t("sidebar:sidebar.items.transfer")} collapsed={railCollapsed}><button type="button" aria-label={t("sidebar:sidebar.items.transfer")} onClick={() => { setActionDialog({ kind: "transfer" }); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowLeftRight size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("sidebar:sidebar.items.transfer")}</span></button></SidebarTooltip></li>}
           </ul>
         </section>}
         {groups.slice(2).map(group => <section key={group.id} className="mb-5" aria-label={t(`navigationSections.${group.id}`)}><div className="sidebar-section-title text-[11px] font-medium text-gray-500"><span className="sidebar-label">{t(`navigationSections.${group.id}`)}</span></div><ul className="space-y-1">{group.items.map(({key,label,to,Icon})=><li key={key}><SidebarTooltip label={t(label)} collapsed={railCollapsed}><NavLink to={to} end aria-label={t(label)} onClick={closeMobile} className={({ isActive }) => `sidebar-row rounded-md text-[13px] transition-colors ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Icon size={16} className="sidebar-icon" aria-hidden="true"/><span className="sidebar-label">{t(label)}</span></NavLink></SidebarTooltip></li>)}</ul></section>)}
@@ -85,6 +88,14 @@ function PersonalLayoutContent() {
       <WorkspaceLifecycleBanner/>
       <main className={`min-h-0 flex-1 px-4 py-6 sm:px-7 ${isTransactionsPage ? "flex flex-col overflow-hidden" : "overflow-y-auto"}`}><div className={`mx-auto max-w-[1440px] ${isTransactionsPage ? "flex min-h-0 w-full flex-1 flex-col" : ""}`}><Suspense fallback={<PageSkeleton rows={7}/>}><Outlet/></Suspense></div></main>
     </div>
+    {actionDialog && <PersonalRecordDialog
+      key={actionDialog.kind === "transactions" ? `transactions:${actionDialog.transactionKind}` : "transfer"}
+      kind={actionDialog.kind}
+      transactionKind={actionDialog.kind === "transactions" ? actionDialog.transactionKind : undefined}
+      currency={currency}
+      onClose={() => setActionDialog(null)}
+      onSaved={() => { setActionDialog(null); notifyPersonalFinanceChanged(); }}
+    />}
   </div>;
 }
 
