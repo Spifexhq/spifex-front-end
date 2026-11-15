@@ -291,7 +291,6 @@ const MemberModal: React.FC<MemberModalProps> = ({
         } else if (memberId) {
           await api.editMember(memberId, {
             name,
-            email,
             group_ids,
           });
         }
@@ -349,6 +348,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                  disabled={mode === "edit"}
                   required
                 />
 
