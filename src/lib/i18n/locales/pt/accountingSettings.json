@@ -417,7 +417,8 @@
       "postingDate": "Data de lançamento",
       "status": "Estado",
       "lines": "Linhas",
-      "actions": "Ações"
+      "actions": "Ações",
+      "reversalDate": "Data de reversão"
     },
     "actions": {
       "reverse": "Reverter",

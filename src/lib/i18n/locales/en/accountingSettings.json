@@ -417,7 +417,8 @@
       "postingDate": "Posting date",
       "status": "Status",
       "lines": "Lines",
-      "actions": "Actions"
+      "actions": "Actions",
+      "reversalDate": "Reversal date"
     },
     "actions": {
       "reverse": "Reverse",

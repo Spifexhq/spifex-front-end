@@ -349,9 +349,10 @@ const AccountingJournalsPage: React.FC = () => {
               { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
               { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
               { key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
+              { key: "reversal", label: t("journalsPage.columns.reversalDate", "Reversal date"), render: item => item.reversal_date || "—" },
               { key: "lines", label: t("journalsPage.columns.lines", "Lines"), render: item => String(item.lines?.length ?? 0) },
               { key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
-            ]} actions={item => <Button type="button" variant="outline" size="sm" disabled={!canManage || reversingId === item.id || item.status !== "posted"} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button>} />
+            ]} actions={item => item.status === "posted" && item.source_type === "manual" ? <Button type="button" variant="outline" size="sm" disabled={!canManage || reversingId === item.id} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button> : null} />
           </div>
         </Card>
 
@@ -614,6 +615,7 @@ const AccountingJournalsPage: React.FC = () => {
             { label: t("journalsPage.columns.book", "Book"), value: activeJournal.book_code },
             { label: t("journalsPage.columns.status", "Status"), value: t(`enums.status.${activeJournal.status}`, activeJournal.status) },
             { label: t("journalsPage.columns.postingDate", "Posting date"), value: activeJournal.posting_date },
+            { label: t("journalsPage.columns.reversalDate", "Reversal date"), value: activeJournal.reversal_date || "-" },
             { label: t("common.currency", "Currency"), value: activeJournal.currency_code },
             { label: journalRelated?.kind === "settlement" ? t("journalsPage.relatedSettlement", "Related settlement") : t("journalsPage.relatedEntry", "Related entry"), value: journalRelated
               ? <button type="button" onClick={() => pushRelatedPreview(journalRelated.kind, journalRelated.id)} className="max-w-full break-all text-left font-mono text-[11px] font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950">{journalRelated.id}</button>

@@ -417,7 +417,8 @@
       "postingDate": "Date de comptabilisation",
       "status": "Statut",
       "lines": "Lignes",
-      "actions": "Actions"
+      "actions": "Actions",
+      "reversalDate": "Date de contre-passation"
     },
     "actions": {
       "reverse": "Contrepasser",

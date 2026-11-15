@@ -139,6 +139,7 @@ export interface JournalEntry {
   entry_number: string;
   document_date: string;
   posting_date: string;
+  reversal_date?: string | null;
   status: JournalStatus;
   currency_code: string;
   memo?: string;
