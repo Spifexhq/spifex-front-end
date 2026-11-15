@@ -361,5 +361,16 @@
   "lockedSeries": "Verrouill?e par des paiements ou la comptabilit?",
   "bulkRecurrenceHint": "La modification group?e applique la description, le montant, la date d'?ch?ance, les notes et la cat?gorie aux transactions s?lectionn?es. La p?riodicit? et le nombre ne peuvent pas changer.",
   "chooseAtLeastOne": "S?lectionnez au moins une transaction ? modifier.",
-  "seriesLoadError": "Impossible de charger la s?rie r?currente."
+  "seriesLoadError": "Impossible de charger la s?rie r?currente.",
+  "seriesPosted": "Comptabilisé / verrouillé",
+  "seriesOpen": "Ouverte",
+  "seriesPageRange": "{{start}}-{{end}} sur {{total}}",
+  "seriesPrevious": "Page précédente",
+  "seriesNext": "Page suivante",
+  "tabs": "Sections de la transaction",
+  "tabDetails": "Détails",
+  "tabRecurrence": "Récurrence",
+  "notRecurring": "Cette transaction ne fait pas partie d'une série récurrente.",
+  "applyTheseChangesTo": "Appliquer ces modifications à",
+  "applyTheseChangesHint": "Seuls les champs modifiés sont copiés. Les changements de date décalent les dates sélectionnées du même nombre de jours."
 }

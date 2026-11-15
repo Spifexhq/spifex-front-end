@@ -361,5 +361,16 @@
   "lockedSeries": "Durch Zahlungen oder Buchhaltung gesperrt",
   "bulkRecurrenceHint": "Sammelbearbeitung ?bertr?gt Beschreibung, Betrag, F?lligkeitsdatum, Notizen und Kategorie auf die ausgew?hlten Transaktionen. Rhythmus und Anzahl k?nnen nicht ge?ndert werden.",
   "chooseAtLeastOne": "W?hlen Sie mindestens eine Transaktion zum Bearbeiten aus.",
-  "seriesLoadError": "Die wiederkehrende Serie konnte nicht geladen werden."
+  "seriesLoadError": "Die wiederkehrende Serie konnte nicht geladen werden.",
+  "seriesPosted": "Gebucht / gesperrt",
+  "seriesOpen": "Offen",
+  "seriesPageRange": "{{start}}-{{end}} von {{total}}",
+  "seriesPrevious": "Vorherige Seite",
+  "seriesNext": "Nächste Seite",
+  "tabs": "Transaktionsbereiche",
+  "tabDetails": "Details",
+  "tabRecurrence": "Wiederholung",
+  "notRecurring": "Diese Transaktion gehört nicht zu einer wiederkehrenden Serie.",
+  "applyTheseChangesTo": "Diese Änderungen anwenden auf",
+  "applyTheseChangesHint": "Nur geänderte Felder werden übernommen. Datumsänderungen verschieben die ausgewählten Fälligkeitsdaten um dieselbe Anzahl von Tagen."
 }

@@ -1,6 +1,7 @@
 import TransactionAttachments from "./TransactionAttachments";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -8,6 +9,7 @@ import Checkbox from "@/shared/ui/Checkbox";
 import ToggleSwitch from "@/shared/ui/ToggleSwitch";
 import { ErrorState } from "@/shared/ui/State";
 import { Select } from "@/shared/ui/Select";
+import SegmentedControl from "@/shared/ui/SegmentedControl";
 import { personalApi } from "@/products/personal/services/api";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { formatCurrency, formatDateFromISO } from "@/lib";
@@ -16,10 +18,11 @@ import type { RecurrenceEntry } from "@/models/entries/entries";
 import { allPersonal, today } from "../services/personalData";
 
 type DialogKind = Exclude<PersonalCollection, "accounts" | "transfers"> | "settle" | "contribute" | "transfer";
-type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; transactionKind?: "income" | "expense"; onClose(): void; onSaved(): void };
+type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; transactionKind?: "income" | "expense"; onClose(): void; onSaved(): void; onEditRelated?(id: string): Promise<void> };
+const SERIES_PAGE_SIZE = 10;
 
-export default function PersonalRecordDialog({ kind, record, currency, transactionKind, onClose, onSaved }: Props) {
-  const { t } = useTranslation("personal");
+export default function PersonalRecordDialog({ kind, record, currency, transactionKind, onClose, onSaved, onEditRelated }: Props) {
+  const { t } = useTranslation(["personal", "entriesModal"]);
   const editLocked = kind === "transactions" && !!record && "status" in record && record.status !== "pending";
   const [form, setForm] = useState<Record<string, string>>(() => ({
     name: "", description: "", amount: kind === "settle" && record && "open_amount" in record ? record.open_amount : "",
@@ -38,7 +41,9 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   const [series, setSeries] = useState<{ loading: boolean; error: string; rows: RecurrenceEntry[] }>({ loading: false, error: "", rows: [] });
   const [scope, setScope] = useState<"single" | "selected">("single");
   const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
+  const [seriesPage, setSeriesPage] = useState(0);
   const [seriesRetry, setSeriesRetry] = useState(0);
+  const [activeTab, setActiveTab] = useState<"details" | "recurrence">("details");
   const key = useRef(crypto.randomUUID());
   const lock = useRef(false);
   useEffect(() => {
@@ -66,12 +71,14 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
       setSeries({ loading: false, error: "", rows: [] });
       setScope("single");
       setSelectedSeries([]);
+      setSeriesPage(0);
       return;
     }
     let active = true;
     setSeries({ loading: true, error: "", rows: [] });
     setScope("single");
     setSelectedSeries([]);
+    setSeriesPage(0);
     void personalApi.recurrence(record.id).then(({ data }) => {
       if (active) setSeries({ loading: false, error: "", rows: data.results ?? [] });
     }).catch(cause => {
@@ -84,6 +91,17 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   const allSeriesSelected = eligibleSeries.length > 0 && eligibleSeries.every(row => selectedSeries.includes(row.id));
   const toggleSeries = (id: string) => setSelectedSeries(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id]);
   const toggleAllSeries = () => setSelectedSeries(allSeriesSelected ? [] : eligibleSeries.map(row => row.id));
+  const seriesPages = Math.max(1, Math.ceil(series.rows.length / SERIES_PAGE_SIZE));
+  const page = Math.min(seriesPage, seriesPages - 1);
+  const pageRows = series.rows.slice(page * SERIES_PAGE_SIZE, (page + 1) * SERIES_PAGE_SIZE);
+  const seriesStart = pageRows.length ? page * SERIES_PAGE_SIZE + 1 : 0;
+  const seriesEnd = pageRows.length ? seriesStart + pageRows.length - 1 : 0;
+
+  useEffect(() => {
+    setSeriesPage(previous => Math.min(previous, Math.max(0, Math.ceil(series.rows.length / SERIES_PAGE_SIZE) - 1)));
+  }, [series.rows.length]);
+
+  const seriesStatus = (row: RecurrenceEntry) => row.is_settled ? t("settled") : row.settled_count > 0 || row.last_settled_on ? t("partial") : row.financial_locked ? t("seriesPosted") : t("seriesOpen");
 
   const update = (name: string, value: string) => setForm(previous => ({ ...previous, [name]: value }));
   const text = (name: string, required = true) => <Input key={name} kind="text" label={t(name)} value={form[name] || ""} required={required} maxLength={name === "notes" ? 500 : 120} disabled={busy} onChange={event => update(name, event.target.value)} />;
@@ -151,55 +169,70 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
     finally { lock.current = false; setBusy(false); }
   };
 
-  return <FloatingDialog isOpen title={kind === "transactions" && !record && transactionKind ? t(transactionKind === "income" ? "createCreditEntry" : "createDebitEntry") : t(["settle", "contribute", "transfer"].includes(kind) ? kind : record ? "edit" : "create")} description={t(record && kind === "transactions" ? "editDialogHint" : `${kind}DialogHint`)} closeLabel={t("close")} onClose={() => { if (!busy) onClose(); }} onSubmit={save} busy={busy} loading={loading} width={600} height={650} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t("cancel")}</Button><Button type="submit" disabled={busy || loading || optionsFailed} isLoading={busy}>{t("save")}</Button></div>}>
+  return <FloatingDialog isOpen title={kind === "transactions" && !record && transactionKind ? t(transactionKind === "income" ? "createCreditEntry" : "createDebitEntry") : t(["settle", "contribute", "transfer"].includes(kind) ? kind : record ? "edit" : "create")} description={t(record && kind === "transactions" ? "editDialogHint" : `${kind}DialogHint`)} closeLabel={t("close")} onClose={() => { if (!busy) onClose(); }} onSubmit={save} busy={busy} loading={loading} width={600} height={650} tabs={kind === "transactions" ? <SegmentedControl<"details" | "recurrence"> id="personal-record-tabs" value={activeTab} onChange={setActiveTab} label={t("tabs")} items={[{ value: "details", label: t("tabDetails"), panelId: "personal-record-panel" }, { value: "recurrence", label: t("tabRecurrence"), panelId: "personal-record-panel" }]} /> : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t("cancel")}</Button><Button type="submit" disabled={busy || loading || optionsFailed} isLoading={busy}>{t("save")}</Button></div>}>
     {error && <ErrorState message={error} size="sm" className="mb-5 leading-6" action={optionsFailed ? <Button type="button" variant="outline" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button> : undefined} />}
-    {loading ? <DialogSkeleton label={t("loading")} /> : <div className="grid gap-5 sm:grid-cols-2">
-      {kind === "transactions" && <>
-        <div className="sm:col-span-2">{text("description")}</div>
-        {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind), true)}</>}
-        <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id}/> : <p className="mt-3 text-[11px] leading-5 text-slate-400">{t("saveBeforeFiles")}</p>}</div>
-        {!record && <details className="text-xs text-slate-500 sm:col-span-2"><summary className="cursor-pointer py-2">{t("recurrence")}</summary><div className="mt-3 space-y-3">
+    {loading ? <DialogSkeleton label={t("loading")} /> : <div id="personal-record-panel" role="tabpanel" aria-labelledby={`personal-record-tabs-${activeTab}`} className="grid gap-5 sm:grid-cols-2">
+      {activeTab === "details" && <>
+        {kind === "transactions" && <>
+          <div className="sm:col-span-2">{text("description")}</div>
+          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind), true)}</>}
+          <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id}/> : <p className="mt-3 text-[11px] leading-5 text-slate-400">{t("saveBeforeFiles")}</p>}</div>
+          {editLocked && <p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("lockedTransaction")}</p>}
+        </>}
+        {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}
+        {kind === "categories" && <ToggleSwitch checked={form.is_active === "true"} onChange={value => update("is_active", String(value))} label={t("active")} />}
+        {kind === "budgets" && <>{text("name")}{date("month")}{options("category_id", categories.filter(item => item.kind !== "income"), true)}{amount("limit")}</>}
+        {kind === "goals" && <>{text("name")}{amount("target")}{date("target_date", false)}</>}
+        {kind === "settle" && <><div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-6 text-gray-600 sm:col-span-2">{t("partialPaymentHint")}<p className="mt-1 font-medium text-gray-800">{t("open_amount")}: {formatCurrency(record && "open_amount" in record ? record.open_amount : "0", currency)}</p></div>{options("bank_id", accounts)}{amount("amount")}{date("value_date")}</>}
+        {kind === "transfer" && <>{options("source_bank_id", accounts)}{options("destination_bank_id", accounts.filter(item => item.id !== form.source_bank_id))}{amount("amount")}{date("value_date")}{text("notes", false)}</>}
+        {kind === "contribute" && <>{amount("amount")}{text("notes", false)}<p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("contributionHint")}</p></>}
+      </>}
+      {activeTab === "recurrence" && kind === "transactions" && <div className="space-y-5 sm:col-span-2">
+        {!record ? <>
           <ToggleSwitch checked={form.recurrence_enabled === "true"} onChange={enabled => { update("recurrence_enabled", String(enabled)); if (enabled && Number(form.installment_count) < 2) update("installment_count", "2"); }} label={t("repeatTransaction")} description={t("recurrenceHelp")} disabled={busy}/>
           {form.recurrence_enabled === "true" && <div className="grid gap-4 sm:grid-cols-2">
             <Input kind="text" type="number" min={2} max={120} step={1} label={t("installment_count")} value={form.installment_count} onChange={event => update("installment_count", event.target.value)} />
             <Select<{id:string;name:string}> label={t("interval_months")} items={[0,1,2,3,6,12].map(value => ({id:String(value),name:t(`recurrenceIntervals.${value}`)}))} selected={[{id:form.interval_months,name:t(`recurrenceIntervals.${form.interval_months}`)}]} onChange={items => update("interval_months", items[0]?.id || "1")} getItemKey={item => item.id} getItemLabel={item => item.name} buttonLabel={t("choose")} singleSelect hideFilter disabled={busy}/>
             <Select<{id:string;name:string}> label={t("weekend_action")} items={[0,1,-1].map(value => ({id:String(value),name:t(`weekendActions.${value}`)}))} selected={[{id:form.weekend_action,name:t(`weekendActions.${form.weekend_action}`)}]} onChange={items => update("weekend_action", items[0]?.id || "0")} getItemKey={item => item.id} getItemLabel={item => item.name} buttonLabel={t("choose")} singleSelect hideFilter disabled={busy}/>
           </div>}
-        </div></details>}
-        {record && kind === "transactions" && (series.loading || series.error || series.rows.length > 1) && <details open className="text-xs text-slate-500 sm:col-span-2">
-          <summary className="cursor-pointer py-2">{t("recurringSeries")}</summary>
-          <div className="mt-3 space-y-3">
-            {series.loading ? <p>{t("loadingSeries")}</p> : series.error ? <div role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p>{series.error}</p><Button type="button" size="xs" variant="outline" className="mt-2" onClick={() => setSeriesRetry(value => value + 1)}>{t("retry")}</Button></div> : <>
-              <div className="flex flex-wrap gap-4 text-xs text-slate-600">
-                <label className="flex min-h-9 items-center gap-2"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="personal-recurrence-scope" checked={scope === "single"} onChange={() => { setScope("single"); setSelectedSeries([]); }} disabled={busy}/>{t("onlyThisTransaction")}</label>
-                <label className="flex min-h-9 items-center gap-2"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="personal-recurrence-scope" checked={scope === "selected"} onChange={() => setScope("selected")} disabled={busy}/>{t("selectedTransactions", { count: selectedSeries.length + 1 })}</label>
+        </> : series.loading ? <p className="text-xs text-slate-500">{t("loadingSeries")}</p> : series.error ? <div role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p>{series.error}</p><Button type="button" size="xs" variant="outline" className="mt-2" onClick={() => setSeriesRetry(value => value + 1)}>{t("retry")}</Button></div> : series.rows.length > 1 ? <>
+          <details className="mb-3 border-b border-slate-100 pb-2">
+            <summary className="cursor-pointer py-1 text-[11px] font-medium text-slate-500">{t("entriesModal:series.applyTo")}</summary>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
+              <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="personal-recurrence-scope" checked={scope === "single"} onChange={() => { setScope("single"); setSelectedSeries([]); }} disabled={busy}/>{t("entriesModal:series.onlyThis")}</label>
+              <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="personal-recurrence-scope" checked={scope === "selected"} onChange={() => setScope("selected")} disabled={busy}/>{t("entriesModal:series.selected", { count: selectedSeries.length + 1 })}</label>
+            </div>
+            {scope === "selected" && <details className="mt-1 text-[11px] leading-5 text-slate-500"><summary className="cursor-pointer">{t("entriesModal:series.scopeDetails")}</summary><p>{t("entriesModal:series.explain")}</p></details>}
+          </details>
+          <section className="overflow-hidden rounded-lg border border-slate-200">
+            <div className="flex min-h-11 items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
+              <h3 className="text-xs font-semibold text-slate-700">{t("recurringSeries")} <span className="font-normal text-slate-400">({series.rows.length})</span></h3>
+              {scope === "selected" && <div className="flex items-center gap-2 text-xs text-slate-500"><Checkbox checked={allSeriesSelected} indeterminate={selectedSeries.length > 0 && !allSeriesSelected} onChange={toggleAllSeries} disabled={busy || !eligibleSeries.length} aria-label={t("selectAll")} />{t("selectAll")}</div>}
+            </div>
+            <div className="max-h-60 overflow-y-auto overscroll-contain">
+              <div className="divide-y divide-slate-100">
+                {pageRows.map(row => <div key={row.id} className={`flex items-center gap-3 px-3 py-2 ${row.id === record.id ? "bg-slate-50/70" : "bg-white"}`}>
+                  {scope === "selected" && <Checkbox checked={row.id === record.id || selectedSeries.includes(row.id)} disabled={busy || row.id === record.id || row.financial_locked} onChange={() => toggleSeries(row.id)} aria-label={`${row.installment_index}/${row.installment_count}`} />}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-slate-700">{row.installment_index}/{row.installment_count} · {formatDateFromISO(row.due_date)}{row.id === record.id && <span className="ml-2 text-[10px] text-slate-400">{t("currentTransaction")}</span>}</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span className={`size-1.5 rounded-full ${row.financial_locked ? "bg-amber-500" : "bg-emerald-500"}`} />{seriesStatus(row)}</p>
+                  </div>
+                  <span className="text-xs font-medium tabular-nums text-slate-700">{formatCurrency(row.amount, currency)}</span>
+                  {row.id !== record.id && <Button type="button" size="sm" variant="outline" className="min-h-10 sm:min-h-8" disabled={busy} onClick={async () => { if (!onEditRelated) return; setError(""); try { await onEditRelated(row.id); } catch (cause) { setError(apiErrorMessage(cause, t("error"))); } }}>{t("edit")}</Button>}
+                </div>)}
               </div>
-              {scope === "selected" && <div className="max-h-60 overflow-y-auto rounded-lg border border-slate-200">
-                <label className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
-                  <Checkbox checked={allSeriesSelected} indeterminate={selectedSeries.length > 0 && !allSeriesSelected} onChange={toggleAllSeries} disabled={busy || !eligibleSeries.length} aria-label={t("selectAll")} />
-                  {t("selectAll")}
-                </label>
-                <div className="divide-y divide-slate-100">
-                  {series.rows.map(row => <label key={row.id} className="flex items-center gap-3 px-3 py-2 text-xs">
-                    <Checkbox checked={row.id === record.id || selectedSeries.includes(row.id)} disabled={busy || row.id === record.id || row.financial_locked} onChange={() => toggleSeries(row.id)} aria-label={`${row.installment_index}/${row.installment_count}`} />
-                    <span className="min-w-0 flex-1"><span className="block font-medium text-slate-700">{row.installment_index}/{row.installment_count} · {formatDateFromISO(row.due_date)}</span>{row.id === record.id ? <span className="text-[10px] text-slate-400">{t("currentTransaction")}</span> : row.financial_locked ? <span className="text-[10px] text-amber-600">{t("lockedSeries")}</span> : null}</span>
-                    <span className="tabular-nums text-slate-700">{formatCurrency(row.amount, currency)}</span>
-                  </label>)}
-                </div>
-              </div>}
-              <p className="text-[11px] leading-5 text-slate-500">{t("bulkRecurrenceHint")}</p>
-            </>}
-          </div>
-        </details>}
-        {editLocked && <p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("lockedTransaction")}</p>}
-      </>}
-      {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}
-      {kind === "categories" && <ToggleSwitch checked={form.is_active === "true"} onChange={value => update("is_active", String(value))} label={t("active")} />}
-      {kind === "budgets" && <>{text("name")}{date("month")}{options("category_id", categories.filter(item => item.kind !== "income"), true)}{amount("limit")}</>}
-      {kind === "goals" && <>{text("name")}{amount("target")}{date("target_date", false)}</>}
-      {kind === "settle" && <><div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-6 text-gray-600 sm:col-span-2">{t("partialPaymentHint")}<p className="mt-1 font-medium text-gray-800">{t("open_amount")}: {formatCurrency(record && "open_amount" in record ? record.open_amount : "0", currency)}</p></div>{options("bank_id", accounts)}{amount("amount")}{date("value_date")}</>}
-      {kind === "transfer" && <>{options("source_bank_id", accounts)}{options("destination_bank_id", accounts.filter(item => item.id !== form.source_bank_id))}{amount("amount")}{date("value_date")}{text("notes", false)}</>}
-      {kind === "contribute" && <>{amount("amount")}{text("notes", false)}<p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("contributionHint")}</p></>}
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-3 py-2 text-[11px] text-slate-500">
+              <span>{t("seriesPageRange", { start: seriesStart, end: seriesEnd, total: series.rows.length })}</span>
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="outline" size="sm" disabled={busy || page <= 0} aria-label={t("seriesPrevious")} onClick={() => setSeriesPage(value => Math.max(0, value - 1))}><ChevronLeft size={15} aria-hidden="true" /></Button>
+                <Button type="button" variant="outline" size="sm" disabled={busy || page >= seriesPages - 1} aria-label={t("seriesNext")} onClick={() => setSeriesPage(value => Math.min(seriesPages - 1, value + 1))}><ChevronRight size={15} aria-hidden="true" /></Button>
+              </div>
+            </div>
+            <p className="border-t border-slate-100 px-3 py-2 text-[11px] leading-5 text-slate-500">{t("entriesModal:series.protection")}</p>
+          </section>
+        </> : <p className="text-xs leading-6 text-slate-500">{t("notRecurring")}</p>}
+      </div>}
     </div>}
   </FloatingDialog>;
 }

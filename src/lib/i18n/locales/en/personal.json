@@ -361,5 +361,16 @@
   "lockedSeries": "Locked by payments or accounting",
   "bulkRecurrenceHint": "Bulk edits apply description, amount, due date, notes and category to the selected transactions. Schedule and count cannot change.",
   "chooseAtLeastOne": "Select at least one transaction to edit.",
-  "seriesLoadError": "Could not load the recurring series."
+  "seriesLoadError": "Could not load the recurring series.",
+  "seriesPosted": "Posted / locked",
+  "seriesOpen": "Open",
+  "seriesPageRange": "{{start}}-{{end}} of {{total}}",
+  "seriesPrevious": "Previous page",
+  "seriesNext": "Next page",
+  "tabs": "Transaction sections",
+  "tabDetails": "Details",
+  "tabRecurrence": "Recurrence",
+  "notRecurring": "This transaction is not part of a recurring series.",
+  "applyTheseChangesTo": "Apply these changes to",
+  "applyTheseChangesHint": "Only the fields you change are copied. Date changes shift the selected due dates by the same number of days."
 }

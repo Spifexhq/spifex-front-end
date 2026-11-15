@@ -337,6 +337,10 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
     refresh();
   }, [refresh, t]);
   const edit = (item: PersonalTransaction) => setDialog({ kind: "transactions", record: item });
+  const editRelated = useCallback(async (id: string) => {
+    const { data } = await personalApi.transaction(id);
+    setDialog({ kind: "transactions", record: data });
+  }, []);
   const openSettlement = useCallback((items: PersonalTransaction[]) => {
     if (!items.length) { setBusy(false); return; }
     setSelected(items);
@@ -368,7 +372,7 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
     </div>
     <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setEntryPreview(null); openSettlement([item as PersonalTransaction]); }} onContribute={() => {}}/>
     <PersonalSettledActivityPreview item={activityPreview} currency={currency} onClose={() => setActivityPreview(null)} onReverse={!readOnly && (activityPreview?.transfer_id ? access.can(PERSONAL_PERMISSION.deleteTransfer) : access.can(PERSONAL_PERMISSION.reverseSettlement)) ? reverseActivity : undefined}/>
-    {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}:${dialog.transactionKind || ""}`} kind={dialog.kind} record={dialog.record} currency={currency} transactionKind={dialog.transactionKind} onClose={() => setDialog(null)} onSaved={refresh}/>}
+    {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}:${dialog.transactionKind || ""}`} kind={dialog.kind} record={dialog.record} currency={currency} transactionKind={dialog.transactionKind} onClose={() => setDialog(null)} onSaved={refresh} onEditRelated={editRelated}/>}
     <SettlementModal isOpen={settlementOpen} onClose={() => { setSettlementOpen(false); setSelected([]); setBusy(false); }} onSave={() => { setSettlementOpen(false); setSelected([]); setBusy(false); refresh(); }} selectedEntries={selectedForSettlement} banksData={settlementBanks} adapter={settlementAdapter}/>
     {basis === "settled" && busy && <span className="sr-only" role="status">{t("loading")}</span>}
   </div>;

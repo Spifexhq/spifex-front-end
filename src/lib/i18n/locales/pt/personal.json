@@ -361,5 +361,16 @@
   "lockedSeries": "Bloqueada por pagamentos ou contabilidade",
   "bulkRecurrenceHint": "A edi??o em massa aplica descri??o, montante, data de vencimento, notas e categoria ?s transa??es selecionadas. O intervalo e a quantidade n?o podem ser alterados.",
   "chooseAtLeastOne": "Selecione pelo menos uma transa??o para editar.",
-  "seriesLoadError": "N?o foi poss?vel carregar a s?rie recorrente."
+  "seriesLoadError": "N?o foi poss?vel carregar a s?rie recorrente.",
+  "seriesPosted": "Contabilizado / bloqueado",
+  "seriesOpen": "Em aberto",
+  "seriesPageRange": "{{start}}-{{end}} de {{total}}",
+  "seriesPrevious": "Página anterior",
+  "seriesNext": "Página seguinte",
+  "tabs": "Secções da transação",
+  "tabDetails": "Detalhes",
+  "tabRecurrence": "Recorrência",
+  "notRecurring": "Esta transação não faz parte de uma série recorrente.",
+  "applyTheseChangesTo": "Aplicar estas alterações a",
+  "applyTheseChangesHint": "Apenas os campos alterados são copiados. As alterações de data deslocam as datas selecionadas pelo mesmo número de dias."
 }
