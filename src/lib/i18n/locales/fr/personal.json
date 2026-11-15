@@ -377,5 +377,29 @@
   "attachToSeriesHint": "Désactivez cette option pour conserver les fichiers uniquement sur la première échéance.",
   "uploadFailed": "Les transactions ont été enregistrées, mais les pièces jointes n’ont pas pu être téléversées. Réessayez ou ouvrez l’aperçu de la transaction pour les ajouter.",
   "pendingAttachmentHint": "PDF, PNG ou JPEG. Jusqu’à {{count}} fichiers, {{size}} Mo chacun. Les fichiers sont téléversés lors de l’enregistrement.",
-  "attachAllInstallments": "Les {{count}} échéances"
+  "attachAllInstallments": "Les {{count}} échéances",
+  "categoryNames": {
+    "PERSONAL_SALARY": "Salaire",
+    "PERSONAL_FREELANCE": "Freelance et revenus complémentaires",
+    "PERSONAL_INVESTMENT_INCOME": "Revenus de placements",
+    "PERSONAL_RENTAL_INCOME": "Revenus locatifs",
+    "PERSONAL_REFUNDS": "Remboursements et indemnités",
+    "PERSONAL_OTHER_INCOME": "Autres revenus",
+    "PERSONAL_HOUSING": "Logement",
+    "PERSONAL_UTILITIES": "Charges et services",
+    "PERSONAL_INTERNET_PHONE": "Internet et téléphone",
+    "PERSONAL_FOOD": "Courses et alimentation",
+    "PERSONAL_RESTAURANTS": "Restaurants et cafés",
+    "PERSONAL_TRANSPORT": "Transports",
+    "PERSONAL_VEHICLE": "Véhicule",
+    "PERSONAL_HEALTH": "Santé",
+    "PERSONAL_INSURANCE": "Assurances",
+    "PERSONAL_EDUCATION": "Éducation",
+    "PERSONAL_LEISURE": "Loisirs et abonnements",
+    "PERSONAL_SHOPPING": "Achats et soins personnels",
+    "PERSONAL_TRAVEL": "Voyages",
+    "PERSONAL_OTHER_EXPENSE": "Autres dépenses"
+  },
+  "restoreDefaults": "Ajouter les cat?gories par d?faut",
+  "restoringDefaults": "Ajout..."
 }

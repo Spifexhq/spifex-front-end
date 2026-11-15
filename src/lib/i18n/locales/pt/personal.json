@@ -377,5 +377,29 @@
   "attachToSeriesHint": "Desative para manter os ficheiros apenas na primeira prestação.",
   "uploadFailed": "As transações foram guardadas, mas não foi possível carregar os anexos. Tente novamente ou abra a pré-visualização da transação para os adicionar.",
   "pendingAttachmentHint": "PDF, PNG ou JPEG. Até {{count}} ficheiros, {{size}} MB cada. Os ficheiros são carregados ao guardar.",
-  "attachAllInstallments": "Todas as {{count}} prestações"
+  "attachAllInstallments": "Todas as {{count}} prestações",
+  "categoryNames": {
+    "PERSONAL_SALARY": "Salário",
+    "PERSONAL_FREELANCE": "Trabalho independente e rendimentos extra",
+    "PERSONAL_INVESTMENT_INCOME": "Rendimentos de investimentos",
+    "PERSONAL_RENTAL_INCOME": "Rendimentos de arrendamento",
+    "PERSONAL_REFUNDS": "Reembolsos e reposições",
+    "PERSONAL_OTHER_INCOME": "Outros rendimentos",
+    "PERSONAL_HOUSING": "Habitação",
+    "PERSONAL_UTILITIES": "Serviços essenciais",
+    "PERSONAL_INTERNET_PHONE": "Internet e telefone",
+    "PERSONAL_FOOD": "Mercearias e alimentação",
+    "PERSONAL_RESTAURANTS": "Restaurantes e cafés",
+    "PERSONAL_TRANSPORT": "Transportes",
+    "PERSONAL_VEHICLE": "Veículo",
+    "PERSONAL_HEALTH": "Saúde",
+    "PERSONAL_INSURANCE": "Seguros",
+    "PERSONAL_EDUCATION": "Educação",
+    "PERSONAL_LEISURE": "Lazer e subscrições",
+    "PERSONAL_SHOPPING": "Compras e cuidados pessoais",
+    "PERSONAL_TRAVEL": "Viagens",
+    "PERSONAL_OTHER_EXPENSE": "Outras despesas"
+  },
+  "restoreDefaults": "Adicionar categorias predefinidas",
+  "restoringDefaults": "A adicionar..."
 }

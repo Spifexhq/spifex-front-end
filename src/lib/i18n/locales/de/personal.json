@@ -377,5 +377,29 @@
   "attachToSeriesHint": "Deaktivieren Sie dies, um die Dateien nur an der ersten Rate zu behalten.",
   "uploadFailed": "Die Transaktionen wurden gespeichert, aber die Anhänge konnten nicht hochgeladen werden. Versuchen Sie es erneut oder öffnen Sie die Vorschau, um sie hinzuzufügen.",
   "pendingAttachmentHint": "PDF, PNG oder JPEG. Bis zu {{count}} Dateien, je {{size}} MB. Die Dateien werden beim Speichern hochgeladen.",
-  "attachAllInstallments": "Alle {{count}} Raten"
+  "attachAllInstallments": "Alle {{count}} Raten",
+  "categoryNames": {
+    "PERSONAL_SALARY": "Gehalt",
+    "PERSONAL_FREELANCE": "Freelance & Nebeneinkünfte",
+    "PERSONAL_INVESTMENT_INCOME": "Kapitalerträge",
+    "PERSONAL_RENTAL_INCOME": "Mieteinnahmen",
+    "PERSONAL_REFUNDS": "Erstattungen & Rückzahlungen",
+    "PERSONAL_OTHER_INCOME": "Sonstige Einnahmen",
+    "PERSONAL_HOUSING": "Wohnen",
+    "PERSONAL_UTILITIES": "Energie & Wasser",
+    "PERSONAL_INTERNET_PHONE": "Internet & Telefon",
+    "PERSONAL_FOOD": "Lebensmittel",
+    "PERSONAL_RESTAURANTS": "Restaurants & Cafés",
+    "PERSONAL_TRANSPORT": "Transport",
+    "PERSONAL_VEHICLE": "Fahrzeug",
+    "PERSONAL_HEALTH": "Gesundheit",
+    "PERSONAL_INSURANCE": "Versicherungen",
+    "PERSONAL_EDUCATION": "Bildung",
+    "PERSONAL_LEISURE": "Freizeit & Abos",
+    "PERSONAL_SHOPPING": "Einkäufe & Körperpflege",
+    "PERSONAL_TRAVEL": "Reisen",
+    "PERSONAL_OTHER_EXPENSE": "Sonstige Ausgaben"
+  },
+  "restoreDefaults": "Standardkategorien hinzuf?gen",
+  "restoringDefaults": "Wird hinzugef?gt..."
 }

@@ -8,8 +8,8 @@ export type OverviewData = {
   period: { start: string; end: string; previous_start: string; previous_end: string; basis: OverviewBasis; group_by: string };
   capabilities: { metrics: boolean; entries: boolean; open_entries: boolean; banks: boolean };
   metrics: OverviewTotals | null; previous: OverviewTotals | null; series: PeriodPoint[]; activity: PeriodPoint[];
-  categories: { id: string; name: string | null; amount: string }[];
+  categories: { id: string; name: string | null; code?: string; default_name?: string; amount: string }[];
   recent: OverviewRecord[]; attention: OverviewRecord[]; upcoming: OverviewRecord[];
   banks: { id: string; name: string; account: string; currency: string; balance: string }[];
-  filter_options: { categories: { id: string; label: string }[]; banks: { id: string; label: string }[] };
+  filter_options: { categories: { id: string; label: string; code?: string; default_name?: string }[]; banks: { id: string; label: string }[] };
 };

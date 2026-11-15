@@ -52,6 +52,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
   const [preview, setPreview] = useState<PersonalRecord | null>(null);
   const [dialog, setDialog] = useState<{ kind: PersonalWorkspaceCollection | "contribute"; record?: PersonalRecord | null } | null>(null);
   const [error, setError] = useState("");
+  const [restoring, setRestoring] = useState(false);
   const [revision, setRevision] = useState(0);
   const pager = useCursorPager<PersonalRecord, { resourceCount: number; activeCount: number }>(async (page, page_size) => {
     const { data } = await personalApi.list(collection, {
@@ -66,6 +67,19 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
   const columns = useCollectionColumns(collection, workspace?.currency);
   useEffect(() => { setPreview(null); setDialog(null); setError(""); setSearch(""); setAppliedSearch(""); setKind([]); setAppliedKind([]); setStatuses(["active"]); setAppliedStatuses(["active"]); }, [collection, workspace?.id]);
   const refresh = () => { void pager.refresh(); void access.refresh(); setRevision(value => value + 1); setPreview(null); };
+  const restoreDefaults = async () => {
+    if (restoring) return;
+    setRestoring(true);
+    setError("");
+    try {
+      await personalApi.seedCategories();
+      refresh();
+    } catch (cause) {
+      setError(apiErrorMessage(cause, t("error")));
+    } finally {
+      setRestoring(false);
+    }
+  };
   const edit = (row: PersonalRecord) => setDialog({ kind: collection, record: row });
   const permissions = collectionPermissions[collection];
   const capacityCount = collection === "categories" ? pager.metadata?.activeCount : pager.metadata?.resourceCount;
@@ -102,6 +116,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
           {isCategories && <div ref={statusAnchorRef}><SettingsFilter label={t("status")} value={appliedStatuses.length ? appliedStatuses.map(value => t(value)).join(", ") : t("allStatuses")} active={!statusIsDefault} expanded={openFilter === "status"} onClick={() => setOpenFilter(current => current === "status" ? null : "status")} onClear={() => { setStatuses(["active"]); setAppliedStatuses(["active"]); }} /></div>}
           {hasSettingsFilters && <SettingsClearFilters label={t("clearFilters")} onClick={clearSettingsFilters} />}
         </SettingsFilters>
+        {isCategories && canCreate && <Button type="button" variant="outline" disabled={restoring} onClick={() => void restoreDefaults()}>{t(restoring ? "restoringDefaults" : "restoreDefaults")}</Button>}
         {canCreate && <Button type="button" onClick={() => setDialog({ kind: collection })}>{t("create")}</Button>}
       </div>
       <Popover appearance="settings" open={openFilter === "search"} anchorRef={searchAnchorRef} onClose={() => setOpenFilter(null)} title={t("search")} width={420}>

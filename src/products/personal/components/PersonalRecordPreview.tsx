@@ -7,6 +7,7 @@ import SidePanel, { SidePanelDetails } from "@/components/Modal/SidePanel";
 import Button from "@/shared/ui/Button";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { PersonalPreviewCollection, PersonalRecord, PersonalTransaction } from "@/products/personal/types";
+import { personalCategoryName } from "@/shared/financial/categoryName";
 
 const fieldsByCollection: Record<PersonalPreviewCollection, string[]> = {
   transactions: ["kind", "amount", "paid_amount", "open_amount", "status", "due_date", "category_name", "bank_name", "installment_index", "installment_count", "notes"],
@@ -42,10 +43,11 @@ export default function PersonalRecordPreview({ collection, record, currency, re
     if (dateFields.has(key)) return formatDateFromISO(String(value));
     if (["kind", "status", "account_type"].includes(key)) return t(String(value));
     if (key === "is_active") return t(value ? "active" : "inactive");
+    if (key === "category_name") return personalCategoryName({ name: String(value), code: values.category_code as string | undefined, default_name: values.category_default_name as string | undefined }, t);
     if (key === "progress") return `${Math.round(Number(value))}%`;
     return String(value);
   };
-  return <SidePanel isOpen={!!record} loading={!!id && !loaded && !error} skeletonRows={fields.length} title={String(values.description || values.name || "")} eyebrow={t(transfer ? "transfer" : collection)} onClose={onClose} footer={loaded && !readOnly ? <>
+  return <SidePanel isOpen={!!record} loading={!!id && !loaded && !error} skeletonRows={fields.length} title={collection === "categories" ? personalCategoryName({ name: String(values.name || ""), code: values.code as string | undefined, default_name: values.default_name as string | undefined }, t) : String(values.description || values.name || "")} eyebrow={t(transfer ? "transfer" : collection)} onClose={onClose} footer={loaded && !readOnly ? <>
     {!transfer && <Button variant="outline" onClick={() => { onClose(); onEdit(loaded); }}>{t("edit")}</Button>}
     {collection === "transactions" && !transfer && values.status !== "settled" && <Button onClick={() => { onClose(); onSettle(loaded); }}>{t("settle")}</Button>}
     {collection === "goals" && <Button onClick={() => { onClose(); onContribute(loaded); }}>{t("contribute")}</Button>}

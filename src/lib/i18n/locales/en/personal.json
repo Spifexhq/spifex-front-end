@@ -377,5 +377,29 @@
   "attachToSeriesHint": "Turn this off to keep the files only on the first installment.",
   "uploadFailed": "The transactions were saved, but the attachments could not be uploaded. Retry, or open the transaction preview to add them.",
   "pendingAttachmentHint": "PDF, PNG or JPEG. Up to {{count}} files, {{size}} MB each. Files upload when you save.",
-  "attachAllInstallments": "All {{count}} installments"
+  "attachAllInstallments": "All {{count}} installments",
+  "categoryNames": {
+    "PERSONAL_SALARY": "Salary",
+    "PERSONAL_FREELANCE": "Freelance & side income",
+    "PERSONAL_INVESTMENT_INCOME": "Investment income",
+    "PERSONAL_RENTAL_INCOME": "Rental income",
+    "PERSONAL_REFUNDS": "Refunds & reimbursements",
+    "PERSONAL_OTHER_INCOME": "Other income",
+    "PERSONAL_HOUSING": "Housing",
+    "PERSONAL_UTILITIES": "Utilities",
+    "PERSONAL_INTERNET_PHONE": "Internet & phone",
+    "PERSONAL_FOOD": "Groceries & food",
+    "PERSONAL_RESTAURANTS": "Restaurants & cafés",
+    "PERSONAL_TRANSPORT": "Transport",
+    "PERSONAL_VEHICLE": "Vehicle",
+    "PERSONAL_HEALTH": "Health",
+    "PERSONAL_INSURANCE": "Insurance",
+    "PERSONAL_EDUCATION": "Education",
+    "PERSONAL_LEISURE": "Leisure & subscriptions",
+    "PERSONAL_SHOPPING": "Shopping & personal care",
+    "PERSONAL_TRAVEL": "Travel",
+    "PERSONAL_OTHER_EXPENSE": "Other expenses"
+  },
+  "restoreDefaults": "Add default categories",
+  "restoringDefaults": "Adding..."
 }

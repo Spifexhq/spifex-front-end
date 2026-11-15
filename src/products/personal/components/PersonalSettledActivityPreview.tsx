@@ -5,6 +5,7 @@ import Button from "@/shared/ui/Button";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { PersonalSettledActivity } from "../types";
+import { personalCategoryName } from "@/shared/financial/categoryName";
 
 export default function PersonalSettledActivityPreview({ item, currency, onClose, onReverse }: {
   item: PersonalSettledActivity | null; currency: string; onClose(): void; onReverse?(item: PersonalSettledActivity): Promise<void>;
@@ -27,7 +28,7 @@ export default function PersonalSettledActivityPreview({ item, currency, onClose
       { label: t("due_date"), value: formatDateFromISO(item.due_date) },
       { label: t("transactionAmount"), value: formatCurrency(item.transaction_amount, currency) },
       { label: t("remaining"), value: formatCurrency(item.open_amount, currency) },
-      { label: t("category_name"), value: item.category_name || "—" },
+      { label: t("category_name"), value: item.category_name ? personalCategoryName({ name: item.category_name, code: item.category_code, default_name: item.category_default_name }, t) : "—" },
       ...(item.installment_count && item.installment_count > 1 ? [{ label: t("installment_index"), value: `${item.installment_index || 1} / ${item.installment_count}` }] : []),
     ]),
     { label: t("status"), value: t("settled") },

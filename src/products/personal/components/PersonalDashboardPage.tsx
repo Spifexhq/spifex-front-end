@@ -21,6 +21,7 @@ import OverviewMetricCards, { type OverviewMetricCard } from "@/shared/financial
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import DataTable from "@/shared/ui/DataTable";
 import { today } from "../services/personalData";
+import { personalCategoryName } from "@/shared/financial/categoryName";
 
 type DateRange = { start_date: string; end_date: string };
 type DashboardQuery = DateRange & { basis: "planned" | "settled"; cashflow_category_id?: string; description?: string };
@@ -129,7 +130,10 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
     {[7, 30, 90].map(days => <Button key={days} variant="ghost" size="sm" onClick={() => setRange(rangeForDays(days))}>{t("lastDays", { count: days, ns: "overview" })}</Button>)}
     <Button variant="outline" size="sm" className="inline-flex items-center gap-2" onClick={exportCsv} disabled={!data || loading}><Download size={15} aria-hidden="true" />{t("export", { ns: "overview" })}</Button>
   </div>;
-  const categoryOptions = data?.filter_options.categories || [];
+  const categoryOptions = (data?.filter_options.categories || []).map(item => ({
+    ...item,
+    label: personalCategoryName({ name: item.label, code: item.code, default_name: item.default_name }, t),
+  }));
   const hasFilters = !!(query.cashflow_category_id || query.description);
   const toolbar = <>
     <SegmentedControl<DashboardQuery["basis"]> value={query.basis} label={t("basis", { ns: "overview" })}
@@ -187,7 +191,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
       </div>
       <OverviewMetricCards items={metricCards} locale={i18n.language} />
       {data.balances_by_currency.length > 1 && <div className="flex flex-wrap gap-4 text-xs text-slate-500">{data.balances_by_currency.map(item => <span key={item.currency}>{item.currency}: {formatCurrency(item.balance, item.currency)}</span>)}</div>}
-      <FinancialCharts data={data} group={group} onGroup={setGroup} />
+      <FinancialCharts data={{ ...data, categories: data.categories.map(item => ({ ...item, name: personalCategoryName({ name: item.name || "", code: item.code, default_name: item.default_name }, t) })) }} group={group} onGroup={setGroup} />
       {!reports && <>
         <div className="grid gap-3 lg:grid-cols-2">{([['budgets', data.budgets], ['goals', data.goals]] as const).map(([kind, items]) => <Card as="section" key={kind} radius="xl" tone="slate" padding="compact">
           <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold text-slate-900">{t(kind)}</h2><Link to={`/personal/${kind}`} className="text-xs font-medium text-slate-500 hover:text-slate-900">{t("viewAll")}</Link></div>
