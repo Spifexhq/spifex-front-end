@@ -5,6 +5,7 @@ import { Menu, LayoutDashboard, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Cir
 import { useAuthContext } from "@/hooks/useAuth";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
+import NotificationsMenu from "@/shared/layout/NotificationsMenu";
 import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
 import WorkspaceLifecycleBanner from "@/features/workspaces/components/WorkspaceLifecycleBanner";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -80,7 +81,7 @@ function PersonalLayoutContent() {
       </SidebarFrame>}
     </div>
     <div ref={main} className={`flex h-full min-w-0 flex-col transition-[margin-left] duration-[220ms] ease-out motion-reduce:transition-none ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:px-6"><button type="button" aria-label={t("navigation")} className="flex h-11 w-11 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 md:hidden" onClick={toggle}><Menu size={18} aria-hidden="true" /></button><p className="text-xs text-gray-500">Personal <span className="mx-2 text-gray-300">/</span>{inSettings && <><span className="text-gray-500">{t("settings")}</span><span className="mx-2 text-gray-300">/</span></>}<span className="font-medium text-gray-800">{inSettings ? (location.pathname.split("/")[3] === "personal" ? t("personalSettings:title") : t(`settingsPages.${location.pathname.split("/")[3] || "workspaces"}.title`)) : t(sectionLabelKey)}</span></p></header>
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:px-6"><button type="button" aria-label={t("navigation")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 md:hidden" onClick={toggle}><Menu size={18} aria-hidden="true" /></button><p className="min-w-0 flex-1 truncate text-xs text-gray-500">Personal <span className="mx-2 text-gray-300">/</span>{inSettings && <><span className="text-gray-500">{t("settings")}</span><span className="mx-2 text-gray-300">/</span></>}<span className="font-medium text-gray-800">{inSettings ? (location.pathname.split("/")[3] === "personal" ? t("personalSettings:title") : t(`settingsPages.${location.pathname.split("/")[3] || "workspaces"}.title`)) : t(sectionLabelKey)}</span></p><div className="shrink-0"><NotificationsMenu manageTo="/personal/settings/notifications" /></div></header>
       <WorkspaceLifecycleBanner/>
       <main className={`min-h-0 flex-1 px-4 py-6 sm:px-7 ${isTransactionsPage ? "flex flex-col overflow-hidden" : "overflow-y-auto"}`}><div className={`mx-auto max-w-[1440px] ${isTransactionsPage ? "flex min-h-0 w-full flex-1 flex-col" : ""}`}><Suspense fallback={<PageSkeleton rows={7}/>}><Outlet/></Suspense></div></main>
     </div>

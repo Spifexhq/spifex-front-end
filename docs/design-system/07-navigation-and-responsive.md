@@ -77,7 +77,8 @@ desktop icons `PanelLeftClose`/`PanelLeftOpen`, mobile `X`.
   Derived from `getPageBreadcrumbs(pathname)` in `pageTitle.ts`.
 - Right: onboarding warning link (amber pill, icon-only below `sm`),
   notifications trigger (32px) and popover (`w-80`, `rounded-lg`, `shadow-lg`,
-  `shell-popover`).
+  `shell-popover`). The trigger and animated panel are the shared
+  `NotificationsMenu`, used by both Business and Personal headers.
 - Notifications popover: `role="dialog"`, focus moves to "manage" link, outside
   pointer and Escape close, Escape restores trigger focus.
 
