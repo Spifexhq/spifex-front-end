@@ -423,7 +423,8 @@
     "actions": {
       "reverse": "Reverse",
       "reversing": "Reversing...",
-      "manualJournal": "Manual journal"
+      "manualJournal": "Manual journal",
+      "delete": "Delete"
     },
     "modal": {
       "title": "Manual journal",
@@ -459,7 +460,30 @@
     "relatedLoading": "Loading related entry…",
     "relatedRetry": "Try again",
     "relatedNotFound": "Related settlement not found.",
-    "relatedLoadError": "Could not load the related entry."
+    "relatedLoadError": "Could not load the related entry.",
+    "tabs": {
+      "label": "Journal views",
+      "journals": "Journals",
+      "history": "History"
+    },
+    "deleteConfirm": "Delete journal {{entry}}? This permanently removes the posting; the action will remain in history.",
+    "deleteReason": "Deleted from the journals page",
+    "deletedSuccess": "Journal deleted and recorded in history.",
+    "deleteError": "Failed to delete journal.",
+    "history": {
+      "title": "Deletion history",
+      "description": "Deleted journals are kept here with the person, time and lines involved.",
+      "empty": "No deleted journals yet.",
+      "searchPlaceholder": "Search deleted journals",
+      "previewTitle": "Deleted journal",
+      "columns": {
+        "deletedAt": "Deleted at",
+        "actor": "Deleted by",
+        "reason": "Reason",
+        "total": "Total"
+      },
+      "loadError": "Failed to load journal history."
+    }
   },
   "reconciliationPage": {
     "sectionLabel": "Reconciliation",

@@ -423,7 +423,8 @@
     "actions": {
       "reverse": "Reverter",
       "reversing": "A reverter...",
-      "manualJournal": "Lançamento manual"
+      "manualJournal": "Lançamento manual",
+      "delete": "Eliminar"
     },
     "modal": {
       "title": "Diário manual",
@@ -459,7 +460,30 @@
     "relatedLoading": "A carregar entrada relacionada…",
     "relatedRetry": "Tentar novamente",
     "relatedNotFound": "Liquidação relacionada não encontrada.",
-    "relatedLoadError": "Não foi possível carregar a entrada relacionada."
+    "relatedLoadError": "Não foi possível carregar a entrada relacionada.",
+    "tabs": {
+      "label": "Vistas do diário",
+      "journals": "Diários",
+      "history": "Histórico"
+    },
+    "deleteConfirm": "Eliminar o diário {{entry}}? Isto remove permanentemente o lançamento; a ação ficará no histórico.",
+    "deleteReason": "Eliminado da página de diários",
+    "deletedSuccess": "Diário eliminado e registado no histórico.",
+    "deleteError": "Não foi possível eliminar o diário.",
+    "history": {
+      "title": "Histórico de eliminações",
+      "description": "Os diários eliminados ficam aqui com a pessoa, a data e as linhas envolvidas.",
+      "empty": "Ainda não há diários eliminados.",
+      "searchPlaceholder": "Pesquisar diários eliminados",
+      "previewTitle": "Diário eliminado",
+      "columns": {
+        "deletedAt": "Eliminado em",
+        "actor": "Eliminado por",
+        "reason": "Motivo",
+        "total": "Total"
+      },
+      "loadError": "Não foi possível carregar o histórico de diários."
+    }
   },
   "reconciliationPage": {
     "sectionLabel": "Reconciliação",

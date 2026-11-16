@@ -1,3 +1,4 @@
+import { useAuthContext } from "@/hooks/useAuth";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useAccountingSource } from "@/products/business/hooks/useAccountingRecords";
 import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
@@ -13,19 +14,22 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, CheckCheck, ListTree, LockKeyhole, Plus, RotateCcw } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCheck, ListTree, LockKeyhole, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
+import ConfirmToast from "@/shared/ui/ConfirmToast";
 import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import SegmentedControl from "@/shared/ui/SegmentedControl";
 import { Select } from "src/shared/ui/Select";
 import Snackbar from "@/shared/ui/Snackbar";
 
 import { api } from "@/api";
-import { fetchAllCursor } from "@/lib/list";
+import { fetchAllCursor, getCursorFromUrl } from "@/lib/list";
 
 import type {
   JournalEntry,
+  JournalAuditEvent,
   AccountingBook,
   AddJournalEntryRequest,
   JournalSourceType,
@@ -131,9 +135,15 @@ const AccountingJournalsPage: React.FC = () => {
     [i18n, language]
   );
 
+  const auth = useAuthContext();
+  const organizationId = auth.organization?.organization?.id ?? "";
   const requestKey = React.useRef("");
   const [saving, setSaving] = React.useState(false);
   const [reversingId, setReversingId] = React.useState<string | null>(null);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<JournalEntry | null>(null);
+  const [historyPreview, setHistoryPreview] = React.useState<JournalAuditEvent | null>(null);
+  const [tab, setTab] = React.useState<"journals" | "history">("journals");
   const [items, setItems] = React.useState<JournalEntry[]>([]);
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
@@ -218,6 +228,36 @@ const AccountingJournalsPage: React.FC = () => {
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
+  const historyRemote = React.useMemo(() => ({
+    key: `journal-history:${organizationId}:${tab}`,
+    enabled: tab === "history",
+    initialApplied: {},
+    fetchPage: async (filters: Record<string, string>, cursor?: string, pageSize?: number) => {
+      try {
+        const { data } = await api.getJournalHistory({
+          q: (filters.search || "").trim() || undefined,
+          cursor,
+          page_size: pageSize,
+          include_count: true,
+        });
+        return {
+          items: data.results,
+          nextCursor: getCursorFromUrl(data.next),
+          totalCount: data.count,
+        };
+      } catch (cause) {
+        throw new Error(apiErrorMessage(cause, t("journalsPage.history.loadError", "Failed to load journal history.")));
+      }
+    },
+    placeholder: t("journalsPage.history.searchPlaceholder", "Search deleted journals"),
+    onItems: () => {},
+  }), [organizationId, tab, t]);
+  const historyFilters = useRecordFilters<JournalAuditEvent>(
+    [],
+    [],
+    item => [item.entry_number, item.journal_entry_id, item.memo, item.actor_name || "", item.reason].join(" "),
+    historyRemote,
+  );
 
   const loadLookups = React.useCallback(async () => {
     try {
@@ -309,6 +349,24 @@ const AccountingJournalsPage: React.FC = () => {
     }
   };
 
+  const deleteJournal = async () => {
+    const target = deleteTarget;
+    if (!target || deletingId) return;
+    try {
+      setDeletingId(target.id);
+      await api.deleteJournalEntry(target.id, { reason: t("journalsPage.deleteReason", "Deleted from the journals page") });
+      setSnackbar({ severity: "success", message: t("journalsPage.deletedSuccess", "Journal deleted and recorded in history.") });
+      setDeleteTarget(null);
+      await load();
+      setTab("history");
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("journalsPage.deleteError", "Failed to delete journal.")) });
+      setDeleteTarget(null);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (!setupStatus) return <PageSkeleton variant="accounting" rows={6} />;
   if (!setupStatus.operational) return <Card as="section" radius="xl" tone="slate" padding="default" className="space-y-4">
     <div className="flex items-start gap-3">
@@ -331,30 +389,79 @@ const AccountingJournalsPage: React.FC = () => {
   return (
     <>
       <section className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {metrics.map(({ key, value, Icon, detail }) => <AccountingMetricCard key={key} label={t(`journalsPage.metrics.${key}`, key)} value={value.toLocaleString(language)} Icon={Icon} hint={detail}/>)}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SegmentedControl<"journals" | "history">
+            tabs
+            id="journal-tabs"
+            value={tab}
+            onChange={setTab}
+            label={t("journalsPage.tabs.label", "Journal views")}
+            items={[
+              { value: "journals", label: t("journalsPage.tabs.journals", "Journals"), panelId: "journal-list-panel" },
+              { value: "history", label: t("journalsPage.tabs.history", "History"), panelId: "journal-history-panel" },
+            ]}
+          />
         </div>
 
-        {recordFilters.pager.error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-          <span>{recordFilters.pager.error}</span>
-          <Button variant="outline" size="sm" onClick={() => void load()}>{t("redesign.retry", "Retry")}</Button>
-        </div> : null}
-
-        {recordFilters.filters}
-
-        <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.listTitle", "Journal list")}>
-          <div className="p-4 sm:p-5">
-            <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={openJournalPreview} columns={[
-              { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => journalDisplayId(item) },
-              { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
-              { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
-              { key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
-              { key: "reversal", label: t("journalsPage.columns.reversalDate", "Reversal date"), render: item => item.reversal_date || "—" },
-              { key: "lines", label: t("journalsPage.columns.lines", "Lines"), render: item => String(item.lines?.length ?? 0) },
-              { key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
-            ]} actions={item => item.status === "posted" && item.source_type === "manual" ? <Button type="button" variant="outline" size="sm" disabled={!canManage || reversingId === item.id} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button> : null} />
+        {tab === "journals" ? <div role="tabpanel" id="journal-list-panel" aria-labelledby="journal-tabs-journals" className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {metrics.map(({ key, value, Icon, detail }) => <AccountingMetricCard key={key} label={t(`journalsPage.metrics.${key}`, key)} value={value.toLocaleString(language)} Icon={Icon} hint={detail}/>)}
           </div>
-        </Card>
+
+          {recordFilters.pager.error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <span>{recordFilters.pager.error}</span>
+            <Button variant="outline" size="sm" onClick={() => void load()}>{t("redesign.retry", "Retry")}</Button>
+          </div> : null}
+
+          {recordFilters.filters}
+
+          <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.listTitle", "Journal list")}>
+            <div className="p-4 sm:p-5">
+              <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={openJournalPreview} columns={[
+                { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => journalDisplayId(item) },
+                { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
+                { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
+                { key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
+                { key: "reversal", label: t("journalsPage.columns.reversalDate", "Reversal date"), render: item => item.reversal_date || "\u2014" },
+                { key: "lines", label: t("journalsPage.columns.lines", "Lines"), render: item => String(item.lines?.length ?? 0) },
+                { key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
+              ]} actions={item => item.status === "posted" && item.source_type === "manual" ? <div className="flex items-center justify-end gap-1">
+                <Button type="button" variant="outline" size="sm" disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button>
+                <Button type="button" variant="outline" size="iconSm" aria-label={t("journalsPage.actions.delete", "Delete")} title={t("journalsPage.actions.delete", "Delete")} disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => setDeleteTarget(item)}><Trash2 size={13} aria-hidden="true"/></Button>
+              </div> : null} />
+            </div>
+          </Card>
+        </div> : <div role="tabpanel" id="journal-history-panel" aria-labelledby="journal-tabs-history" className="space-y-5">
+          <p className="max-w-2xl text-xs leading-5 text-slate-500">{t("journalsPage.history.description", "Deleted journals are kept here with the person, time and lines involved.")}</p>
+
+          {historyFilters.pager.error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <span>{historyFilters.pager.error}</span>
+            <Button variant="outline" size="sm" onClick={() => void historyFilters.pager.refresh()}>{t("redesign.retry", "Retry")}</Button>
+          </div> : null}
+
+          {historyFilters.filters}
+
+          <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.history.title", "Deletion history")}>
+            <div className="p-4 sm:p-5">
+              <DataTable<JournalAuditEvent>
+                pager={historyFilters.pager}
+                items={historyFilters.rows}
+                emptyLabel={t("journalsPage.history.empty", "No deleted journals yet.")}
+                onInspect={setHistoryPreview}
+                columns={[
+                  { key: "deleted", label: t("journalsPage.history.columns.deletedAt", "Deleted at"), render: item => new Date(item.created_at).toLocaleString(language) },
+                  { key: "entry", label: t("journalsPage.columns.entry", "Entry"), render: item => journalDisplayId({ id: item.journal_entry_id, entry_number: item.entry_number, posting_date: item.posting_date }) },
+                  { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
+                  { key: "posting", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
+                  { key: "actor", label: t("journalsPage.history.columns.actor", "Deleted by"), render: item => item.actor_name || "\u2014" },
+                  { key: "reason", label: t("journalsPage.history.columns.reason", "Reason"), render: item => item.reason || "\u2014" },
+                  { key: "lines", label: t("journalsPage.columns.lines", "Lines"), render: item => String(item.line_count) },
+                  { key: "total", label: t("journalsPage.history.columns.total", "Total"), render: item => formatCurrency(item.total_debit_minor / 100, item.currency_code) },
+                ]}
+              />
+            </div>
+          </Card>
+        </div>}
 
         {snackbar ? (
           <Snackbar
@@ -669,6 +776,56 @@ const AccountingJournalsPage: React.FC = () => {
         </div>}
         </motion.div>
       </SidePanel>
+      <SidePanel
+        isOpen={!!historyPreview}
+        onClose={() => setHistoryPreview(null)}
+        title={t("journalsPage.history.previewTitle", "Deleted journal")}
+        subtitle={historyPreview ? journalDisplayId({ id: historyPreview.journal_entry_id, entry_number: historyPreview.entry_number, posting_date: historyPreview.posting_date }) : undefined}
+      >
+        {historyPreview ? <div className="space-y-6">
+          <SidePanelDetails fields={[
+            { label: t("journalsPage.columns.entry", "Entry"), value: journalDisplayId({ id: historyPreview.journal_entry_id, entry_number: historyPreview.entry_number, posting_date: historyPreview.posting_date }) },
+            { label: t("journalsPage.columns.book", "Book"), value: historyPreview.book_code },
+            { label: t("journalsPage.columns.postingDate", "Posting date"), value: historyPreview.posting_date },
+            { label: t("journalsPage.history.columns.deletedAt", "Deleted at"), value: new Date(historyPreview.created_at).toLocaleString(language) },
+            { label: t("journalsPage.history.columns.actor", "Deleted by"), value: historyPreview.actor_name || "\u2014" },
+            { label: t("journalsPage.history.columns.reason", "Reason"), value: historyPreview.reason || "\u2014" },
+            { label: t("common.currency", "Currency"), value: historyPreview.currency_code },
+          ]}/>
+          {historyPreview.memo && <p className="text-[13px] leading-6 text-gray-600">{historyPreview.memo}</p>}
+          <div className="rounded-lg border border-slate-200">
+            <table className="w-full table-fixed border-collapse text-xs">
+              <thead className="bg-slate-50/80"><tr className="border-b border-slate-200">
+                <th scope="col" className="w-[52%] px-3 py-2 text-left text-[11px] font-medium text-slate-500">{t("redesign.ledgerAccount", "Ledger account")}</th>
+                <th scope="col" className="w-[24%] px-3 py-2 text-right text-[11px] font-medium text-slate-500">{t("common.balances.debit", "Debit")}</th>
+                <th scope="col" className="w-[24%] px-3 py-2 text-right text-[11px] font-medium text-slate-500">{t("common.balances.credit", "Credit")}</th>
+              </tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {historyPreview.snapshot.lines.map(line => <tr key={line.line_no}>
+                  <td className="px-3 py-2"><div className="flex min-w-0 items-center gap-2"><span className="shrink-0 font-mono text-[10px] text-slate-400">{line.account_code}</span><span className="truncate text-slate-700">{line.account_name}</span></div></td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-600">{line.debit_minor ? formatCurrency(line.debit_minor / 100, historyPreview.currency_code) : "\u2014"}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-600">{line.credit_minor ? formatCurrency(line.credit_minor / 100, historyPreview.currency_code) : "\u2014"}</td>
+                </tr>)}
+              </tbody>
+              <tfoot><tr className="border-t border-slate-200 bg-slate-50/80">
+                <td className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600">{t("redesign.total", "Total")}</td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-900">{formatCurrency(historyPreview.total_debit_minor / 100, historyPreview.currency_code)}</td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-900">{formatCurrency(historyPreview.total_credit_minor / 100, historyPreview.currency_code)}</td>
+              </tr></tfoot>
+            </table>
+          </div>
+        </div> : null}
+      </SidePanel>
+      <ConfirmToast
+        open={!!deleteTarget}
+        busy={!!deletingId}
+        variant="danger"
+        text={t("journalsPage.deleteConfirm", "Delete journal {{entry}}? This permanently removes the posting; the action will remain in history.", { entry: deleteTarget ? journalDisplayId(deleteTarget) : "" })}
+        confirmLabel={t("journalsPage.actions.delete", "Delete")}
+        cancelLabel={t("common.cancel", "Cancel")}
+        onCancel={() => { if (!deletingId) setDeleteTarget(null); }}
+        onConfirm={() => void deleteJournal()}
+      />
     </>
   );
 };

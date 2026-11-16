@@ -184,6 +184,48 @@ export interface ReverseJournalEntryRequest {
   memo?: string;
 }
 
+export interface JournalAuditSnapshot {
+  entry: Record<string, unknown>;
+  lines: JournalLine[];
+  totals: { debit_minor: number; credit_minor: number };
+}
+
+export interface JournalAuditEvent {
+  id: string;
+  action: "deleted" | string;
+  journal_entry_id: string;
+  entry_number: string;
+  book_external_id: string;
+  book_code: string;
+  source_type: JournalSourceType;
+  source_external_id: string;
+  document_date: string;
+  posting_date: string;
+  currency_code: string;
+  memo: string;
+  status: JournalStatus;
+  reason: string;
+  actor_name: string | null;
+  created_at: string;
+  total_debit_minor: number;
+  total_credit_minor: number;
+  line_count: number;
+  snapshot: JournalAuditSnapshot;
+}
+
+export interface DeleteJournalEntryRequest {
+  reason?: string;
+}
+
+export interface GetJournalHistoryParams {
+  cursor?: string;
+  page_size?: number;
+  q?: string;
+  include_count?: boolean;
+}
+
+export type GetJournalHistoryResponse = Paginated<JournalAuditEvent> & { count?: number };
+
 export interface GetJournalEntriesParams {
   cursor?: string;
   book_id?: string;

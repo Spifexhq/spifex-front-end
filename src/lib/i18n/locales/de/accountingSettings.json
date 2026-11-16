@@ -423,7 +423,8 @@
     "actions": {
       "reverse": "Stornieren",
       "reversing": "Storniere...",
-      "manualJournal": "Manuelle Buchung"
+      "manualJournal": "Manuelle Buchung",
+      "delete": "Löschen"
     },
     "modal": {
       "title": "Manuelles Journal",
@@ -459,7 +460,30 @@
     "relatedLoading": "Zugehörige Buchung wird geladen…",
     "relatedRetry": "Erneut versuchen",
     "relatedNotFound": "Zugehörige Zahlung nicht gefunden.",
-    "relatedLoadError": "Die zugehörige Buchung konnte nicht geladen werden."
+    "relatedLoadError": "Die zugehörige Buchung konnte nicht geladen werden.",
+    "tabs": {
+      "label": "Journalansichten",
+      "journals": "Journale",
+      "history": "Verlauf"
+    },
+    "deleteConfirm": "Journal {{entry}} löschen? Dadurch wird die Buchung endgültig entfernt; die Aktion bleibt im Verlauf erhalten.",
+    "deleteReason": "Über die Journalseite gelöscht",
+    "deletedSuccess": "Journal gelöscht und im Verlauf erfasst.",
+    "deleteError": "Journal konnte nicht gelöscht werden.",
+    "history": {
+      "title": "Löschverlauf",
+      "description": "Gelöschte Journale bleiben hier mit Person, Zeitpunkt und betroffenen Zeilen erhalten.",
+      "empty": "Noch keine gelöschten Journale.",
+      "searchPlaceholder": "Gelöschte Journale durchsuchen",
+      "previewTitle": "Gelöschtes Journal",
+      "columns": {
+        "deletedAt": "Gelöscht am",
+        "actor": "Gelöscht von",
+        "reason": "Grund",
+        "total": "Summe"
+      },
+      "loadError": "Der Journalverlauf konnte nicht geladen werden."
+    }
   },
   "reconciliationPage": {
     "sectionLabel": "Abstimmung",

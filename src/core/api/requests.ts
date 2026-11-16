@@ -79,9 +79,12 @@ import type {
   UpsertBankAccountLedgerMapRequest,
   JournalEntry,
   AddJournalEntryRequest,
+  DeleteJournalEntryRequest,
   ReverseJournalEntryRequest,
   GetJournalEntriesParams,
   GetJournalEntriesResponse,
+  GetJournalHistoryParams,
+  GetJournalHistoryResponse,
   GetTrialBalanceParams,
   GetTrialBalanceResponse,
 } from '@/models/settings/accounting';
@@ -632,6 +635,12 @@ export const api = {
 
   reverseJournalEntry: (journalId: string, payload: ReverseJournalEntryRequest = {}) =>
     request<JournalEntry>(`ledger/journals/${journalId}/reverse/`, 'POST', payload),
+
+  deleteJournalEntry: (journalId: string, payload: DeleteJournalEntryRequest = {}) =>
+    request<void>(`ledger/journals/${journalId}/`, 'DELETE', payload),
+
+  getJournalHistory: (params?: GetJournalHistoryParams) =>
+    request<GetJournalHistoryResponse>('ledger/journals/history/', 'GET', params, { fresh: true }),
 
   getTrialBalance: (params?: GetTrialBalanceParams) =>
     request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', params, { fresh: true }),

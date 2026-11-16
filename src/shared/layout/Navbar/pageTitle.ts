@@ -41,8 +41,3 @@ export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
   }
   return [{ titleKey }];
 }
-export function getSettingsDescriptionKey(pathname: string): string {
-  const [, , page, tab] = pathname.split("/");
-  const key = page === "accounting" ? `accounting-${tab || "overview"}` : page === "register" ? "ledger-accounts" : page === "subscription" || page === "subscription-management" ? "billing" : page || "personal";
-  return `navbar:settingsDescriptions.${key}`;
-}

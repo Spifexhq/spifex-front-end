@@ -423,7 +423,8 @@
     "actions": {
       "reverse": "Contrepasser",
       "reversing": "Contrepassation...",
-      "manualJournal": "Écriture manuelle"
+      "manualJournal": "Écriture manuelle",
+      "delete": "Supprimer"
     },
     "modal": {
       "title": "Journal manuel",
@@ -459,7 +460,30 @@
     "relatedLoading": "Chargement de l’écriture associée…",
     "relatedRetry": "Réessayer",
     "relatedNotFound": "Règlement associé introuvable.",
-    "relatedLoadError": "Impossible de charger l’écriture associée."
+    "relatedLoadError": "Impossible de charger l’écriture associée.",
+    "tabs": {
+      "label": "Vues du journal",
+      "journals": "Journaux",
+      "history": "Historique"
+    },
+    "deleteConfirm": "Supprimer le journal {{entry}} ? Cela supprime définitivement l’écriture ; l’action restera dans l’historique.",
+    "deleteReason": "Supprimé depuis la page des journaux",
+    "deletedSuccess": "Journal supprimé et conservé dans l’historique.",
+    "deleteError": "Impossible de supprimer le journal.",
+    "history": {
+      "title": "Historique des suppressions",
+      "description": "Les journaux supprimés restent ici avec la personne, la date et les lignes concernées.",
+      "empty": "Aucun journal supprimé pour le moment.",
+      "searchPlaceholder": "Rechercher des journaux supprimés",
+      "previewTitle": "Journal supprimé",
+      "columns": {
+        "deletedAt": "Supprimé le",
+        "actor": "Supprimé par",
+        "reason": "Motif",
+        "total": "Total"
+      },
+      "loadError": "Impossible de charger l’historique des journaux."
+    }
   },
   "reconciliationPage": {
     "sectionLabel": "Rapprochement",
