@@ -1448,7 +1448,7 @@
       "accrual": "Periodengerecht",
       "tax": "Steuerlich"
     },
-    "generating": "Bücher, Kontenplan, Kategorien und Bankverknüpfungen werden erstellt…",
+    "generating": "Bücher, Kontenplan, Kategorien und Bankverknüpfungen werden erstellt und geprüft…",
     "reviewTitle": "Antworten prüfen",
     "reviewBody": "Die Einrichtung wird erst nach Prüfung der Vorschau und dem Anwenden erstellt.",
     "previewTitle": "Ihre vorgeschlagene Einrichtung",
@@ -1495,7 +1495,14 @@
       "deferred_revenue_readiness": "Bereiten Sie Konten für passive Rechnungsabgrenzung und Kundenanzahlungen für Abonnements oder Onlineverkäufe vor.",
       "reporting_dimensions": "Bereiten Sie Kostenstellen- oder Projektberichte für ein wachsendes Team vor.",
       "country_confirmation": "Bestätigen Sie Steuer- und Berichtspflichten mit einem lokalen Steuerberater."
-    }
+    },
+    "structureValidated": "Struktur geprüft: eine Wurzel pro Bereich, jeder Kopf enthält Buchungskonten, jedes Buchungskonto ist ein Blatt und die numerische Eltern-Kind-Reihenfolge ist gültig.",
+    "exportTitle": "Diesen Plan wiederverwenden",
+    "exportHelp": "Konten herunterladen oder in Kontenplan einrichten -> Zeilen manuell einfügen kopieren.",
+    "downloadChartCsv": "CSV herunterladen",
+    "copyChart": "Zeilen kopieren",
+    "copied": "Kopiert",
+    "copyError": "Die Planzeilen konnten nicht kopiert werden."
   },
   "overview": {
     "title": "Buchhaltungsübersicht",

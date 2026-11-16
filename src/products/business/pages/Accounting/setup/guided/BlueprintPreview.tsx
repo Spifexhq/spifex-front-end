@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, CheckCircle2, Copy, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Badge from "@/shared/ui/Badge";
+import Button from "@/shared/ui/Button";
 import SegmentedControl from "@/shared/ui/SegmentedControl";
 import type { AiSetupAccount, AiSetupBankAccount, AiSetupBlueprint, AiSetupMessage, AiSetupPreviewResponse } from "@/models/settings/accountingAiSetup";
+import { buildChartManualText, downloadChartCsv } from "./chartExport";
 
 type PreviewTab = "books" | "chart" | "rules" | "banks";
 type SectionKey = AiSetupAccount["statement_section"];
@@ -41,8 +44,24 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
   const { t } = useTranslation("accountingSettings");
   const reduced = useReducedMotion();
   const [tab, setTab] = useState<PreviewTab>("books");
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
   const blueprint: AiSetupBlueprint | null = preview.blueprint;
   if (!blueprint) return null;
+  const copyChart = async () => {
+    try {
+      await navigator.clipboard.writeText(buildChartManualText(blueprint.accounts));
+      setCopied(true);
+      setCopyError("");
+    } catch {
+      setCopyError(t("guidedSetup.copyError", "Could not copy the chart rows."));
+    }
+  };
 
   const grouped = new Map<SectionKey, AiSetupAccount[]>();
   for (const account of blueprint.accounts) {
@@ -61,6 +80,26 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
 
   return <div className="space-y-4">
     <Summary preview={preview} />
+    <p className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs leading-5 text-emerald-900">
+      <CheckCircle2 size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <span>{t("guidedSetup.structureValidated")}</span>
+    </p>
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium text-gray-700">{t("guidedSetup.exportTitle", "Reuse this chart")}</p>
+        <p className="mt-0.5 text-[11px] leading-5 text-gray-500">{t("guidedSetup.exportHelp", "Download the accounts or copy them into Chart setup -> Paste rows manually.")}</p>
+        {copyError ? <p role="alert" className="mt-1 text-[11px] text-rose-700">{copyError}</p> : null}
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => downloadChartCsv(blueprint.accounts)}>
+          <Download size={14} aria-hidden="true" />{t("guidedSetup.downloadChartCsv", "Download CSV")}
+        </Button>
+        <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void copyChart()}>
+          {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+          {copied ? t("guidedSetup.copied", "Copied") : t("guidedSetup.copyChart", "Copy rows")}
+        </Button>
+      </div>
+    </div>
     {preview.blockers.length ? <div role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
       <p className="font-medium">{t("guidedSetup.blockersTitle")}</p>
       <p className="mt-0.5">{preview.blockers.map(item => item.message).join(" ")}</p>
@@ -92,13 +131,17 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
             {book.is_primary ? <Badge tone="success" variant="outline">{t("guidedSetup.primaryBook")}</Badge> : null}
           </div>) : null}
 
-          {tab === "chart" ? sectionOrder.map(section => {
+          {tab === "chart" ? <>
+            {sectionOrder.map(section => {
             const accounts = grouped.get(section);
             if (!accounts?.length) return null;
+            const ordered = [...accounts].sort((left, right) =>
+              String(left.sort_key || left.path || left.code).localeCompare(String(right.sort_key || right.path || right.code))
+            );
             return <details key={section} className="rounded-lg border border-gray-200 bg-white">
-              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-gray-700">{t(`guidedSetup.statementSections.${section}`)} ({accounts.length})</summary>
+              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-gray-700">{t(`guidedSetup.statementSections.${section}`)} ({ordered.length})</summary>
               <ul className="divide-y divide-gray-100 border-t border-gray-100">
-                {accounts.map(account => <li key={account.code} className="flex items-start gap-3 px-3 py-1.5 text-xs">
+                {ordered.map(account => <li key={account.code} title={account.path} style={{ paddingLeft: `${12 + Math.min(account.depth || 0, 4) * 12}px` }} className="flex items-start gap-3 py-1.5 pr-3 text-xs">
                   <span className="w-14 shrink-0 pt-0.5 font-mono text-[11px] text-gray-500">{account.code}</span>
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate ${account.account_type === "header" ? "font-medium text-gray-900" : "text-gray-700"}`}>{account.name}</span>
@@ -108,7 +151,8 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
                 </li>)}
               </ul>
             </details>;
-          }) : null}
+            })}
+          </> : null}
 
           {tab === "rules" ? blueprint.category_rules.map(rule => <div key={`${rule.category_code}-${rule.book_code}`} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">

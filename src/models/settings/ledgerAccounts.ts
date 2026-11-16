@@ -175,6 +175,9 @@ export interface LedgerGuideAccount {
   currency_code?: string;
   is_system?: boolean;
   is_active?: boolean;
+  path?: string;
+  depth?: number;
+  sort_key?: string;
 }
 
 export interface LedgerGuideResponse {

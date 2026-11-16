@@ -1448,7 +1448,7 @@
       "accrual": "Accrual",
       "tax": "Tax"
     },
-    "generating": "Building your books, chart, categories and bank links…",
+    "generating": "Building and validating your books, chart, categories and bank links…",
     "reviewTitle": "Review your answers",
     "reviewBody": "We will create the setup only after you review the preview and apply it.",
     "previewTitle": "Your proposed setup",
@@ -1495,7 +1495,14 @@
       "deferred_revenue_readiness": "Prepare deferred-revenue and customer-prepayment accounts for subscriptions or online sales.",
       "reporting_dimensions": "Prepare department or project reporting dimensions for a growing team.",
       "country_confirmation": "Confirm tax and reporting requirements with a local accountant."
-    }
+    },
+    "structureValidated": "Structure checked: one root per section, every header contains posting accounts, every posting is a leaf, and the numeric parent/child ladder is valid.",
+    "exportTitle": "Reuse this chart",
+    "exportHelp": "Download the accounts or copy them into Chart setup -> Paste rows manually.",
+    "downloadChartCsv": "Download CSV",
+    "copyChart": "Copy rows",
+    "copied": "Copied",
+    "copyError": "Could not copy the chart rows."
   },
   "overview": {
     "title": "Accounting overview",

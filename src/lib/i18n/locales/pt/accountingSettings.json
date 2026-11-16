@@ -1448,7 +1448,7 @@
       "accrual": "Especialização",
       "tax": "Fiscal"
     },
-    "generating": "A criar livros, plano, categorias e ligações bancárias…",
+    "generating": "A criar e validar livros, plano, categorias e ligações bancárias…",
     "reviewTitle": "Reveja as suas respostas",
     "reviewBody": "Só criamos a configuração depois de rever a pré-visualização e aplicar.",
     "previewTitle": "A sua configuração proposta",
@@ -1495,7 +1495,14 @@
       "deferred_revenue_readiness": "Prepare contas de réditos diferidos e adiantamentos de clientes para subscrições ou vendas online.",
       "reporting_dimensions": "Prepare dimensões de departamentos ou projetos para uma equipa em crescimento.",
       "country_confirmation": "Confirme os requisitos fiscais e de relatórios com um contabilista local."
-    }
+    },
+    "structureValidated": "Estrutura verificada: uma raiz por secção, cada cabeçalho contém contas de lançamento, cada lançamento é uma folha e a sequência numérica pai/filho é válida.",
+    "exportTitle": "Reutilizar este plano",
+    "exportHelp": "Descarregue as contas ou copie-as para Configuração do plano -> Colar linhas manualmente.",
+    "downloadChartCsv": "Descarregar CSV",
+    "copyChart": "Copiar linhas",
+    "copied": "Copiado",
+    "copyError": "Não foi possível copiar as linhas do plano."
   },
   "overview": {
     "title": "Visão geral da contabilidade",

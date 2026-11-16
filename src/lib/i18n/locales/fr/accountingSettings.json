@@ -1448,7 +1448,7 @@
       "accrual": "Engagement",
       "tax": "Fiscal"
     },
-    "generating": "Création des livres, du plan, des catégories et des liens bancaires…",
+    "generating": "Création et validation des livres, du plan, des catégories et des liens bancaires…",
     "reviewTitle": "Vérifiez vos réponses",
     "reviewBody": "La configuration n’est créée qu’après vérification de l’aperçu et application.",
     "previewTitle": "Votre configuration proposée",
@@ -1495,7 +1495,14 @@
       "deferred_revenue_readiness": "Préparez les comptes de produits constatés d'avance et d'acomptes clients pour les abonnements ou ventes en ligne.",
       "reporting_dimensions": "Préparez des dimensions par service ou projet pour une équipe en croissance.",
       "country_confirmation": "Confirmez les obligations fiscales et de reporting avec un comptable local."
-    }
+    },
+    "structureValidated": "Structure vérifiée : une racine par section, chaque en-tête contient des comptes de saisie, chaque compte de saisie est une feuille et la séquence numérique parent/enfant est valide.",
+    "exportTitle": "Réutiliser ce plan",
+    "exportHelp": "Téléchargez les comptes ou copiez-les dans Configuration du plan -> Coller des lignes manuellement.",
+    "downloadChartCsv": "Télécharger le CSV",
+    "copyChart": "Copier les lignes",
+    "copied": "Copié",
+    "copyError": "Impossible de copier les lignes du plan."
   },
   "overview": {
     "title": "Vue d’ensemble comptable",
