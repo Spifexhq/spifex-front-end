@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Check, Loader2, Plus } from "lucide-react";
 import { api } from "@/core/api/requests";
 import { fetchAllCursor } from "@/lib/list";
@@ -8,7 +9,6 @@ import { useAuthContext } from "@/hooks/useAuth";
 import type { BankAccount } from "@/models/settings/banking";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
-import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
 import { ErrorState } from "@/shared/ui/State";
 import UploadStatement from "./UploadStatement";
 import ImportHistory from "./ImportHistory";
@@ -82,6 +82,7 @@ export default function BankImports({ product = "business", basePath = "/bank-im
 
 function ImportDetail({ id, canEdit, personal }: { id: string; canEdit: boolean; personal: boolean }) {
   const { t } = useTranslation("statements");
+  const reduced = useReducedMotion();
   const process = useImportProcess(id, canEdit);
   const steps = ["reading", "matching", "review"] as const;
   const current = steps.indexOf(process.phase);
@@ -99,9 +100,9 @@ function ImportDetail({ id, canEdit, personal }: { id: string; canEdit: boolean;
       <ol className="grid grid-cols-3 gap-2" aria-label={t("workspace.progress")}>{steps.map((step, index) => <li key={step} aria-current={current === index ? "step" : undefined} className={`flex items-center gap-2 border-t-2 py-2 text-xs font-medium sm:text-sm ${index <= current ? "border-indigo-500 text-slate-800" : "border-slate-200 text-slate-400"}`}><span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${index < current ? "bg-indigo-50 text-indigo-600" : "bg-slate-100"}`}>{index < current ? <Check size={13} aria-hidden="true" /> : index + 1}</span>{t(`workspace.phases.${step}`)}</li>)}</ol>
     </Card>
     {process.error ? <ErrorState message={process.error} action={<Button variant="outline" onClick={process.retry}>{t("workspace.retry")}</Button>} /> : process.sessionId ? <ImportReview sessionId={process.sessionId} canEdit={canEdit} personal={personal} /> : <Card as="section" radius="xl" tone="slate" padding="spacious">
-      <div role="status" className="flex items-center gap-3 text-sm text-slate-600"><Loader2 className="animate-spin motion-reduce:animate-none" size={18} aria-hidden="true" />{t(process.phase === "matching" ? "workspace.matchingHelp" : "workspace.readingHelp")}</div>
-      <div aria-hidden="true" className="mt-6 space-y-5">{[100, 85, 93, 70].map(width => <div key={width} style={{ width: `${width}%` }}><SkeletonLine className="h-4" /></div>)}</div>
-      <p className="mt-6 text-xs text-slate-400">{t("workspace.resumeHelp")}</p>
+      <div role="status" aria-live="polite" aria-busy="true" className="flex items-center gap-2 text-sm font-medium text-gray-700"><Loader2 size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />{t(process.phase === "matching" ? "workspace.matchingHelp" : "workspace.readingHelp")}</div>
+      <div aria-hidden="true" className="mt-5 space-y-3">{[92, 78, 86].map((width, index) => <motion.div key={width} initial={{ opacity: 0.35, x: reduced ? 0 : -4 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: reduced ? 0 : 0.2, delay: reduced ? 0 : index * 0.08 }} className="h-3 rounded-full bg-gray-100"><div className="h-3 rounded-full bg-gray-200" style={{ width: `${width}%` }} /></motion.div>)}</div>
+      <p className="mt-5 text-xs text-slate-400">{t("workspace.resumeHelp")}</p>
     </Card>}
   </div>;
 }

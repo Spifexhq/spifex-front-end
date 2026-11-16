@@ -32,3 +32,18 @@ test('personal workspaces expose the shared import flow', () => {
   const editor = fs.readFileSync('src/products/business/pages/Finance/BankImports/ImportRowEditor.tsx', 'utf8');
   assert.match(editor, /personal \? \{\} : \{/);
 });
+
+test('bank import review uses the canonical selection bar and reading animation', () => {
+  const bar = fs.readFileSync('src/products/business/pages/Finance/BankImports/ImportBulkSelectionBar.tsx', 'utf8');
+  assert.match(bar, /role=\{confirming \? "alertdialog" : "region"\}/);
+  assert.match(bar, /workspace\.confirmExclude/);
+  assert.match(bar, /SELECTION_BAR_SELECT_PANEL_Z_INDEX/);
+  const page = fs.readFileSync('src/products/business/pages/Finance/BankImports/index.tsx', 'utf8');
+  assert.match(page, /useReducedMotion/);
+  assert.match(page, /\[92, 78, 86\]/);
+  for (const language of ['en', 'pt', 'fr', 'de']) {
+    const workspace = JSON.parse(fs.readFileSync(`src/lib/i18n/locales/${language}/statements.json`, 'utf8')).workspace;
+    assert.ok(workspace.confirmExclude, language);
+    assert.match(workspace.confirmExclude, /\{\{count\}\}/);
+  }
+});

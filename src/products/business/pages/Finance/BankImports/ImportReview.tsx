@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Ban, CheckCheck, Clock3, ListChecks, X } from "lucide-react";
+import { Ban, CheckCheck, Clock3, ListChecks } from "lucide-react";
 import { api } from "@/core/api/requests";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -14,9 +14,9 @@ import DataTable from "@/shared/ui/DataTable";
 import Input from "@/shared/ui/Input";
 import MetricCard from "@/shared/ui/MetricCard";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import SelectionBar from "@/shared/ui/SelectionBar";
 import { ErrorState } from "@/shared/ui/State";
 import LookupSelect from "./LookupSelect";
+import ImportBulkSelectionBar from "./ImportBulkSelectionBar";
 import ImportRowEditor from "./ImportRowEditor";
 import { ImportStatus } from "./ImportHistory";
 
@@ -24,7 +24,7 @@ export default function ImportReview({ sessionId, canEdit, personal = false }: {
   const { t, i18n } = useTranslation("statements"), { t: personalT } = useTranslation("personal");
   const [session, setSession] = useState<StatementImportSession>(), [lookups, setLookups] = useState<StatementImportLookups>();
   const [row, setRow] = useState<StatementImportRow>(), [editorOpen, setEditorOpen] = useState(false), [status, setStatus] = useState(""), [search, setSearch] = useState(""), [query, setQuery] = useState("");
-  const [error, setError] = useState(""), [busy, setBusy] = useState(false), [confirm, setConfirm] = useState(false), [retry, setRetry] = useState(0), [bulkCategory, setBulkCategory] = useState("");
+  const [error, setError] = useState(""), [busy, setBusy] = useState(false), [confirm, setConfirm] = useState(false), [retry, setRetry] = useState(0);
   const [clearSelection, setClearSelection] = useState(0), [notice, setNotice] = useState("");
   const mutation = useRef(false);
   const displayLookups = useMemo(() => {
@@ -48,11 +48,11 @@ export default function ImportReview({ sessionId, canEdit, personal = false }: {
     return () => { alive = false; };
   }, [sessionId, retry, t]);
   const refresh = async () => { const metadata = await api.getStatementImportSession(sessionId); setSession(metadata); await pager.refresh(); };
-  const run = async (action: () => Promise<unknown>) => {
-    if (mutation.current) return;
+  const run = async (action: () => Promise<unknown>): Promise<boolean> => {
+    if (mutation.current) return false;
     mutation.current = true; setBusy(true); setError(""); setNotice("");
-    try { await action(); await refresh(); setClearSelection(value => value + 1); }
-    catch (cause) { setError(apiErrorMessage(cause, t("workspace.error"))); }
+    try { await action(); await refresh(); setClearSelection(value => value + 1); return true; }
+    catch (cause) { setError(apiErrorMessage(cause, t("workspace.error"))); return false; }
     finally { mutation.current = false; setBusy(false); }
   };
   if (!session || !lookups) return error ? <ErrorState message={error} action={<Button variant="outline" onClick={() => setRetry(value => value + 1)}>{t("workspace.retry")}</Button>} /> : <PageSkeleton variant="review" />;
@@ -96,18 +96,14 @@ export default function ImportReview({ sessionId, canEdit, personal = false }: {
           } },
           { key: "status", label: t("workspace.status"), render: item => <ImportStatus status={item.status} /> },
         ]}
-        selectionActions={selection => <SelectionBar open={editable && selection.ids.length > 0} label={t("workspace.selected", { count: selection.ids.length })} className="max-w-3xl" layout>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold text-gray-900">{t("workspace.selected", { count: selection.ids.length })}</p>
-            <button type="button" disabled={busy} aria-label={t("workspace.clear")} title={t("workspace.clear")} onClick={selection.clear} className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-800"><X size={15} aria-hidden="true" /></button>
-          </div>
-          <div className="mt-3 flex flex-wrap items-end justify-end gap-2 border-t border-gray-100 pt-3">
-            <div className="min-w-48 max-w-xs flex-1"><LookupSelect label={t("workspace.category")} hideLabel value={bulkCategory} items={displayLookups!.cashflow_categories} onChange={setBulkCategory} disabled={busy} /></div>
-            <Button size="sm" variant="primary" disabled={busy || !bulkCategory} onClick={() => void run(() => api.bulkUpdateStatementImportRows(sessionId, { ids: selection.ids, data: { cashflow_category_id: bulkCategory, status: "ready" } }))}>{t("workspace.apply")}</Button>
-            <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(() => api.bulkUpdateStatementImportRows(sessionId, { ids: selection.ids, data: { status: "excluded" } }))}>{t("workspace.exclude")}</Button>
-            <Button size="sm" variant="ghost" disabled={busy} onClick={selection.clear}>{t("workspace.cancel")}</Button>
-          </div>
-        </SelectionBar>} />
+        selectionActions={selection => <ImportBulkSelectionBar
+          open={editable && selection.ids.length > 0}
+          selection={selection}
+          categories={displayLookups!.cashflow_categories}
+          busy={busy}
+          onApply={(ids, category) => run(() => api.bulkUpdateStatementImportRows(sessionId, { ids, data: { cashflow_category_id: category, status: "ready" } }))}
+          onExclude={ids => run(() => api.bulkUpdateStatementImportRows(sessionId, { ids, data: { status: "excluded" } }))}
+        />} />
       <p className="border-t border-slate-100 px-4 py-3 text-xs leading-5 text-slate-400">{t("workspace.savedHelp")}</p>
     </Card>
     {row && <ImportRowEditor isOpen={editorOpen} key={row.id} row={row} sessionId={sessionId} lookups={displayLookups!} personal={personal} readOnly={!editable} onClose={() => setEditorOpen(false)} onSaved={refresh} />}

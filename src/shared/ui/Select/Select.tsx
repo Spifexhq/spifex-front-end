@@ -16,7 +16,7 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { SelectProps } from "./Select.types";
-import { SELECT_SIZE } from "./sizes";
+import { SELECT_PANEL_Z_INDEX, SELECT_SIZE } from "./sizes";
 import Checkbox from "@/shared/ui/Checkbox";
 import RequiredMark from "@/shared/ui/Input/RequiredMark";
 
@@ -65,6 +65,7 @@ function Select<T>({
   virtualize = true,
   virtualThreshold = 300,
   virtualRowHeight,
+  panelZIndex = SELECT_PANEL_Z_INDEX,
 }: SelectProps<T>) {
   const { t } = useTranslation("select");
   const settingsUi = useContext(SettingsUiContext);
@@ -733,7 +734,7 @@ function Select<T>({
                 : "opacity-0 -translate-y-1 scale-[0.985] pointer-events-none"
             )}
             style={{
-              zIndex: 10070,
+              zIndex: panelZIndex,
               left: panelPosition.left,
               width: panelPosition.width,
               top: panelPosition.top,

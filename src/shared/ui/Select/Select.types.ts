@@ -27,4 +27,6 @@ export interface SelectProps<T> {
   virtualThreshold?: number;
   virtualRowHeight?: number;
   size?: SelectSize;
+  /** Panel layer override for controls rendered inside the feedback stack. */
+  panelZIndex?: number;
 }

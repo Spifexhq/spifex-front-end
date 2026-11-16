@@ -29,6 +29,17 @@
   compact selection bar, but hides entity, project, document type, department
   and inventory controls.
 
+## Selection bar and reading state
+
+- Bulk review actions now use the canonical selection-bar anatomy: summary +
+  clear, a separated action row, and an `alertdialog` confirmation for the
+  destructive exclude action.
+- The category `Select` inside the bar uses the dedicated `15010` panel layer,
+  so its listbox renders above the feedback stack instead of behind the bar.
+- The reading/matching screen uses the same animated bar sequence as the AI
+  accounting setup (`Loader2` plus staggered motion bars) and respects reduced
+  motion.
+
 ## Verification
 
 | Check | Result |

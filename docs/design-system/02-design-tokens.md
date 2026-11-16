@@ -212,6 +212,7 @@ Canonical hierarchy (Phase 3; legacy million-level values removed):
 | Anchored popover/menu | `10060` | `CompactActionMenu`, `SettingsPopover`, legacy `Popover` |
 | Selection bars above dialogs | `11000` | Settings/import selection surfaces |
 | Feedback stack (snackbar, confirmation, selection) | `15000` | `FeedbackStackProvider` |
+| Select panel opened from a selection bar | `15010` | `SELECTION_BAR_SELECT_PANEL_Z_INDEX` (bulk import category) |
 
 Rules: floating layers must be above the mobile sidebar; toasts must be above
 dialogs; never add a new arbitrary `z-[…]` without adding it to this table.

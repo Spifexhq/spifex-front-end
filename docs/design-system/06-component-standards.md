@@ -381,6 +381,8 @@ border-gray-200 bg-gray-50/50 px-3 py-2`; pagination buttons 32px (40px mobile),
 | Error | Error surface with retry (passed by caller) |
 | Selection | Shared `SelectionBar` (portals into the feedback stack; `max-w-[320px]` for DataTable) |
 | Bulk delete confirm | Same bar becomes `alertdialog`; failed deletes stay selected |
+| Bulk exclude confirm | Import review uses the same `alertdialog` with cancel + danger action; failed exclusions stay selected |
+| Selection-bar select | `Select` panels opened from a selection bar use `SELECTION_BAR_SELECT_PANEL_Z_INDEX` (`15010`) so the list clears the feedback stack |
 
 **Accessibility:** `<table aria-label>`, select-all checkbox with
 `aria-label`, shift-select, Escape clears overlays before selection, pagination

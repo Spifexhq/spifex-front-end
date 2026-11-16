@@ -162,6 +162,7 @@
     "cancel": "Cancel",
     "save": "Save review",
     "exclude": "Exclude",
+    "confirmExclude": "Exclude {{count}} selected transactions from this import? They will not create entries.",
     "completed": "Import completed",
     "completedHelp": "The source document is retained with your import history. Created entries are available in Cash flow.",
     "reviewHelp": "Check dates, amounts and categories. Review or exclude every pending transaction before creating entries. Suggestions are never posted automatically.",

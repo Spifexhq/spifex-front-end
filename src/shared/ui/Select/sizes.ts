@@ -1,6 +1,10 @@
 // src/shared/ui/Select/sizes.ts
 import type { SelectSize } from "./Select.types";
 
+/** Anchored select panel layer; the selection-bar variant clears the feedback stack. */
+export const SELECT_PANEL_Z_INDEX = 10070;
+export const SELECTION_BAR_SELECT_PANEL_Z_INDEX = 15010;
+
 type SelectSizeShape = {
   label: string;
   trigger: string;
