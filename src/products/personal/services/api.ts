@@ -18,7 +18,6 @@ export const personalApi = {
   settleBulk: (items: BulkSettleItem[], atomic = true) => request<{updated:PersonalTransaction[];errors:unknown[]}>("personal/transactions/bulk-settle/", "POST", { items, atomic }),
   deleteTransactionsBulk: (ids: string[]) => request<{deleted:string[]}>("personal/transactions/bulk-delete/", "POST", { ids }),
   attachments: (id: string) => request<{results:EntryAttachment[];max_files:number;max_bytes:number}>(`personal/transactions/${id}/attachments/`, "GET"),
-  seedCategories: () => request<{seeded:boolean}>(`personal/categories/seed/`, "POST", {}),
   uploadAttachment: (id: string, file: File) => { const form = new FormData(); form.append("file", file); return request<EntryAttachment>(`personal/transactions/${id}/attachments/`, "POST", form); },
   removeAttachment: (id: string, attachment: string) => request<void>(`personal/transactions/${id}/attachments/${attachment}/`, "DELETE"),
   shareAttachments: (id: string, attachmentIds: string[], entryIds: string[]) => request<{results:EntryAttachment[]}>(`personal/transactions/${id}/share-attachments/`, "POST", { attachment_ids: attachmentIds, entry_ids: entryIds }),

@@ -201,7 +201,6 @@
   "billingHint": "Les prix sont configurés par Spifex et confirmés lors du paiement sécurisé. Les fonctionnalités sont activées après vérification du paiement.",
   "addTransaction": "Ajouter une transaction",
   "filters": "Filtres",
-  "defaultCategory": "Utiliser la catégorie par défaut",
   "editDialogHint": "Modifiez cette transaction. L’historique des paiements et les champs financiers protégés sont conservés.",
   "attachments": "Pièces jointes",
   "addFile": "Ajouter un fichier",
@@ -400,6 +399,5 @@
     "PERSONAL_TRAVEL": "Voyages",
     "PERSONAL_OTHER_EXPENSE": "Autres dépenses"
   },
-  "restoreDefaults": "Ajouter les cat?gories par d?faut",
-  "restoringDefaults": "Ajout..."
+  "chooseCategory": "Choisissez une cat?gorie."
 }

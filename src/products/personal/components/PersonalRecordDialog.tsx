@@ -138,13 +138,14 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   const amount = (name: string, required = true) => <Input key={name} kind="amount" allowNegative={name === "initial_balance" || kind === "contribute"} currency={currency} label={t(name)} value={form[name] || ""} required={required} disabled={busy} onValueChange={(value: string) => update(name, value)} />;
   const date = (name: string, required = true) => <Input key={name} kind="date" label={t(name)} value={form[name] || ""} required={required} disabled={busy} onValueChange={(value: string) => update(name, value)} />;
   const options = (name: string, values: { id: string; name: string }[], optional = false) => {
-    const items = optional ? [{ id: "", name: t(name === "category_id" ? kind === "transactions" ? "defaultCategory" : "allCategories" : "choose") }, ...values] : values;
+    const items = optional ? [{ id: "", name: t(name === "category_id" ? "allCategories" : "choose") }, ...values] : values;
     return <Select key={name} label={t(name)} items={items} selected={items.filter(value => value.id === form[name])} onChange={items => update(name, items[0]?.id || "")} getItemKey={item => item.id} getItemLabel={item => item.name} buttonLabel={t("choose")} singleSelect hideCheckboxes disabled={busy} />;
   };
   const choices = (name: string, values: string[]) => options(name, values.map(value => ({ id: value, name: t(value) })));
   const save = async (event: FormEvent) => {
     event.preventDefault();
     if (busy || lock.current || loading || optionsFailed) return;
+    if (kind === "transactions" && !editLocked && !form.category_id) { setError(t("chooseCategory")); return; }
     lock.current = true;
     setBusy(true);
     setError("");
@@ -225,7 +226,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
       {activeTab === "details" && <>
         {kind === "transactions" && <>
           <div className="sm:col-span-2">{text("description")}</div>
-          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind).map(item => ({ ...item, name: personalCategoryName(item, t) })), true)}</>}
+          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind).map(item => ({ ...item, name: personalCategoryName(item, t) })))}</>}
           <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id} editable/> : kind === "transactions" ? <PendingAttachments
             files={pendingAttachments}
             maxFiles={ATTACHMENT_LIMITS.maxFiles}

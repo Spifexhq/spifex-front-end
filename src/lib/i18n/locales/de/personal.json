@@ -201,7 +201,6 @@
   "billingHint": "Spifex konfiguriert die Preise; diese werden im sicheren Checkout bestätigt. Kostenpflichtige Funktionen werden erst nach Zahlungsbestätigung aktiviert.",
   "addTransaction": "Transaktion hinzufügen",
   "filters": "Filter",
-  "defaultCategory": "Standardkategorie verwenden",
   "editDialogHint": "Transaktion aktualisieren. Zahlungsverlauf und geschützte Finanzfelder bleiben erhalten.",
   "attachments": "Anhänge",
   "addFile": "Datei hinzufügen",
@@ -400,6 +399,5 @@
     "PERSONAL_TRAVEL": "Reisen",
     "PERSONAL_OTHER_EXPENSE": "Sonstige Ausgaben"
   },
-  "restoreDefaults": "Standardkategorien hinzuf?gen",
-  "restoringDefaults": "Wird hinzugef?gt..."
+  "chooseCategory": "Wählen Sie eine Kategorie."
 }
