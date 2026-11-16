@@ -152,29 +152,6 @@ async function downloadTemplate(path: string, filename: string) {
 }
 
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-
-function filenameFromContentDisposition(
-  contentDisposition: string | undefined,
-  fallback: string
-) {
-  const match = contentDisposition?.match(/filename="([^"]+)"/i);
-  return match?.[1] ?? fallback;
-}
-
-
-
-
 export const api = {
   /* --- Auth --- */
   signIn: (payload: SignInRequest) =>
@@ -952,17 +929,6 @@ export const api = {
     return res.data;
   },
 
-  downloadStatement: async (statementId: string) => {
-    const res = await http.get(`banking/statements/${statementId}/download/`, {
-      responseType: "blob",
-      validateStatus: (s: number) => s >= 200 && s < 300,
-    });
-
-    const cd = res.headers?.["content-disposition"] as string | undefined;
-    const filename = filenameFromContentDisposition(cd, `statement_${statementId}.pdf`);
-
-    downloadBlob(res.data as Blob, filename);
-  },
 
 
 
