@@ -162,7 +162,7 @@
     "cancel": "Cancelar",
     "save": "Guardar revisão",
     "exclude": "Excluir",
-    "confirmExclude": "Excluir {{count}} transa??es selecionadas desta importa??o? N?o ser?o criadas transa??es.",
+    "confirmExclude": "Excluir {{count}} transações selecionadas desta importação? Não serão criadas transações.",
     "completed": "Importação concluída",
     "completedHelp": "O documento original é preservado no histórico. Os lançamentos criados estão disponíveis no Fluxo de caixa.",
     "reviewHelp": "Verifique datas, montantes e categorias. Reveja ou exclua todas as transações pendentes antes de criar lançamentos. As sugestões nunca são registadas automaticamente.",

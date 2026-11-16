@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { api } from "@/core/api/requests";
 import type { CashflowCategory } from "@/models/settings/categories";
 import { personalApi } from "@/products/personal/services/api";
 import type { PersonalCategory } from "@/products/personal/types";
-import { personalCategoryName } from "@/shared/financial/categoryName";
 
 function extractCollection<T>(input: unknown): T[] {
   if (Array.isArray(input)) return input as T[];
@@ -24,7 +22,6 @@ function extractCollection<T>(input: unknown): T[] {
 }
 
 export function useCashflowCategories(enabled = true, personal = false) {
-  const { t } = useTranslation("personal");
   const [categories, setCategories] = useState<CashflowCategory[]>([]);
 
   useEffect(() => {
@@ -40,12 +37,12 @@ export function useCashflowCategories(enabled = true, personal = false) {
             id: category.id,
             parent_id: null,
             code: "",
-            name: personalCategoryName(category, t),
+            name: category.name,
             description: "",
             tx_type_hint: category.kind === "income" ? "credit" : category.kind === "expense" ? "debit" : null,
             is_active: category.is_active,
             sort_order: 0,
-            metadata: { default_name: category.default_name ?? "" },
+            metadata: {},
           }));
         } else {
           const response = await api.getCashflowCategories({ active: "true" });
@@ -65,7 +62,7 @@ export function useCashflowCategories(enabled = true, personal = false) {
     return () => {
       alive = false;
     };
-  }, [enabled, personal, t]);
+  }, [enabled, personal]);
 
   return categories;
 }

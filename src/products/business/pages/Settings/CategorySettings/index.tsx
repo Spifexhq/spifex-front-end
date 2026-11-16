@@ -1,6 +1,7 @@
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import DataTable from "@/shared/ui/DataTable";
+import CategoryImportLanguageDialog, { type CategoryImportLanguage } from "@/shared/ui/CategoryImportLanguageDialog";
 import AccountingStatus from "@/products/business/pages/Accounting/components/AccountingStatus";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,7 +9,6 @@ import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
-import Textarea from "@/shared/ui/Input/Textarea";
 import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
 import Popover from "@/shared/ui/Popover";
@@ -38,7 +38,6 @@ type CategoryFormState = {
   tx_type_hint: "credit" | "debit" | "";
   is_active: boolean;
   sort_order: string;
-  metadata_text: string;
 };
 
 type Option<T extends string = string> = {
@@ -54,7 +53,6 @@ const EMPTY_FORM: CategoryFormState = {
   tx_type_hint: "",
   is_active: true,
   sort_order: "0",
-  metadata_text: "{}",
 };
 
 function extractCollection<T>(input: unknown): T[] {
@@ -107,11 +105,13 @@ const CategorySettingsPage: React.FC = () => {
 
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
-  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [importing, setImporting] = React.useState(false);
+  const [importOpen, setImportOpen] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
   const [items, setItems] = React.useState<CashflowCategory[]>([]);
   const [parentChoices, setParentChoices] = React.useState<CashflowCategory[]>([]);
+  const [parentChoicesLoaded, setParentChoicesLoaded] = React.useState(false);
 
   const [draftSearch, setDraftSearch] = React.useState("");
   const [draftStatuses, setDraftStatuses] = React.useState<("active" | "inactive")[]>(["active"]);
@@ -131,9 +131,9 @@ const CategorySettingsPage: React.FC = () => {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [form, setForm] = React.useState<CategoryFormState>(EMPTY_FORM);
 
-  const load = React.useCallback(async () => {
+  const load = React.useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await api.getCashflowCategories({
         is_active: appliedStatuses.length ? appliedStatuses.join(",") : "active,inactive",
         ...(appliedSearch.trim() ? { search: appliedSearch.trim() } : {}),
@@ -146,7 +146,7 @@ const CategorySettingsPage: React.FC = () => {
       setItems([]);
       setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("feedback.loadError")) });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [appliedStatuses, appliedSearch, appliedTxFilter, appliedParent, t]);
 
@@ -157,6 +157,8 @@ const CategorySettingsPage: React.FC = () => {
       setParentChoices(nextItems);
     } catch {
       setParentChoices([]);
+    } finally {
+      setParentChoicesLoaded(true);
     }
   }, []);
 
@@ -258,7 +260,6 @@ const CategorySettingsPage: React.FC = () => {
       tx_type_hint: item.tx_type_hint ?? "",
       is_active: !!item.is_active,
       sort_order: String(item.sort_order ?? 0),
-      metadata_text: JSON.stringify(item.metadata ?? {}, null, 2),
     });
     setModalOpen(true);
   };
@@ -271,14 +272,6 @@ const CategorySettingsPage: React.FC = () => {
       return;
     }
 
-    let metadata: Record<string, unknown> = {};
-    try {
-      metadata = form.metadata_text.trim() ? JSON.parse(form.metadata_text) : {};
-    } catch (notificationCause) {
-      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("feedback.invalidJson")) });
-      return;
-    }
-
     const basePayload: AddCashflowCategoryRequest | EditCashflowCategoryRequest = {
       code: form.code.trim(),
       name: form.name.trim(),
@@ -287,7 +280,6 @@ const CategorySettingsPage: React.FC = () => {
       tx_type_hint: form.tx_type_hint || null,
       is_active: form.is_active,
       sort_order: Number(form.sort_order || 0),
-      metadata,
     };
 
     try {
@@ -312,21 +304,37 @@ const CategorySettingsPage: React.FC = () => {
     }
   };
 
+  const importDefaults = async (language: CategoryImportLanguage) => {
+    try {
+      setImporting(true);
+      const { data } = await api.importCashflowCategoryDefaults(language);
+      setImportOpen(false);
+      await Promise.all([load(true), loadParentChoices()]);
+      setSnackbar({
+        severity: "success",
+        message: data.created
+          ? t("feedback.defaultsImported", { count: data.created })
+          : t("feedback.defaultsAlreadyImported"),
+      });
+    } catch (error) {
+      setSnackbar({
+        severity: "error",
+        message: apiErrorMessage(error, t("feedback.importError")),
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const removeCategory = async (item: CashflowCategory) => {
     try {
-      setDeletingId(item.id);
       await api.deleteCashflowCategory(item.id);
-      setItems(current => current.filter(category => category.id !== item.id));
-      setSnackbar({ severity: "success", message: t("feedback.deleted") });
-      await Promise.all([load(), loadParentChoices()]);
     } catch (error) {
       const message =
         (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         t("feedback.deleteError");
       setSnackbar({ severity: "error", message });
       throw error;
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -351,7 +359,10 @@ const CategorySettingsPage: React.FC = () => {
                 <div ref={statusAnchorRef}><SettingsFilter label={t("table.status")} value={statusFilterLabel} active={!statusIsDefault} expanded={openFilter === "status"} onClick={() => setOpenFilter(openFilter === "status" ? null : "status")} onClear={() => { setDraftStatuses(["active"]); setAppliedStatuses(["active"]); }} /></div>
                 {hasFilters && <SettingsClearFilters label={t("actions.clear")} onClick={clearFilters} />}
               </SettingsFilters>
-              <Button type="button" onClick={openCreate} disabled={saving || !!deletingId}>{t("actions.new")}</Button>
+              <div className="flex flex-wrap items-center gap-2">
+                {parentChoicesLoaded && parentChoices.length === 0 && <Button type="button" variant="outline" onClick={() => setImportOpen(true)} isLoading={importing} disabled={saving || importing}>{importing ? t("actions.importing") : t("actions.importDefaults")}</Button>}
+                <Button type="button" onClick={openCreate} disabled={saving || importing}>{t("actions.new")}</Button>
+              </div>
             </div>
 
             <Popover appearance="settings" open={openFilter === "search"} anchorRef={searchAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.search")} width={420}>
@@ -372,10 +383,20 @@ const CategorySettingsPage: React.FC = () => {
               key={JSON.stringify([appliedSearch, appliedStatuses, appliedTxFilter, appliedParent])}
 
               items={items}
+              selectable
+              selectAllMode="all"
               editLabel={t("actions.edit")}
               emptyLabel={t("table.empty")}
               onEdit={openEdit}
               onDelete={removeCategory}
+              onDeleteMany={items => api.bulkDeleteCashflowCategories(items.map(item => item.id))}
+              onDeleted={ids => {
+                if (!ids.length) return;
+                const removed = new Set(ids);
+                setItems(current => current.filter(category => !removed.has(category.id)));
+                setSnackbar({ severity: "success", message: t("feedback.deleted") });
+                return Promise.all([load(), loadParentChoices()]);
+              }}
               previewFields={[{ key: "order", label: t("table.sort"), render: item => item.sort_order ?? 0 }, { key: "description", label: t("modal.description"), render: item => item.description || t("common.empty") }]}
               columns={[
                 { key: "name", label: t("table.name"), render: item => item.name },
@@ -464,15 +485,6 @@ const CategorySettingsPage: React.FC = () => {
             </label>
           </div>
 
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold text-gray-700">{t("modal.metadata")}</span>
-            <Textarea
-              value={form.metadata_text}
-              onChange={(e) => setForm((prev) => ({ ...prev, metadata_text: e.target.value }))}
-              className="min-h-[180px] font-mono"
-            />
-          </label>
-
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               {t("actions.cancel")}
@@ -483,6 +495,8 @@ const CategorySettingsPage: React.FC = () => {
           </div>
         </SidePanelForm>
       </SidePanel>
+
+      <CategoryImportLanguageDialog open={importOpen} busy={importing} onClose={() => { if (!importing) setImportOpen(false); }} onConfirm={language => void importDefaults(language)} />
 
       {snackbar ? (
         <Snackbar

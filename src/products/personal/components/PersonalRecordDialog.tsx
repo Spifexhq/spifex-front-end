@@ -17,7 +17,6 @@ import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { PersonalAccount, PersonalCategory, PersonalCollection, PersonalRecord, PersonalTransaction } from "@/products/personal/types";
 import type { RecurrenceEntry } from "@/models/entries/entries";
 import { allPersonal, today } from "../services/personalData";
-import { personalCategoryName } from "@/shared/financial/categoryName";
 
 type DialogKind = Exclude<PersonalCollection, "accounts" | "transfers"> | "settle" | "contribute" | "transfer";
 type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; transactionKind?: "income" | "expense"; onClose(): void; onSaved(): void; onEditRelated?(id: string): Promise<void> };
@@ -226,7 +225,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
       {activeTab === "details" && <>
         {kind === "transactions" && <>
           <div className="sm:col-span-2">{text("description")}</div>
-          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind).map(item => ({ ...item, name: personalCategoryName(item, t) })))}</>}
+          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind))}</>}
           <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id} editable/> : kind === "transactions" ? <PendingAttachments
             files={pendingAttachments}
             maxFiles={ATTACHMENT_LIMITS.maxFiles}
@@ -241,7 +240,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
         </>}
         {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}
         {kind === "categories" && <ToggleSwitch checked={form.is_active === "true"} onChange={value => update("is_active", String(value))} label={t("active")} />}
-        {kind === "budgets" && <>{text("name")}{date("month")}{options("category_id", categories.filter(item => item.kind !== "income").map(item => ({ ...item, name: personalCategoryName(item, t) })), true)}{amount("limit")}</>}
+        {kind === "budgets" && <>{text("name")}{date("month")}{options("category_id", categories.filter(item => item.kind !== "income"), true)}{amount("limit")}</>}
         {kind === "goals" && <>{text("name")}{amount("target")}{date("target_date", false)}</>}
         {kind === "settle" && <><div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-6 text-gray-600 sm:col-span-2">{t("partialPaymentHint")}<p className="mt-1 font-medium text-gray-800">{t("open_amount")}: {formatCurrency(record && "open_amount" in record ? record.open_amount : "0", currency)}</p></div>{options("bank_id", accounts)}{amount("amount")}{date("value_date")}</>}
         {kind === "transfer" && <>{options("source_bank_id", accounts)}{options("destination_bank_id", accounts.filter(item => item.id !== form.source_bank_id))}{amount("amount")}{date("value_date")}{text("notes", false)}</>}

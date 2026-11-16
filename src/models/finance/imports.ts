@@ -43,7 +43,6 @@ export type LookupOption = {
   label: string;
   entity_type?: string;
   code?: string;
-  default_name?: string;
 };
 
 export type StatementImportDepartment = {

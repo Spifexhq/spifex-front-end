@@ -110,5 +110,19 @@
     "limit": "Tariflimit: {{limit}}.",
     "resets": "Zurücksetzung am {{date}}.",
     "viewUsage": "Nutzung und Limits ansehen"
+  },
+  "categoryImport": {
+    "title": "Sprache der Kategorien wählen",
+    "description": "Die vordefinierten Kategorien werden mit Namen in der ausgewählten Sprache erstellt. Diese Auswahl kann nach dem Import nicht geändert werden.",
+    "languageLabel": "Sprache der Kategorien",
+    "import": "Kategorien importieren",
+    "importing": "Wird importiert...",
+    "cancel": "Abbrechen",
+    "languages": {
+      "en": "Englisch",
+      "pt": "Portugiesisch",
+      "fr": "Französisch",
+      "de": "Deutsch"
+    }
   }
 }

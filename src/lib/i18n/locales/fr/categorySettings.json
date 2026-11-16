@@ -58,11 +58,12 @@
     "txHint": "Indice de transaction",
     "noHint": "Aucun indice",
     "sortOrder": "Ordre",
-    "active": "Active",
-    "metadata": "Métadonnées (JSON)"
+    "active": "Active"
   },
   "actions": {
     "new": "Nouvelle catégorie",
+    "importDefaults": "Importer les valeurs par défaut",
+    "importing": "Importation...",
     "apply": "Appliquer",
     "clear": "Effacer",
     "edit": "Modifier",
@@ -75,8 +76,10 @@
   },
   "feedback": {
     "loadError": "Impossible de charger les catégories de trésorerie.",
+    "importError": "Impossible d'importer les catégories par défaut.",
+    "defaultsImported": "{{count}} catégories par défaut importées.",
+    "defaultsAlreadyImported": "Toutes les catégories par défaut sont déjà présentes.",
     "nameRequired": "Le nom est obligatoire.",
-    "invalidJson": "Les métadonnées doivent être un JSON valide.",
     "created": "Catégorie créée.",
     "updated": "Catégorie mise à jour.",
     "deleted": "Catégorie supprimée.",

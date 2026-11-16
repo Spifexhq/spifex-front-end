@@ -110,5 +110,19 @@
     "limit": "Limite do plano: {{limit}}.",
     "resets": "Renova em {{date}}.",
     "viewUsage": "Ver utilização e limites"
+  },
+  "categoryImport": {
+    "title": "Escolha o idioma das categorias",
+    "description": "As categorias predefinidas serão criadas com nomes no idioma selecionado. Esta escolha não pode ser alterada após a importação.",
+    "languageLabel": "Idioma das categorias",
+    "import": "Importar categorias",
+    "importing": "A importar...",
+    "cancel": "Cancelar",
+    "languages": {
+      "en": "Inglês",
+      "pt": "Português",
+      "fr": "Francês",
+      "de": "Alemão"
+    }
   }
 }

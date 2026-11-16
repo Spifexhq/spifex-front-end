@@ -58,11 +58,12 @@
     "txHint": "Transaktionshinweis",
     "noHint": "Kein Hinweis",
     "sortOrder": "Sortierung",
-    "active": "Aktiv",
-    "metadata": "Metadaten (JSON)"
+    "active": "Aktiv"
   },
   "actions": {
     "new": "Neue Kategorie",
+    "importDefaults": "Standardkategorien importieren",
+    "importing": "Wird importiert...",
     "apply": "Anwenden",
     "clear": "Zurücksetzen",
     "edit": "Bearbeiten",
@@ -75,8 +76,10 @@
   },
   "feedback": {
     "loadError": "Cashflow-Kategorien konnten nicht geladen werden.",
+    "importError": "Standardkategorien konnten nicht importiert werden.",
+    "defaultsImported": "{{count}} Standardkategorien importiert.",
+    "defaultsAlreadyImported": "Alle Standardkategorien sind bereits vorhanden.",
     "nameRequired": "Name ist erforderlich.",
-    "invalidJson": "Metadaten müssen gültiges JSON sein.",
     "created": "Kategorie erstellt.",
     "updated": "Kategorie aktualisiert.",
     "deleted": "Kategorie gelöscht.",

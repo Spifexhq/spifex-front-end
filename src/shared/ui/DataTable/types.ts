@@ -39,6 +39,8 @@ export type DataTableProps<T> = {
     virtualOverscan?: number;
     selectionPadding?: number;
     canSelect?: boolean;
+    /** "all" makes the header checkbox select every item, not only the current page. */
+    selectAllMode?: "page" | "all";
     rowKind?(item: T): "record" | "summary";
     clearSelectionToken?: number;
     selectionActions?(selection: TableSelection<T>): ReactNode;
@@ -68,6 +70,8 @@ export type DataTableProps<T> = {
     onEdit?(item: T): void;
     onInspect?(item: T): void;
     onDelete?(item: T): Promise<unknown>;
+    /** Atomic multi-record deletion. Used instead of per-record onDelete calls. */
+    onDeleteMany?(items: T[]): Promise<unknown>;
     onDeleted?(ids: string[]): unknown;
     actions?(item: T): ReactNode;
     mobileActions?: boolean;

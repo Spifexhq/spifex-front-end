@@ -10,6 +10,7 @@ import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Popover from "@/shared/ui/Popover";
 import { Select } from "@/shared/ui/Select";
+import CategoryImportLanguageDialog, { type CategoryImportLanguage } from "@/shared/ui/CategoryImportLanguageDialog";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsClearFilters, SettingsFilter } from "@/shared/ui/Settings/SettingsFilter";
 import { personalApi } from "../services/api";
@@ -18,6 +19,7 @@ import { useCollectionColumns } from "./useCollectionColumns";
 import type { PersonalWorkspaceCollection, PersonalRecord } from "../types";
 import PersonalRecordPreview from "./PersonalRecordPreview";
 import PersonalRecordDialog from "./PersonalRecordDialog";
+import PersonalCategorySidePanel from "./PersonalCategorySidePanel";
 import { readonlyWorkspace } from "../services/personalData";
 import { usePersonalAccess } from "../access/PersonalAccessProvider";
 import { PERSONAL_PERMISSION, type PersonalPermission } from "../access/permissions";
@@ -52,6 +54,9 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
   const [preview, setPreview] = useState<PersonalRecord | null>(null);
   const [dialog, setDialog] = useState<{ kind: PersonalWorkspaceCollection | "contribute"; record?: PersonalRecord | null } | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [importingDefaults, setImportingDefaults] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [revision, setRevision] = useState(0);
   const pager = useCursorPager<PersonalRecord, { resourceCount: number; activeCount: number }>(async (page, page_size) => {
     const { data } = await personalApi.list(collection, {
@@ -64,14 +69,31 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
     return { items: data.results, nextCursor: data.next ? getCursorFromUrl(data.next) : undefined, totalCount: data.count, metadata: { resourceCount: data.resource_count ?? data.count, activeCount: data.active_count ?? data.resource_count ?? data.count } };
   }, { deps: [collection, appliedSearch, appliedKind, appliedStatuses, workspace?.id, workspace?.lifecycle, readRevision, revision] });
   const columns = useCollectionColumns(collection, workspace?.currency);
-  useEffect(() => { setPreview(null); setDialog(null); setError(""); setSearch(""); setAppliedSearch(""); setKind([]); setAppliedKind([]); setStatuses(["active"]); setAppliedStatuses(["active"]); }, [collection, workspace?.id]);
+  useEffect(() => { setPreview(null); setDialog(null); setError(""); setNotice(""); setSearch(""); setAppliedSearch(""); setKind([]); setAppliedKind([]); setStatuses(["active"]); setAppliedStatuses(["active"]); }, [collection, workspace?.id]);
   const refresh = () => { void pager.refresh(); void access.refresh(); setRevision(value => value + 1); setPreview(null); };
   const edit = (row: PersonalRecord) => setDialog({ kind: collection, record: row });
+  const importDefaults = async (language: CategoryImportLanguage) => {
+    try {
+      setImportingDefaults(true);
+      setError("");
+      setNotice("");
+      const { data } = await personalApi.importCategoryDefaults(language);
+      setImportOpen(false);
+      setNotice(data.created ? t("categoriesImport.created", { count: data.created }) : t("categoriesImport.none"));
+      refresh();
+    } catch (cause) {
+      setError(apiErrorMessage(cause, t("categoriesImport.error")));
+    } finally {
+      setImportingDefaults(false);
+    }
+  };
   const permissions = collectionPermissions[collection];
   const capacityCount = collection === "categories" ? pager.metadata?.activeCount : pager.metadata?.resourceCount;
   const canCreate = !readOnly && capacityCount !== undefined && access.canUse(permissions.add, 1, capacityCount);
   const canEdit = !readOnly && access.canUse(permissions.change);
   const canDelete = !readOnly && access.canUse(permissions.remove);
+  const hasCategories = (pager.metadata?.resourceCount ?? 0) > 0;
+  const canImportDefaults = isCategories && !readOnly && access.canUse(permissions.add) && !hasCategories;
   const addEntitlement = access.entitlement(permissions.capacity);
   const kindOptions: Array<{ value: CategoryKind; label: string }> = [
     { value: "income", label: t("income") },
@@ -102,7 +124,10 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
           {isCategories && <div ref={statusAnchorRef}><SettingsFilter label={t("status")} value={appliedStatuses.length ? appliedStatuses.map(value => t(value)).join(", ") : t("allStatuses")} active={!statusIsDefault} expanded={openFilter === "status"} onClick={() => setOpenFilter(current => current === "status" ? null : "status")} onClear={() => { setStatuses(["active"]); setAppliedStatuses(["active"]); }} /></div>}
           {hasSettingsFilters && <SettingsClearFilters label={t("clearFilters")} onClick={clearSettingsFilters} />}
         </SettingsFilters>
-        {canCreate && <Button type="button" onClick={() => setDialog({ kind: collection })}>{t("create")}</Button>}
+        {canCreate && <div className="flex flex-wrap items-center gap-2">
+          {canImportDefaults && <Button type="button" variant="outline" onClick={() => setImportOpen(true)} disabled={importingDefaults}>{importingDefaults ? t("categoriesImport.importing") : t("categoriesImport.action")}</Button>}
+          <Button type="button" onClick={() => setDialog({ kind: collection })}>{t("create")}</Button>
+        </div>}
       </div>
       <Popover appearance="settings" open={openFilter === "search"} anchorRef={searchAnchorRef} onClose={() => setOpenFilter(null)} title={t("search")} width={420}>
         <div className="p-4">
@@ -137,11 +162,15 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
       {search && <Button type="button" variant="outline" onClick={() => { setSearch(""); }}>{t("clearFilters")}</Button>}
     </Card>}
     {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
-    <DataTable<PersonalRecord> items={pager.items} columns={columns} pager={pager} emptyLabel={t("empty")} editLabel={t("edit")} error={pager.error} busy={pager.loading} onInspect={setPreview} canEdit={canEdit} onEdit={edit} canDelete={canDelete} onDelete={async row => {
+    {notice && <p role="status" className="text-xs text-emerald-700">{notice}</p>}
+    <DataTable<PersonalRecord> items={pager.items} columns={columns} pager={pager} selectable emptyLabel={t("empty")} editLabel={t("edit")} error={pager.error} busy={pager.loading} onInspect={setPreview} canEdit={canEdit} onEdit={edit} canDelete={canDelete} onDelete={async row => {
       try { await personalApi.remove(collection, row.id); }
       catch (cause) { setError(apiErrorMessage(cause, t("error"))); throw cause; }
     }} onDeleted={refresh}/>
     <PersonalRecordPreview collection={collection} record={preview} currency={workspace?.currency} readOnly={readOnly || !canEdit} onClose={() => setPreview(null)} onEdit={edit} onSettle={() => {}} onContribute={row => { if (collection === "goals" && canEdit) setDialog({ kind: "contribute", record: row }); }}/>
-    {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}`} kind={dialog.kind} record={dialog.record} currency={workspace?.currency || "EUR"} onClose={() => setDialog(null)} onSaved={refresh}/>}
+    {dialog?.kind === "categories"
+      ? <PersonalCategorySidePanel key={`categories:${dialog.record?.id || "new"}`} record={dialog.record} onClose={() => setDialog(null)} onSaved={refresh}/>
+      : dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}`} kind={dialog.kind} record={dialog.record} currency={workspace?.currency || "EUR"} onClose={() => setDialog(null)} onSaved={refresh}/>}
+    <CategoryImportLanguageDialog open={importOpen} busy={importingDefaults} onClose={() => { if (!importingDefaults) setImportOpen(false); }} onConfirm={language => void importDefaults(language)} />
   </div>;
 }

@@ -6,10 +6,10 @@
     "back": "Zurück zum Arbeitsbereich",
     "expand": "Seitenleiste ausklappen",
     "collapse": "Seitenleiste einklappen",
-    "close": "Schlie?en",
+    "close": "Schließen",
     "groups": {
       "workspace": "Arbeitsbereich",
-      "operations": "Vorg?nge"
+      "operations": "Vorgänge"
     }
   },
   "nav": {
@@ -114,7 +114,7 @@
       "reorderPointHint": "Warnt, wenn der Bestand auf oder unter diesem Wert liegt. Null deaktiviert die Warnung.",
       "unitCostHint": "Referenzkosten pro Einheit in der Arbeitsbereichswährung.",
       "stockReadOnly": "Der Bestand wird über Zugänge, Abgänge, Korrekturen und Umbuchungen geändert.",
-      "priceHistoryHint": "Eine Preis?nderung erzeugt einen neuen g?ltigen Preis. Nutzen Sie den Preisverlauf, um einen fr?heren Preis zu korrigieren."
+      "priceHistoryHint": "Eine Preisänderung erzeugt einen neuen gültigen Preis. Nutzen Sie den Preisverlauf, um einen früheren Preis zu korrigieren."
     },
     "preview": {
       "stockTitle": "Bestand nach Lagerort",
@@ -270,7 +270,7 @@
   "empty": "Keine Einträge gefunden.",
   "units": {
     "none": "Keine Einheit",
-    "pcs": "St?ck",
+    "pcs": "Stück",
     "unit": "Einheit",
     "pair": "Paar",
     "set": "Satz",
@@ -280,7 +280,7 @@
     "case": "Kasten",
     "carton": "Karton",
     "pallet": "Palette",
-    "bundle": "B?ndel",
+    "bundle": "Bündel",
     "roll": "Rolle",
     "sheet": "Blatt",
     "bag": "Beutel",
@@ -299,17 +299,17 @@
     "l": "Liter",
     "m3": "Kubikmeter",
     "gal": "Gallone",
-    "fl_oz": "Fl?ssigunze",
+    "fl_oz": "Flüssigunze",
     "mm": "Millimeter",
     "cm": "Zentimeter",
     "m": "Meter",
     "km": "Kilometer",
     "in": "Zoll",
-    "ft": "Fu?",
+    "ft": "Fuß",
     "yd": "Yard",
     "cm2": "Quadratzentimeter",
     "m2": "Quadratmeter",
-    "ft2": "Quadratfu?",
+    "ft2": "Quadratfuß",
     "min": "Minute",
     "h": "Stunde",
     "day": "Tag",
@@ -323,26 +323,26 @@
   "prices": {
     "historyTitle": "Preisverlauf",
     "manage": "Verwalten",
-    "effectiveAt": "G?ltig ab",
-    "unitCost": "St?ckkosten",
-    "change": "?nderung",
+    "effectiveAt": "Gültig ab",
+    "unitCost": "Stückkosten",
+    "change": "Änderung",
     "empty": "Noch kein Preisverlauf.",
     "current": "Aktueller Preis",
     "perUnit": "Pro {{unit}}",
     "currentTag": "Aktuell",
     "correct": "Korrigieren",
-    "add": "Preis hinzuf?gen",
-    "addTitle": "Preis?nderung hinzuf?gen",
+    "add": "Preis hinzufügen",
+    "addTitle": "Preisänderung hinzufügen",
     "correctTitle": "Preis korrigieren",
     "reason": "Grund",
-    "reasonPlaceholder": "z. B. Lieferantenerh?hung, Korrektur",
-    "invalidPrice": "Geben Sie einen g?ltigen Preis ein.",
-    "added": "Preis?nderung erfasst.",
+    "reasonPlaceholder": "z. B. Lieferantenerhöhung, Korrektur",
+    "invalidPrice": "Geben Sie einen gültigen Preis ein.",
+    "added": "Preisänderung erfasst.",
     "corrected": "Preis korrigiert.",
-    "concurrent": "Dieser Preis wurde w?hrend der Bearbeitung ge?ndert. Neu laden und erneut versuchen.",
+    "concurrent": "Dieser Preis wurde während der Bearbeitung geändert. Neu laden und erneut versuchen.",
     "saveError": "Preis konnte nicht gespeichert werden.",
     "loadError": "Preisverlauf konnte nicht geladen werden.",
-    "currentHint": "Aktueller Preis: {{price}}. Beim Speichern einer ?nderung wird ein neuer g?ltiger Preis angeh?ngt.",
-    "back": "Zur?ck"
+    "currentHint": "Aktueller Preis: {{price}}. Beim Speichern einer Änderung wird ein neuer gültiger Preis angehängt.",
+    "back": "Zurück"
   }
 }

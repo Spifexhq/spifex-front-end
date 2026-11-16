@@ -58,11 +58,12 @@
     "txHint": "Transaction hint",
     "noHint": "No hint",
     "sortOrder": "Sort order",
-    "active": "Active",
-    "metadata": "Metadata (JSON)"
+    "active": "Active"
   },
   "actions": {
     "new": "New category",
+    "importDefaults": "Import defaults",
+    "importing": "Importing...",
     "apply": "Apply",
     "clear": "Clear",
     "edit": "Edit",
@@ -75,8 +76,10 @@
   },
   "feedback": {
     "loadError": "Failed to load cashflow categories.",
+    "importError": "Failed to import the default categories.",
+    "defaultsImported": "{{count}} default categories imported.",
+    "defaultsAlreadyImported": "All default categories are already present.",
     "nameRequired": "Name is required.",
-    "invalidJson": "Metadata must be valid JSON.",
     "created": "Category created.",
     "updated": "Category updated.",
     "deleted": "Category deleted.",

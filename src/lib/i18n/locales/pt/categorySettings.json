@@ -58,11 +58,12 @@
     "txHint": "Indicação de transação",
     "noHint": "Sem indicação",
     "sortOrder": "Ordem",
-    "active": "Ativa",
-    "metadata": "Metadados (JSON)"
+    "active": "Ativa"
   },
   "actions": {
     "new": "Nova categoria",
+    "importDefaults": "Importar predefinições",
+    "importing": "A importar...",
     "apply": "Aplicar",
     "clear": "Limpar",
     "edit": "Editar",
@@ -75,8 +76,10 @@
   },
   "feedback": {
     "loadError": "Não foi possível carregar as categorias de cashflow.",
+    "importError": "Não foi possível importar as categorias predefinidas.",
+    "defaultsImported": "{{count}} categorias predefinidas importadas.",
+    "defaultsAlreadyImported": "Todas as categorias predefinidas já existem.",
     "nameRequired": "O nome é obrigatório.",
-    "invalidJson": "Os metadados têm de ser JSON válido.",
     "created": "Categoria criada.",
     "updated": "Categoria atualizada.",
     "deleted": "Categoria apagada.",

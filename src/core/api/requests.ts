@@ -107,6 +107,7 @@ import type {
   EditCashflowCategoryRequest,
   GetCashflowCategoriesParams,
   GetCashflowCategoriesResponse,
+  ImportCashflowCategoryDefaultsResponse,
 } from '@/models/settings/categories';
 import type {
   GetStatementsParams,
@@ -659,6 +660,12 @@ export const api = {
 
   deleteCashflowCategory: (categoryId: string) =>
     request<void>(`cashflow/categories/${categoryId}/`, "DELETE"),
+
+  bulkDeleteCashflowCategories: (ids: string[]) =>
+    request<{ deleted: string[] }>("cashflow/categories/bulk-delete/", "POST", { ids }),
+
+  importCashflowCategoryDefaults: (language?: string) =>
+    request<ImportCashflowCategoryDefaultsResponse>("cashflow/categories/import-defaults/", "POST", language ? { language } : {}),
 
   getEntryAccountingReadiness: (entryId: string) =>
     request<EntryAccountingReadinessEnvelope>(`cashflow/entries/${entryId}/accounting-readiness/`, 'GET'),

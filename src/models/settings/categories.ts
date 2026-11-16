@@ -24,6 +24,13 @@ export type GetCashflowCategoriesParams = {
 
 export type GetCashflowCategoriesResponse = CashflowCategory[];
 
+export type ImportCashflowCategoryDefaultsResponse = {
+  created: number;
+  skipped: number;
+  total: number;
+  codes: string[];
+};
+
 export type AddCashflowCategoryRequest = {
   code?: string;
   name: string;

@@ -26,7 +26,6 @@ import PersonalSettledActivityPreview from "./PersonalSettledActivityPreview";
 import { usePersonalAccess } from "../access/PersonalAccessProvider";
 import { PERSONAL_PERMISSION } from "../access/permissions";
 import { PERSONAL_FINANCE_CHANGED } from "../events";
-import { personalCategoryName } from "@/shared/financial/categoryName";
 
 type Basis = "outstanding" | "settled";
 export type { Basis };
@@ -244,7 +243,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
   const rowAdapters = normalizeRows(items);
   const secondColumnLabel = t(settled ? "personal:bank_name" : "personal:category_name");
   const renderSecondary = (record: FinancialActivityRecord<TableItem>) => {
-    if (record.activityKind === "entry" && "category_name" in record.source) return record.source.category_name ? personalCategoryName({ name: record.source.category_name, code: record.source.category_code, default_name: record.source.category_default_name }, t) : null;
+    if (record.activityKind === "entry" && "category_name" in record.source) return record.source.category_name || null;
     return record.bankName || ("bank_name" in record.source ? record.source.bank_name : null) || null;
   };
   const inspect = (row: TableItem) => onInspect(row);

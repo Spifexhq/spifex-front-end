@@ -32,6 +32,7 @@ export const personalApi = {
   create: (collection: Exclude<PersonalCollection,"transfers">, payload: Record<string,unknown>) => request<PersonalRecord | {created_count:number;transactions:PersonalTransaction[]}>(`personal/${collection}/`, "POST", payload),
   edit: (collection: Exclude<PersonalCollection,"transfers">, id: string, payload: Record<string,unknown>) => request<PersonalRecord>(`personal/${collection}/${id}/`, "PATCH", payload),
   remove: (collection: PersonalCollection, id: string) => request<void>(`personal/${collection}/${id}/`, "DELETE"),
+  importCategoryDefaults: (language?: string) => request<{created:number;skipped:number;total:number;codes:string[]}>("personal/categories/import-defaults/", "POST", language ? { language } : {}),
   settle: (id: string, payload: Record<string,unknown>) => request(`personal/transactions/${id}/settle/`, "POST", payload),
   reverseSettlement: (entryId: string, settlementId: string) => request<PersonalTransaction>(`personal/transactions/${entryId}/settlements/${settlementId}/`, "DELETE"),
   transfer: (payload: Record<string,unknown>) => request("personal/transfers/", "POST", payload),

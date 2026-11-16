@@ -8,8 +8,8 @@
     "collapse": "Recolher barra lateral",
     "close": "Fechar",
     "groups": {
-      "workspace": "?rea de trabalho",
-      "operations": "Opera??es"
+      "workspace": "área de trabalho",
+      "operations": "Operações"
     }
   },
   "nav": {
@@ -114,7 +114,7 @@
       "reorderPointHint": "Avisa quando o stock estiver no limite ou abaixo. Zero desativa o aviso.",
       "unitCostHint": "Custo de referência por unidade na moeda do espaço de trabalho.",
       "stockReadOnly": "O stock é alterado através de entradas, saídas, ajustes e transferências.",
-      "priceHistoryHint": "Alterar o pre?o regista um novo pre?o efetivo. Use o hist?rico para corrigir um pre?o anterior."
+      "priceHistoryHint": "Alterar o preço regista um novo preço efetivo. Use o histórico para corrigir um preço anterior."
     },
     "preview": {
       "stockTitle": "Stock por localização",
@@ -214,10 +214,10 @@
       "adjustment": "Escolha uma quantidade diferente para criar um ajuste.",
       "sameLocation": "Escolha duas localizações diferentes."
     },
-    "levelPreviewTitle": "N?vel de stock",
+    "levelPreviewTitle": "Nível de stock",
     "movementPreviewTitle": "Detalhes do movimento",
     "stockValue": "Valor do stock",
-    "locationMovements": "Movimentos recentes nesta localiza??o"
+    "locationMovements": "Movimentos recentes nesta localização"
   },
   "locations": {
     "add": "Adicionar localização",
@@ -252,11 +252,11 @@
       "concurrent": "Esta localização foi alterada enquanto a editava. Recarregue e tente novamente.",
       "validation": "Código e nome são obrigatórios."
     },
-    "previewTitle": "Detalhes da localiza??o",
-    "stockTitle": "Stock nesta localiza??o",
+    "previewTitle": "Detalhes da localização",
+    "stockTitle": "Stock nesta localização",
     "filters": {
       "default": "Predefinida",
-      "custom": "N?o predefinida"
+      "custom": "Não predefinida"
     }
   },
   "panel": {
@@ -270,15 +270,15 @@
   "empty": "Nenhum registo encontrado.",
   "units": {
     "none": "Sem unidade",
-    "pcs": "Pe?as",
+    "pcs": "Peças",
     "unit": "Unidade",
     "pair": "Par",
     "set": "Conjunto",
-    "dozen": "D?zia",
+    "dozen": "Dúzia",
     "pack": "Pacote",
     "box": "Caixa",
     "case": "Caixa de embarque",
-    "carton": "Cart?o",
+    "carton": "Cartão",
     "pallet": "Palete",
     "bundle": "Fardo",
     "roll": "Rolo",
@@ -291,58 +291,58 @@
     "g": "Grama",
     "kg": "Quilograma",
     "t": "Tonelada",
-    "oz": "On?a",
+    "oz": "Onça",
     "lb": "Libra",
     "ml": "Mililitro",
     "cl": "Centilitro",
     "dl": "Decilitro",
     "l": "Litro",
-    "m3": "Metro c?bico",
-    "gal": "Gal?o",
-    "fl_oz": "On?a l?quida",
-    "mm": "Mil?metro",
-    "cm": "Cent?metro",
+    "m3": "Metro cúbico",
+    "gal": "Galão",
+    "fl_oz": "Onça líquida",
+    "mm": "Milímetro",
+    "cm": "Centímetro",
     "m": "Metro",
-    "km": "Quil?metro",
+    "km": "Quilómetro",
     "in": "Polegada",
-    "ft": "P?",
+    "ft": "Pé",
     "yd": "Jarda",
-    "cm2": "Cent?metro quadrado",
+    "cm2": "Centímetro quadrado",
     "m2": "Metro quadrado",
-    "ft2": "P? quadrado",
+    "ft2": "Pé quadrado",
     "min": "Minuto",
     "h": "Hora",
     "day": "Dia",
     "week": "Semana",
-    "month": "M?s",
+    "month": "Mês",
     "year": "Ano",
     "kwh": "Quilowatt-hora",
     "mwh": "Megawatt-hora",
     "other": "Outra unidade"
   },
   "prices": {
-    "historyTitle": "Hist?rico de pre?os",
+    "historyTitle": "Histórico de preços",
     "manage": "Gerir",
     "effectiveAt": "Data efetiva",
-    "unitCost": "Custo unit?rio",
-    "change": "Varia??o",
-    "empty": "Ainda n?o existe hist?rico de pre?os.",
-    "current": "Pre?o atual",
+    "unitCost": "Custo unitário",
+    "change": "Variação",
+    "empty": "Ainda não existe histórico de preços.",
+    "current": "Preço atual",
     "perUnit": "Por {{unit}}",
     "currentTag": "Atual",
     "correct": "Corrigir",
-    "add": "Adicionar pre?o",
-    "addTitle": "Adicionar altera??o de pre?o",
-    "correctTitle": "Corrigir pre?o",
+    "add": "Adicionar preço",
+    "addTitle": "Adicionar alteração de preço",
+    "correctTitle": "Corrigir preço",
     "reason": "Motivo",
-    "reasonPlaceholder": "ex.: Aumento do fornecedor, corre??o",
-    "invalidPrice": "Introduza um pre?o v?lido.",
-    "added": "Altera??o de pre?o registada.",
-    "corrected": "Pre?o corrigido.",
-    "concurrent": "Este pre?o foi alterado enquanto o editava. Recarregue e tente novamente.",
-    "saveError": "N?o foi poss?vel guardar o pre?o.",
-    "loadError": "N?o foi poss?vel carregar o hist?rico de pre?os.",
-    "currentHint": "Pre?o atual: {{price}}. Guardar uma altera??o acrescenta um novo pre?o efetivo.",
+    "reasonPlaceholder": "ex.: Aumento do fornecedor, correção",
+    "invalidPrice": "Introduza um preço válido.",
+    "added": "Alteração de preço registada.",
+    "corrected": "Preço corrigido.",
+    "concurrent": "Este preço foi alterado enquanto o editava. Recarregue e tente novamente.",
+    "saveError": "Não foi possível guardar o preço.",
+    "loadError": "Não foi possível carregar o histórico de preços.",
+    "currentHint": "Preço atual: {{price}}. Guardar uma alteração acrescenta um novo preço efetivo.",
     "back": "Voltar"
   }
 }

@@ -110,5 +110,19 @@
     "limit": "Limite du forfait : {{limit}}.",
     "resets": "Réinitialisation le {{date}}.",
     "viewUsage": "Voir l’utilisation et les limites"
+  },
+  "categoryImport": {
+    "title": "Choisissez la langue des catégories",
+    "description": "Les catégories prédéfinies seront créées avec des noms dans la langue sélectionnée. Ce choix ne peut pas être modifié après l'importation.",
+    "languageLabel": "Langue des catégories",
+    "import": "Importer les catégories",
+    "importing": "Importation...",
+    "cancel": "Annuler",
+    "languages": {
+      "en": "Anglais",
+      "pt": "Portugais",
+      "fr": "Français",
+      "de": "Allemand"
+    }
   }
 }

@@ -110,5 +110,19 @@
     "limit": "Plan limit: {{limit}}.",
     "resets": "Resets on {{date}}.",
     "viewUsage": "View usage and limits"
+  },
+  "categoryImport": {
+    "title": "Choose the category language",
+    "description": "Predefined categories will be created with names in the selected language. This choice cannot be changed after import.",
+    "languageLabel": "Category language",
+    "import": "Import categories",
+    "importing": "Importing...",
+    "cancel": "Cancel",
+    "languages": {
+      "en": "English",
+      "pt": "Portuguese",
+      "fr": "French",
+      "de": "German"
+    }
   }
 }

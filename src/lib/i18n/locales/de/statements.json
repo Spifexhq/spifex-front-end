@@ -162,7 +162,7 @@
     "cancel": "Abbrechen",
     "save": "Prüfung speichern",
     "exclude": "Ausschließen",
-    "confirmExclude": "{{count}} ausgew?hlte Transaktionen von diesem Import ausschlie?en? Es werden keine Transaktionen erstellt.",
+    "confirmExclude": "{{count}} ausgewählte Transaktionen von diesem Import ausschließen? Es werden keine Transaktionen erstellt.",
     "completed": "Import abgeschlossen",
     "completedHelp": "Das Quelldokument bleibt in der Importhistorie erhalten. Erstellte Einträge sind im Cashflow verfügbar.",
     "reviewHelp": "Prüfen Sie Daten, Beträge und Kategorien. Prüfen oder überspringen Sie jede offene Transaktion vor der Erstellung. Vorschläge werden nie automatisch gebucht.",

@@ -162,7 +162,7 @@
     "cancel": "Annuler",
     "save": "Enregistrer la vérification",
     "exclude": "Exclure",
-    "confirmExclude": "Exclure {{count}} transactions s?lectionn?es de cet import ? Aucune transaction ne sera cr??e.",
+    "confirmExclude": "Exclure {{count}} transactions sélectionnées de cet import ? Aucune transaction ne sera créée.",
     "completed": "Import terminé",
     "completedHelp": "Le document source est conservé dans votre historique. Les écritures créées sont disponibles dans Trésorerie.",
     "reviewHelp": "Vérifiez dates, montants et catégories. Vérifiez ou excluez chaque transaction en attente avant de créer des écritures. Les suggestions ne sont jamais enregistrées automatiquement.",

@@ -9,7 +9,7 @@
     "close": "Fermer",
     "groups": {
       "workspace": "Espace de travail",
-      "operations": "Op?rations"
+      "operations": "Opérations"
     }
   },
   "nav": {
@@ -103,7 +103,7 @@
     "filters": {
       "status": "Statut",
       "stock": "Stock",
-      "uom": "Unit?"
+      "uom": "Unité"
     },
     "panel": {
       "createTitle": "Ajouter un article",
@@ -114,7 +114,7 @@
       "reorderPointHint": "Alerte lorsque le stock est au seuil ou en dessous. Zéro désactive l'alerte.",
       "unitCostHint": "Coût de référence par unité dans la devise de l'espace de travail.",
       "stockReadOnly": "Le stock est modifié via les entrées, sorties, ajustements et transferts.",
-      "priceHistoryHint": "Modifier le prix enregistre un nouveau prix effectif. Utilisez l'historique pour corriger un prix ant?rieur."
+      "priceHistoryHint": "Modifier le prix enregistre un nouveau prix effectif. Utilisez l'historique pour corriger un prix antérieur."
     },
     "preview": {
       "stockTitle": "Stock par emplacement",
@@ -215,9 +215,9 @@
       "sameLocation": "Choisissez deux emplacements différents."
     },
     "levelPreviewTitle": "Niveau de stock",
-    "movementPreviewTitle": "D?tails du mouvement",
+    "movementPreviewTitle": "Détails du mouvement",
     "stockValue": "Valeur du stock",
-    "locationMovements": "Mouvements r?cents ? cet emplacement"
+    "locationMovements": "Mouvements récents à cet emplacement"
   },
   "locations": {
     "add": "Ajouter un emplacement",
@@ -252,11 +252,11 @@
       "concurrent": "Cet emplacement a changé pendant votre modification. Rechargez et réessayez.",
       "validation": "Le code et le nom sont obligatoires."
     },
-    "previewTitle": "D?tails de l'emplacement",
-    "stockTitle": "Stock ? cet emplacement",
+    "previewTitle": "Détails de l'emplacement",
+    "stockTitle": "Stock à cet emplacement",
     "filters": {
-      "default": "Par d?faut",
-      "custom": "Non par d?faut"
+      "default": "Par défaut",
+      "custom": "Non par défaut"
     }
   },
   "panel": {
@@ -269,14 +269,14 @@
   },
   "empty": "Aucun enregistrement trouvé.",
   "units": {
-    "none": "Sans unit?",
-    "pcs": "Pi?ces",
-    "unit": "Unit?",
+    "none": "Sans unité",
+    "pcs": "Pièces",
+    "unit": "Unité",
     "pair": "Paire",
     "set": "Ensemble",
     "dozen": "Douzaine",
     "pack": "Pack",
-    "box": "Bo?te",
+    "box": "Boîte",
     "case": "Caisse",
     "carton": "Carton",
     "pallet": "Palette",
@@ -285,7 +285,7 @@
     "sheet": "Feuille",
     "bag": "Sac",
     "bottle": "Bouteille",
-    "can": "Bo?te m?tallique",
+    "can": "Boîte métallique",
     "kit": "Kit",
     "mg": "Milligramme",
     "g": "Gramme",
@@ -295,36 +295,36 @@
     "lb": "Livre",
     "ml": "Millilitre",
     "cl": "Centilitre",
-    "dl": "D?cilitre",
+    "dl": "Décilitre",
     "l": "Litre",
-    "m3": "M?tre cube",
+    "m3": "Mètre cube",
     "gal": "Gallon",
     "fl_oz": "Once liquide",
-    "mm": "Millim?tre",
-    "cm": "Centim?tre",
-    "m": "M?tre",
-    "km": "Kilom?tre",
+    "mm": "Millimètre",
+    "cm": "Centimètre",
+    "m": "Mètre",
+    "km": "Kilomètre",
     "in": "Pouce",
     "ft": "Pied",
     "yd": "Yard",
-    "cm2": "Centim?tre carr?",
-    "m2": "M?tre carr?",
-    "ft2": "Pied carr?",
+    "cm2": "Centimètre carré",
+    "m2": "Mètre carré",
+    "ft2": "Pied carré",
     "min": "Minute",
     "h": "Heure",
     "day": "Jour",
     "week": "Semaine",
     "month": "Mois",
-    "year": "Ann?e",
+    "year": "Année",
     "kwh": "Kilowattheure",
-    "mwh": "M?gawattheure",
-    "other": "Autre unit?"
+    "mwh": "Mégawattheure",
+    "other": "Autre unité"
   },
   "prices": {
     "historyTitle": "Historique des prix",
-    "manage": "G?rer",
+    "manage": "Gérer",
     "effectiveAt": "Date d'effet",
-    "unitCost": "Co?t unitaire",
+    "unitCost": "Coût unitaire",
     "change": "Variation",
     "empty": "Aucun historique de prix.",
     "current": "Prix actuel",
@@ -337,9 +337,9 @@
     "reason": "Motif",
     "reasonPlaceholder": "ex. : Hausse fournisseur, correction",
     "invalidPrice": "Saisissez un prix valide.",
-    "added": "Variation de prix enregistr?e.",
-    "corrected": "Prix corrig?.",
-    "concurrent": "Ce prix a chang? pendant votre modification. Rechargez et r?essayez.",
+    "added": "Variation de prix enregistrée.",
+    "corrected": "Prix corrigé.",
+    "concurrent": "Ce prix a changé pendant votre modification. Rechargez et réessayez.",
     "saveError": "Impossible d'enregistrer le prix.",
     "loadError": "Impossible de charger l'historique des prix.",
     "currentHint": "Prix actuel : {{price}}. Enregistrer une variation ajoute un nouveau prix effectif.",

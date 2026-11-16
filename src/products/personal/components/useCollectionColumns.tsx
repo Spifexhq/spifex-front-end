@@ -3,20 +3,16 @@ import { useTranslation } from "react-i18next";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { Column } from "@/shared/ui/DataTable";
 import type { PersonalWorkspaceCollection, PersonalRecord } from "../types";
-import { personalCategoryName } from "@/shared/financial/categoryName";
 
 const field = (row: PersonalRecord, key: string) => String((row as unknown as Record<string, unknown>)[key] ?? "");
 export function useCollectionColumns(collection: PersonalWorkspaceCollection, currency?: string) {
   const { t } = useTranslation("personal");
   return useMemo<Column<PersonalRecord>[]>(() => {
     const money = (value: string) => value ? formatCurrency(value, currency) : "—";
-    const nameKey = "name";
     const name: Column<PersonalRecord> = {
       key: "name",
-      label: t(nameKey),
-      render: row => collection === "categories"
-        ? personalCategoryName({ name: field(row, "name"), code: field(row, "code"), default_name: field(row, "default_name") }, t)
-        : field(row, nameKey),
+      label: t("name"),
+      render: row => field(row, "name"),
     };
     const date = (key: string): Column<PersonalRecord> => ({ key, label: t(key), render: row => formatDateFromISO(field(row, key)) });
     const amount = (key: string, label = key): Column<PersonalRecord> => ({ key, label: t(label), render: row => money(field(row, key)) });

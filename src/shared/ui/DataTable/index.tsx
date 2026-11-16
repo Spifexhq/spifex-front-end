@@ -34,7 +34,10 @@ export default function DataTable<T extends {
     const sizing = useColumnWidths(columns.map(column => column.key), props.initialWidths);
     const [previewId, setPreviewId] = useState<string | null>(null), [menu, setMenu] = useState<T | null>(null), [deleting, setDeleting] = useState<T[]>([]), [bulkConfirming, setBulkConfirming] = useState(false), [pending, setPending] = useState(false), [error, setError] = useState("");
     const selectableRows = page.rows.filter(item => props.rowKind?.(item) !== "summary");
-    const selection = useShiftSelect(selectableRows, item => item.id);
+    const selectAllRows = props.selectAllMode === "all"
+        ? items.filter(item => props.rowKind?.(item) !== "summary")
+        : selectableRows;
+    const selection = useShiftSelect(selectAllRows, item => item.id);
     const scroller = useRef<HTMLDivElement>(null);
     const { rowHeight } = props;
     const heightFor = (item: T) => typeof rowHeight === "function" ? rowHeight(item) : rowHeight || 48;
@@ -58,7 +61,8 @@ export default function DataTable<T extends {
     const selected = items.find(item => item.id === previewId);
     const signature = page.rows.map(item => item.id).join("|");
     useEffect(() => { if (pending)
-        return; setSelectedIds(ids => ids.filter(id => signature.split("|").includes(id))); setMenu(null); }, [signature, setSelectedIds, pending]);
+        return; if (props.selectAllMode !== "all")
+        setSelectedIds(ids => ids.filter(id => signature.split("|").includes(id))); setMenu(null); }, [signature, setSelectedIds, pending, props.selectAllMode]);
     useEffect(() => {
         if (props.busy || pending || !selection.selectedIds.length || menu || selected || deleting.length)
             return;
@@ -78,7 +82,18 @@ export default function DataTable<T extends {
         setPending(true);
         setError("");
         try {
-            const results = await Promise.allSettled(targets.map(item => onDelete(item)));
+            if (targets.length > 1 && props.onDeleteMany) {
+                await props.onDeleteMany(targets);
+                const deletedIds = targets.map(item => item.id);
+                selection.clearSelection();
+                if (deletedIds.includes(previewId || ""))
+                    setPreviewId(null);
+                setDeleting([]);
+                setBulkConfirming(false);
+                await onDeleted?.(deletedIds);
+                return;
+            }
+            const results = await Promise.allSettled(targets.map(item => onDelete!(item)));
             const succeeded = targets.filter((_, i) => results[i].status === "fulfilled").map(item => item.id);
             const failed = targets.filter((_, i) => results[i].status === "rejected");
             selection.setSelectedIds(failed.map(item => item.id));
@@ -94,6 +109,8 @@ export default function DataTable<T extends {
             }
         }
         catch (cause) {
+            setDeleting([]);
+            setBulkConfirming(false);
             setError(apiErrorMessage(cause, t("records.deleteError")));
         }
         finally {
@@ -110,7 +127,7 @@ export default function DataTable<T extends {
    <table ref={table} aria-label={t("records.list")} className="w-full table-fixed text-left text-[13px] md:min-w-[740px] [&_th]:font-medium! [&_th]:text-gray-500! [&_td]:py-0! max-md:min-w-0!">
     <colgroup>{selectable && <col className="w-10"/>}{columns.map((column, i) => <col key={column.key} style={{ "--column-width": `${sizing.widths[i]}%`, "--mobile-width": column.mobileWidth || "auto" } as CSSProperties} className={`md:[width:var(--column-width)] max-md:[width:var(--mobile-width)] ${i && !column.mobile ? "hidden md:table-column" : ""}`}/>)}<col className={`${props.mobileActions === false ? "hidden md:table-column" : ""} ${actions ? "w-[180px]" : onDelete && canDelete && onEdit && canEdit ? "w-[96px]" : "w-[55px]"}`}/></colgroup>
     <thead className="sticky top-0 z-10 bg-gray-50"><tr className="border-b border-gray-200 text-xs text-gray-500">
-     {selectable && <th className="px-3"><Checkbox size="small" aria-label={t("records.selectAll")} checked={!!selectableRows.length && selection.selectedIds.length === selectableRows.length} indeterminate={selection.selectedIds.length > 0 && selection.selectedIds.length < selectableRows.length} disabled={busy || !selectionAllowed} onChange={() => { dismissRowDeleteFlow(); selection.handleSelectAll(); }}/></th>}
+     {selectable && <th className="px-3"><Checkbox size="small" aria-label={t("records.selectAll")} checked={!!selectAllRows.length && selection.selectedIds.length === selectAllRows.length} indeterminate={selection.selectedIds.length > 0 && selection.selectedIds.length < selectAllRows.length} disabled={busy || !selectionAllowed} onChange={() => { dismissRowDeleteFlow(); selection.handleSelectAll(); }}/></th>}
      {columns.map((column, i) => <th key={column.key} className={`relative px-3 py-2.5 ${i && !column.mobile ? "hidden md:table-cell" : ""}`}><div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1 [&>*]:max-w-full">{column.header || column.label}</div>{i < columns.length - 1 && <button type="button" aria-label={t("records.resize", { name: column.label })} className="absolute inset-y-2 right-0 hidden w-2 cursor-col-resize touch-none border-r border-gray-200/70 hover:border-gray-400 focus-visible:border-gray-500 focus-visible:outline-none md:block" onPointerDown={event => sizing.start(event, i, table.current?.getBoundingClientRect().width || 800)} onKeyDown={event => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         event.preventDefault();
         sizing.resize(i, event.key === "ArrowRight" ? 1 : -1);
@@ -131,7 +148,7 @@ export default function DataTable<T extends {
         setDeleting([menu]); setMenu(null); }}>{deleteLabel}</button></CompactActionMenu>
   <ConfirmToast open={!!deleting.length && !bulkConfirming} busy={pending} text={props.deleteConfirmText?.(deleting.length) || t("records.deleteConfirm", { count: deleting.length })} confirmLabel={props.deleteConfirmLabel || deleteLabel} cancelLabel={t("btn.cancel")} onCancel={() => { if (!pending)
         setDeleting([]); }} onConfirm={() => void remove()}/>
-  {props.selectionActions && props.selectionActions({ ids: selection.selectedIds, items: selectableRows.filter(item => selection.selectedIds.includes(item.id)), clear: selection.clearSelection })}
+  {props.selectionActions && props.selectionActions({ ids: selection.selectedIds, items: selectAllRows.filter(item => selection.selectedIds.includes(item.id)), clear: selection.clearSelection })}
   <SelectionBar
     open={!props.selectionActions && selection.selectedIds.length > 0}
     role={bulkConfirming ? "alertdialog" : "region"}
@@ -146,7 +163,7 @@ export default function DataTable<T extends {
           <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3"><Button ref={bulkCancelRef} type="button" size="sm" variant="outline" disabled={pending} onClick={() => { setDeleting([]); setBulkConfirming(false); }}>{t("btn.cancel")}</Button><Button type="button" size="sm" variant="outlineBlack" isLoading={pending} disabled={pending || busy} onClick={() => void remove()}>{props.deleteConfirmLabel || deleteLabel}</Button></div>
         </motion.div> : <motion.div key="bulk-actions" initial={{ opacity: 0, y: reducedMotion ? 0 : 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -4 }} transition={{ duration: reducedMotion ? 0 : .15 }} className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs text-gray-700">{t("records.selected", { count: selection.selectedIds.length })}</span>
-          <div className="mt-3 flex w-full items-center justify-end gap-2 border-t border-gray-100 pt-3"><Button type="button" size="sm" variant="outline" disabled={busy} onClick={selection.clearSelection}>{t("records.cancel")}</Button><Button type="button" size="sm" variant="outlineBlack" disabled={busy} onClick={() => { setError(""); setMenu(null); setDeleting(page.rows.filter(item => selection.selectedIds.includes(item.id))); setBulkConfirming(true); }}>{deleteLabel}</Button></div>
+          <div className="mt-3 flex w-full items-center justify-end gap-2 border-t border-gray-100 pt-3"><Button type="button" size="sm" variant="outline" disabled={busy} onClick={selection.clearSelection}>{t("records.cancel")}</Button><Button type="button" size="sm" variant="outlineBlack" disabled={busy} onClick={() => { setError(""); setMenu(null); setDeleting(selectAllRows.filter(item => selection.selectedIds.includes(item.id))); setBulkConfirming(true); }}>{deleteLabel}</Button></div>
         </motion.div>}
       </AnimatePresence>
   </SelectionBar>
