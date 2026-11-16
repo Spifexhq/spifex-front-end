@@ -21,3 +21,14 @@ test('bank import copy has matching keys and interpolation in every language',()
     for(const [key,value] of baseline) { assert.ok(translated.get(key)); assert.deepEqual(translated.get(key).match(/{{[^}]+}}/g),value.match(/{{[^}]+}}/g)); }
   }
 });
+
+test('personal workspaces expose the shared import flow', () => {
+  const routes = fs.readFileSync('src/products/personal/routes/index.tsx', 'utf8');
+  assert.match(routes, /path: "imports"/);
+  assert.match(routes, /path: "imports\/:statementId"/);
+  const page = fs.readFileSync('src/products/personal/pages/Imports/index.tsx', 'utf8');
+  assert.match(page, /product="personal"/);
+  assert.match(page, /allPersonal<PersonalAccount>\("accounts"\)/);
+  const editor = fs.readFileSync('src/products/business/pages/Finance/BankImports/ImportRowEditor.tsx', 'utf8');
+  assert.match(editor, /personal \? \{\} : \{/);
+});

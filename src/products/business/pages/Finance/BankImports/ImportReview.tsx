@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Ban, CheckCheck, Clock3, ListChecks, X } from "lucide-react";
 import { api } from "@/core/api/requests";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
+import { personalCategoryName } from "@/shared/financial/categoryName";
 import type { StatementImportSession, StatementImportLookups, StatementImportRow } from "@/models/finance/imports";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
@@ -19,13 +20,23 @@ import LookupSelect from "./LookupSelect";
 import ImportRowEditor from "./ImportRowEditor";
 import { ImportStatus } from "./ImportHistory";
 
-export default function ImportReview({ sessionId, canEdit }: { sessionId: string; canEdit: boolean }) {
-  const { t, i18n } = useTranslation("statements");
+export default function ImportReview({ sessionId, canEdit, personal = false }: { sessionId: string; canEdit: boolean; personal?: boolean }) {
+  const { t, i18n } = useTranslation("statements"), { t: personalT } = useTranslation("personal");
   const [session, setSession] = useState<StatementImportSession>(), [lookups, setLookups] = useState<StatementImportLookups>();
   const [row, setRow] = useState<StatementImportRow>(), [editorOpen, setEditorOpen] = useState(false), [status, setStatus] = useState(""), [search, setSearch] = useState(""), [query, setQuery] = useState("");
   const [error, setError] = useState(""), [busy, setBusy] = useState(false), [confirm, setConfirm] = useState(false), [retry, setRetry] = useState(0), [bulkCategory, setBulkCategory] = useState("");
   const [clearSelection, setClearSelection] = useState(0), [notice, setNotice] = useState("");
   const mutation = useRef(false);
+  const displayLookups = useMemo(() => {
+    if (!lookups || !personal) return lookups;
+    return {
+      ...lookups,
+      cashflow_categories: lookups.cashflow_categories.map(item => ({
+        ...item,
+        label: personalCategoryName({ name: item.label, code: item.code, default_name: item.default_name }, personalT),
+      })),
+    };
+  }, [lookups, personal, personalT]);
   const pager = useCursorPager<StatementImportRow>(async (cursor, page_size) => {
     const data = await api.getStatementImportRows(sessionId, { cursor, page_size, include_count: true, status, q: query });
     return { items: data.results, nextCursor: getCursorFromUrl(data.next), totalCount: data.count };
@@ -78,7 +89,11 @@ export default function ImportReview({ sessionId, canEdit }: { sessionId: string
           { key: "name", label: t("workspace.description"), render: item => <div className="min-w-0"><span className="font-medium">{item.final_description || item.source_description}</span>{item.duplicate_confidence >= .8 && <span className="ml-2 text-xs text-amber-700">{t("workspace.duplicate")}</span>}</div> },
           { key: "date", label: t("workspace.date"), render: item => item.final_due_date || item.source_date || t("workspace.notSet") },
           { key: "amount", label: t("workspace.amount"), render: item => <span className="whitespace-nowrap tabular-nums">{item.final_tx_type === -1 ? "−" : "+"}{item.final_amount_minor == null ? t("workspace.notSet") : (item.final_amount_minor / 100).toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> },
-          { key: "category", label: t("workspace.category"), render: item => item.cashflow_category?.label || <span className="text-slate-400">{lookups.cashflow_categories.find(option => option.id === item.candidate_payload?.suggested_category_id)?.label || t("workspace.chooseCategory")}</span> },
+          { key: "category", label: t("workspace.category"), render: item => {
+            const saved = displayLookups!.cashflow_categories.find(option => option.id === item.cashflow_category?.id);
+            const suggested = displayLookups!.cashflow_categories.find(option => option.id === item.candidate_payload?.suggested_category_id);
+            return saved?.label || item.cashflow_category?.label || <span className="text-slate-400">{suggested?.label || t("workspace.chooseCategory")}</span>;
+          } },
           { key: "status", label: t("workspace.status"), render: item => <ImportStatus status={item.status} /> },
         ]}
         selectionActions={selection => <SelectionBar open={editable && selection.ids.length > 0} label={t("workspace.selected", { count: selection.ids.length })} className="max-w-3xl" layout>
@@ -87,7 +102,7 @@ export default function ImportReview({ sessionId, canEdit }: { sessionId: string
             <button type="button" disabled={busy} aria-label={t("workspace.clear")} title={t("workspace.clear")} onClick={selection.clear} className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-800"><X size={15} aria-hidden="true" /></button>
           </div>
           <div className="mt-3 flex flex-wrap items-end justify-end gap-2 border-t border-gray-100 pt-3">
-            <div className="min-w-48 max-w-xs flex-1"><LookupSelect label={t("workspace.category")} hideLabel value={bulkCategory} items={lookups.cashflow_categories} onChange={setBulkCategory} disabled={busy} /></div>
+            <div className="min-w-48 max-w-xs flex-1"><LookupSelect label={t("workspace.category")} hideLabel value={bulkCategory} items={displayLookups!.cashflow_categories} onChange={setBulkCategory} disabled={busy} /></div>
             <Button size="sm" variant="primary" disabled={busy || !bulkCategory} onClick={() => void run(() => api.bulkUpdateStatementImportRows(sessionId, { ids: selection.ids, data: { cashflow_category_id: bulkCategory, status: "ready" } }))}>{t("workspace.apply")}</Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(() => api.bulkUpdateStatementImportRows(sessionId, { ids: selection.ids, data: { status: "excluded" } }))}>{t("workspace.exclude")}</Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={selection.clear}>{t("workspace.cancel")}</Button>
@@ -95,7 +110,7 @@ export default function ImportReview({ sessionId, canEdit }: { sessionId: string
         </SelectionBar>} />
       <p className="border-t border-slate-100 px-4 py-3 text-xs leading-5 text-slate-400">{t("workspace.savedHelp")}</p>
     </Card>
-    {row && <ImportRowEditor isOpen={editorOpen} key={row.id} row={row} sessionId={sessionId} lookups={lookups} readOnly={!editable} onClose={() => setEditorOpen(false)} onSaved={refresh} />}
+    {row && <ImportRowEditor isOpen={editorOpen} key={row.id} row={row} sessionId={sessionId} lookups={displayLookups!} personal={personal} readOnly={!editable} onClose={() => setEditorOpen(false)} onSaved={refresh} />}
     <ConfirmToast open={confirm} text={t("workspace.confirm", { count: summary.ready_rows || 0 })} confirmLabel={t("workspace.create", { count: summary.ready_rows || 0 })} cancelLabel={t("workspace.cancel")} busy={busy} onCancel={() => setConfirm(false)} onConfirm={() => { setConfirm(false); void run(async () => { const result = await api.commitStatementImportSession(sessionId); setNotice(t("workspace.created", { count: result.created_count })); }); }} />
   </section>;
 }

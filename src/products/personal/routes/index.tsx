@@ -12,6 +12,7 @@ const Categories = lazy(() => import("../pages/Categories"));
 const Budgets = lazy(() => import("../pages/Budgets"));
 const Goals = lazy(() => import("../pages/Goals"));
 const Transfers = lazy(() => import("../pages/Transfers"));
+const Imports = lazy(() => import("../pages/Imports"));
 const SettingsIndex = lazy(() => import("../pages/PersonalSettings"));
 const PersonalSettings = lazy(() => import("@/features/account-settings/pages/PersonalSettings"));
 const Security = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
@@ -33,6 +34,8 @@ export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layo
   { path: "budgets", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.budgets}><Budgets/></PersonalPermissionRoute> },
   { path: "goals", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.goals}><Goals/></PersonalPermissionRoute> },
   { path: "transfers", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settledTransactions}><Transfers/></PersonalPermissionRoute> },
+  { path: "imports", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.transactions}><Imports/></PersonalPermissionRoute> },
+  { path: "imports/:statementId", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.transactions}><Imports/></PersonalPermissionRoute> },
   { path: "settings", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settings}><SettingsLayout/></PersonalPermissionRoute>, children: [
     { index: true, element: <SettingsIndex/> },
     { path: "personal", element: <PersonalSettings product="personal"/> },

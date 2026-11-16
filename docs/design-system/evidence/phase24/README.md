@@ -19,6 +19,16 @@
 - The review amount uses the shared `Input kind="amount"` control, which renders
   `AmountField` with workspace currency formatting.
 
+## Personal parity
+
+- Personal workspaces now render the same flow at `/personal/imports` and
+  `/personal/imports/:statementId`, with an "Import statement" sidebar entry.
+- The shared `BankImports` component accepts `product`, `basePath`, permission
+  and bank-loader props; Personal loads accounts through `allPersonal`.
+- Personal review keeps the same design-system surfaces, drawer animation and
+  compact selection bar, but hides entity, project, document type, department
+  and inventory controls.
+
 ## Verification
 
 | Check | Result |

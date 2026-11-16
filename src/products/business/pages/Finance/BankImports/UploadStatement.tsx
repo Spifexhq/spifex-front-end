@@ -2,17 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UploadCloud, FileSpreadsheet, ShieldCheck } from "lucide-react";
 import { api } from "@/core/api/requests";
-import { fetchAllCursor } from "@/lib/list";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
-import type { BankAccount } from "@/models/settings/banking";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
 import { ErrorState } from "@/shared/ui/State";
 import LookupSelect from "./LookupSelect";
+import type { BankLoader, BankOption } from "./types";
 
-export default function UploadStatement({ onUploaded }: { onUploaded(id: string): void }) {
+export default function UploadStatement({ onUploaded, loadBanks }: { onUploaded(id: string): void; loadBanks: BankLoader }) {
   const { t } = useTranslation("statements");
-  const [banks, setBanks] = useState<BankAccount[]>([]), [bank, setBank] = useState("");
+  const [banks, setBanks] = useState<BankOption[]>([]), [bank, setBank] = useState("");
   const [file, setFile] = useState<File>(), [busy, setBusy] = useState(false), [progress, setProgress] = useState(0), [error, setError] = useState("");
   const [loading, setLoading] = useState(true), [retry, setRetry] = useState(0), [dragging, setDragging] = useState(false);
   const picker = useRef<HTMLInputElement>(null), inFlight = useRef(false), mounted = useRef(true);
@@ -20,10 +19,10 @@ export default function UploadStatement({ onUploaded }: { onUploaded(id: string)
   useEffect(() => {
     let alive = true;
     setLoading(true); setError("");
-    void fetchAllCursor<BankAccount>(params => api.getBanks({ cursor: params.cursor, active: "true" }))
+    void loadBanks(true)
       .then(items => { if (alive) setBanks(items); }).catch(cause => { if (alive) setError(apiErrorMessage(cause, t("workspace.bankError"))); }).finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [retry, t]);
+  }, [loadBanks, retry, t]);
   const choose = (next?: File) => {
     if (!next || busy) return;
     if (!/\.(pdf|png|jpe?g|webp|csv|ofx|xml)$/i.test(next.name) || next.size > (/\.(png|jpe?g|webp)$/i.test(next.name) ? 10 : 20) * 1024 * 1024) { setError(t("workspace.fileError")); return; }
