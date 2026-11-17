@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { isCancel } from "axios";
 import { Loader2, RefreshCw } from "lucide-react";
 
 import { api } from "@/core/api/requests";
@@ -59,10 +60,15 @@ export default function Overview() {
       : undefined;
 
   const inspectVersion = useRef(0);
+  const cancellationRetries = useRef(0);
 
   useEffect(() => {
     document.title = t("title");
   }, [t]);
+
+  useEffect(() => {
+    cancellationRetries.current = 0;
+  }, [organization, signature]);
 
   useEffect(() => {
     inspectVersion.current++;
@@ -81,13 +87,34 @@ export default function Overview() {
       .getOverview(JSON.parse(signature))
       .then((response) => {
         if (alive) {
-          setData(response.data);
+          const payload = response.data;
+          setData({
+            ...payload,
+            series: Array.isArray(payload.series) ? payload.series : [],
+            activity: Array.isArray(payload.activity) ? payload.activity : [],
+            categories: Array.isArray(payload.categories) ? payload.categories : [],
+            recent: Array.isArray(payload.recent) ? payload.recent : [],
+            attention: Array.isArray(payload.attention) ? payload.attention : [],
+            upcoming: Array.isArray(payload.upcoming) ? payload.upcoming : [],
+            banks: Array.isArray(payload.banks) ? payload.banks : [],
+            filter_options: payload.filter_options ?? { categories: [], banks: [] },
+          });
         }
       })
       .catch((cause) => {
-        if (alive) {
-          setError(apiErrorMessage(cause, t("loadError")));
+        if (!alive) return;
+        if (isCancel(cause)) {
+          // Auth/profile synchronization can invalidate a same-workspace read.
+          // Re-issue a bounded number of times instead of leaving a blank page.
+          if (cancellationRetries.current < 2) {
+            cancellationRetries.current += 1;
+            window.setTimeout(() => {
+              if (alive) setRetry((value) => value + 1);
+            }, 200);
+          }
+          return;
         }
+        setError(apiErrorMessage(cause, t("loadError")));
       })
       .finally(() => {
         if (alive) {

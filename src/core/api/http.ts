@@ -119,7 +119,7 @@ export function clearAuthGate(expected?: Promise<void>) {
   if (!expected || gate === expected) gate = null;
 }
 
-export async function waitAuthGate(timeoutMs = 4000): Promise<void> {
+export async function waitAuthGate(timeoutMs = 15000): Promise<void> {
   if (!gate) return;
 
   if (typeof window === "undefined") {
@@ -164,7 +164,7 @@ http.interceptors.request.use(async (cfg) => {
   const url = cfg.url || "";
 
   if (!(cfg as AxiosRequestConfig & { _skipAuthGate?: boolean })._skipAuthGate && !/(^|\/)auth\//.test(String(url))) {
-    await waitAuthGate(4000);
+    await waitAuthGate(15000);
   }
 
   await scheduleByScope(method, url);
@@ -586,20 +586,21 @@ function normalizeEndpoint(ep: string): string {
 
 export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string; organizationId?: string; timeout?: number }): Promise<ApiSuccess<T>> {
   let requestStillCurrent: (() => boolean) | null = null;
-  let requestGeneration = getAuthGeneration();
-  let requestOrganization: string | undefined;
   try {
     const ep = normalizeEndpoint(endpoint);
     const generation = getAuthGeneration();
     const cacheVersion = cacheGeneration;
     const organization = options?.organizationId || readOrgExternalId();
-    requestGeneration = generation;
-    requestOrganization = organization;
     const tags = resourceTags(ep);
     const stamp = () => tags.map(tag => resourceGenerations.get(tag) || 0).join(":");
     const resourceVersion = stamp();
-    const current = () => cacheVersion === cacheGeneration && resourceVersion === stamp() && generation === getAuthGeneration();
-    requestStillCurrent = current;
+    // Cache invalidation may happen while a same-identity read is in flight
+    // (for example when LiveSync refreshes permissions). Do not turn that into a
+    // cancelled page load; only an identity or workspace change makes the read stale.
+    const identityCurrent = () => generation === getAuthGeneration()
+      && (Boolean(options?.organizationId) || ep.startsWith("auth/") || organization === readOrgExternalId());
+    const cacheCurrent = () => cacheVersion === cacheGeneration && resourceVersion === stamp() && identityCurrent();
+    requestStillCurrent = identityCurrent;
 
     const cfg: AxiosRequestConfig = {
       url: ep,
@@ -638,7 +639,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
           }
         }
         const responseControls = String(res.headers?.["cache-control"] || "").toLowerCase();
-        if (!/no-store/.test(responseControls) && String(res.headers?.vary || "").trim() !== "*" && current() && res.status >= 200 && res.status < 300) {
+        if (!/no-store/.test(responseControls) && String(res.headers?.vary || "").trim() !== "*" && cacheCurrent() && res.status >= 200 && res.status < 300) {
           if (responseCache.size >= 200 && !responseCache.has(k)) responseCache.delete(responseCache.keys().next().value!);
           // Keep validators/bodies after freshness expires so the next GET can
           // revalidate. must-revalidate/no-cache forbids reuse, not storage.
@@ -653,7 +654,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       res = locks && changesSession ? await locks.request("spifex:refresh", () => http.request(cfg)) : await http.request(cfg);
     }
 
-    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !(options?.skipAuthGate && ep === "identity/profile/") && !current()) || (!options?.organizationId && !ep.startsWith("auth/") && organization !== readOrgExternalId())) throw staleRequestCancellation();
+    if (!identityCurrent()) throw staleRequestCancellation();
     if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) {
       const affected = mutationTags(ep);
       if (affected) invalidateHttpResources(affected); else clearHttpCaches();
@@ -670,15 +671,14 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     return body as ApiSuccess<T>;
   } catch (e) {
     const failedEndpoint = normalizeEndpoint(endpoint);
-    const staleIdentity = requestGeneration !== getAuthGeneration()
-      || (!options?.organizationId && !failedEndpoint.startsWith("auth/") && requestOrganization !== readOrgExternalId());
+    const staleIdentity = requestStillCurrent !== null && !requestStillCurrent();
     const staleRead = /^(GET|HEAD)$/i.test(method)
       && !(options?.skipAuthGate && failedEndpoint === "identity/profile/")
       && requestStillCurrent !== null
       && !requestStillCurrent();
-    // A stale request may fail with 403/401 while a workspace transition is in
-    // progress. Convert that response to a silent cancellation before callers
-    // can mistake it for a real permission or authentication failure.
+    // A superseded identity or workspace read may fail with 403/401 while a
+    // transition is in progress. Convert that response to a silent cancellation
+    // before callers can mistake it for a real permission or authentication failure.
     if (staleIdentity || staleRead) throw staleRequestCancellation();
     if (axios.isCancel(e)) throw e;
     const err = e as AxiosError<unknown>;

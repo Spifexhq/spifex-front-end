@@ -16,7 +16,7 @@ function paths(values: number[]) {
 /** A noninteractive preview interpolated from actual observations, with reduced-motion support. */
 export default function Sparkline({ values, color = "#6366f1", className = "", label }: { values: number[]; color?: string; className?: string; label: string }) {
   const reduced = useReducedMotion(), id = useId().replace(/:/g, "");
-  const points = values.filter(Number.isFinite);
+  const points = (Array.isArray(values) ? values : []).map(Number).filter(Number.isFinite);
   if (!points.length) return null;
   const geometry = paths(points);
   const transition = {duration:reduced ? 0 : .45,ease:"easeOut" as const};

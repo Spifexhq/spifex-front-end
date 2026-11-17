@@ -18,8 +18,16 @@ export default function FinancialCharts({ data, group, onGroup }: {
   // Accumulate in minor units to avoid floating-point drift across buckets.
   let periodNetMinor = 0;
   const points = data.series.map(point => {
-    periodNetMinor += Math.round(Number(point.net) * 100);
-    return { ...point, incoming: Number(point.in), outgoing: Number(point.out), periodNet: periodNetMinor / 100 };
+    const incomingValue = Number(point.in);
+    const outgoingValue = Number(point.out);
+    const netValue = Number(point.net);
+    periodNetMinor += Math.round((Number.isFinite(netValue) ? netValue : 0) * 100);
+    return {
+      ...point,
+      incoming: Number.isFinite(incomingValue) ? incomingValue : 0,
+      outgoing: Number.isFinite(outgoingValue) ? outgoingValue : 0,
+      periodNet: periodNetMinor / 100,
+    };
   });
   const expenses = Number(data.metrics?.out || 0);
   const categoriesTotal = data.categories.reduce((sum,item)=>sum+Number(item.amount),0);
@@ -30,7 +38,7 @@ export default function FinancialCharts({ data, group, onGroup }: {
         <SegmentedControl<"day" | "week" | "month"> value={group} onChange={onGroup} label={t("groupBy")} items={(["day","week","month"] as const).map(value=>({value,label:t(`groups.${value}`)}))}/>
       </div>
       <div className="relative h-[260px] w-full sm:h-[300px]" role="img" aria-label={t("chartLabel")}>
-        <ResponsiveContainer width="100%" height="100%">
+        {points.length > 0 && <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={points} margin={{top:12,right:10,left:0,bottom:4}}>
             <defs>
               <linearGradient id={`${id}-receipts`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6366f1" stopOpacity={.13}/><stop offset="100%" stopColor="#6366f1" stopOpacity={0}/></linearGradient>
@@ -45,7 +53,7 @@ export default function FinancialCharts({ data, group, onGroup }: {
             <Area type="monotone" dataKey="outgoing" name={t("paid")} stroke="#94a3b8" strokeWidth={2} fill={`url(#${id}-payments)`} baseValue={0} dot={points.length===1 ? {r:3} : false} activeDot={{r:4}} isAnimationActive={!reduced} animationBegin={0} animationDuration={450} animationEasing="ease-out"/>
             <Area type="monotone" dataKey="periodNet" name={t("periodNetTrend")} stroke="#10b981" strokeWidth={2} fill={`url(#${id}-period-net)`} baseValue={0} dot={points.length===1 ? {r:3} : false} activeDot={{r:4}} isAnimationActive={!reduced} animationBegin={0} animationDuration={450} animationEasing="ease-out"/>
           </AreaChart>
-        </ResponsiveContainer>
+        </ResponsiveContainer>}
         {!data.metrics?.count && <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><EmptyState size="sm" title={t("noActivity")} className="max-w-xs rounded-lg bg-white/90" /></div>}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-5 border-t border-slate-100 pt-4 text-xs text-slate-500"><span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-indigo-500"/>{t("received")}</span><span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-slate-400"/>{t("paid")}</span><span className="inline-flex items-center gap-1"><span className="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-500"/>{t("periodNetTrend")}<InfoTooltip label={t("periodNetTrend")}>{t("periodNetTrendDescription")}</InfoTooltip></span><span className="ml-auto">{data.currency}</span></div>
