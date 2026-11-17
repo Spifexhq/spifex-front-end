@@ -26,7 +26,7 @@ type BankImportsProps = {
   loadBanks?: BankLoader;
 };
 
-export default function BankImports({ product = "business", basePath = "/bank-imports", permissions, loadBanks }: BankImportsProps) {
+export default function BankImports({ product = "business", basePath = "/b/bank-imports", permissions, loadBanks }: BankImportsProps) {
   const { t } = useTranslation("statements"), auth = useAuthContext();
   const navigate = useNavigate(), { statementId } = useParams(), [params] = useSearchParams();
   const personal = product === "personal";

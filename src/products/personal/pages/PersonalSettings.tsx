@@ -17,5 +17,5 @@ const legacySections: Record<string, string> = {
 export default function PersonalSettingsIndex() {
   const [params] = useSearchParams();
   const section = params.get("section") || "personal";
-  return <Navigate to={`/personal/settings/${legacySections[section] || "personal"}`} replace />;
+  return <Navigate to={`/p/settings/${legacySections[section] || "personal"}`} replace />;
 }

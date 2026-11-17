@@ -74,9 +74,9 @@
     "change_bank": { "label": "Modifier un compte bancaire", "description": "Permet de modifier la configuration des comptes bancaires." },
     "delete_bank": { "label": "Supprimer un compte bancaire", "description": "Permet de supprimer des comptes bancaires." },
 
-    "add_member": { "label": "Créer un employé", "description": "Permet de créer des fiches employé." },
-    "change_member": { "label": "Modifier un employé", "description": "Permet de modifier les informations des employés." },
-    "delete_member": { "label": "Supprimer un employé", "description": "Permet de supprimer des fiches employé." },
+    "business_add_member": { "label": "Créer un employé", "description": "Permet de créer des fiches employé." },
+    "business_change_member": { "label": "Modifier un employé", "description": "Permet de modifier les informations des employés." },
+    "business_delete_member": { "label": "Supprimer un employé", "description": "Permet de supprimer des fiches employé." },
 
     "add_group": { "label": "Créer un groupe", "description": "Permet de créer des groupes de permissions." },
     "change_group": { "label": "Modifier un groupe", "description": "Permet de modifier des groupes de permissions." },

@@ -53,7 +53,7 @@ const routes: RouteObject[] = [
         children: [
             {
                 index: true,
-                element: <Navigate to="/overview" replace />,
+                element: <Navigate to="/b/overview" replace />,
             },
             { path: "legal/privacy", element: <LegalPage /> },
             { path: "legal/terms", element: <LegalPage /> },
@@ -61,7 +61,7 @@ const routes: RouteObject[] = [
             {
             path: 'signup',
             element: (
-                    <GuestOnlyMiddleware redirectTo="/overview">
+                    <GuestOnlyMiddleware redirectTo="/b/overview">
                         <SignUp />
                     </GuestOnlyMiddleware>
                 ),
@@ -70,7 +70,7 @@ const routes: RouteObject[] = [
             {
             path: 'signin',
             element: (
-                    <GuestOnlyMiddleware redirectTo="/overview">
+                    <GuestOnlyMiddleware redirectTo="/b/overview">
                         <SignIn />
                     </GuestOnlyMiddleware>
                 ),

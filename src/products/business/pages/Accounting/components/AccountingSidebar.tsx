@@ -41,10 +41,10 @@ export default function AccountingSidebar() {
     footer={<div className="shrink-0">
       <div className="space-y-1 border-t border-gray-200 p-3">
         <SidebarTooltip label={t("section.settings")} collapsed={collapsed}>
-          <Link to="/settings" aria-label={t("section.settings")} className={`${row} text-gray-500 hover:bg-gray-200/50`}><Settings2 size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.settings")}</span></Link>
+          <Link to="/b/settings" aria-label={t("section.settings")} className={`${row} text-gray-500 hover:bg-gray-200/50`}><Settings2 size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.settings")}</span></Link>
         </SidebarTooltip>
         <SidebarTooltip label={t("section.back")} collapsed={collapsed}>
-          <Link to="/overview" aria-label={t("section.back")} className={`${row} text-gray-500 hover:bg-gray-200/50`}><ArrowLeft size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.back")}</span></Link>
+          <Link to="/b/overview" aria-label={t("section.back")} className={`${row} text-gray-500 hover:bg-gray-200/50`}><ArrowLeft size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{t("section.back")}</span></Link>
         </SidebarTooltip>
       </div>
       <SidebarUserConfiguration collapsed={collapsed} />
@@ -57,7 +57,7 @@ export default function AccountingSidebar() {
         const itemAllowed = allowed(page);
         const content = <><Icon size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{itemLabel}</span></>;
         return <SidebarTooltip key={page} label={itemAllowed ? itemLabel : `${itemLabel} — ${t("section.locked")}`} collapsed={collapsed}>
-          {itemAllowed ? <NavLink to={`/accounting/${page}`} onClick={shell?.closeMobile} aria-label={itemLabel} className={({isActive}) => `${row} ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50"}`}>{content}</NavLink>
+          {itemAllowed ? <NavLink to={`/b/accounting/${page}`} onClick={shell?.closeMobile} aria-label={itemLabel} className={({isActive}) => `${row} ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50"}`}>{content}</NavLink>
             : <span aria-disabled="true" className={`${row} cursor-not-allowed text-gray-400 opacity-60`}><LockKeyhole size={16} className="shrink-0 justify-self-center" aria-hidden="true" /><span className={label}>{itemLabel}</span></span>}
         </SidebarTooltip>;
       })}</div>

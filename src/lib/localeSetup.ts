@@ -1,7 +1,7 @@
 import type { ConfigurationStatus } from "@/models/auth/configuration";
 
 export function safeSetupReturn(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || Array.from(value).some(char => char.charCodeAt(0) <= 32) || value.split(/[?#]/)[0] === "/locale-setup") return "/overview";
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || Array.from(value).some(char => char.charCodeAt(0) <= 32) || value.split(/[?#]/)[0] === "/locale-setup") return "/b/overview";
   return value;
 }
 

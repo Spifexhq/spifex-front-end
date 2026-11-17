@@ -74,9 +74,9 @@
     "change_bank": { "label": "Editar conta bancária", "description": "Permite editar a configuração das contas bancárias." },
     "delete_bank": { "label": "Excluir conta bancária", "description": "Permite excluir contas bancárias." },
 
-    "add_member": { "label": "Criar colaborador", "description": "Permite criar registros de colaboradores." },
-    "change_member": { "label": "Editar colaborador", "description": "Permite editar dados de colaboradores." },
-    "delete_member": { "label": "Excluir colaborador", "description": "Permite excluir registros de colaboradores." },
+    "business_add_member": { "label": "Criar colaborador", "description": "Permite criar registros de colaboradores." },
+    "business_change_member": { "label": "Editar colaborador", "description": "Permite editar dados de colaboradores." },
+    "business_delete_member": { "label": "Excluir colaborador", "description": "Permite excluir registros de colaboradores." },
 
     "add_group": { "label": "Criar grupo", "description": "Permite criar grupos de permissão." },
     "change_group": { "label": "Editar grupo", "description": "Permite editar grupos de permissão." },

@@ -34,7 +34,7 @@ export async function selectWorkspace(id: string, deps: Dependencies, options: {
       // tenant identity.
       deps.setWorkspace(id);
       deps.commit(data);
-      deps.navigate(data.organization.organization.product_category === "personal" ? "/personal/overview" : "/overview");
+      deps.navigate(data.organization.organization.product_category === "personal" ? "/p/overview" : "/b/overview");
     } catch (error) {
       if (current()) {
         deps.advance();

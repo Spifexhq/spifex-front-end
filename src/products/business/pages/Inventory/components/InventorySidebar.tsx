@@ -45,13 +45,13 @@ export default function InventorySidebar() {
         <div className="shrink-0">
           <div className="space-y-1 border-t border-gray-200 p-3">
             <SidebarTooltip label={t("section.settings")} collapsed={collapsed}>
-              <Link to="/settings" aria-label={t("section.settings")} className={`${row} text-gray-500 hover:bg-gray-200/50`}>
+              <Link to="/b/settings" aria-label={t("section.settings")} className={`${row} text-gray-500 hover:bg-gray-200/50`}>
                 <Settings2 size={16} className="shrink-0 justify-self-center" aria-hidden="true" />
                 <span className={label}>{t("section.settings")}</span>
               </Link>
             </SidebarTooltip>
             <SidebarTooltip label={t("section.back")} collapsed={collapsed}>
-              <Link to="/overview" aria-label={t("section.back")} className={`${row} text-gray-500 hover:bg-gray-200/50`}>
+              <Link to="/b/overview" aria-label={t("section.back")} className={`${row} text-gray-500 hover:bg-gray-200/50`}>
                 <ArrowLeft size={16} className="shrink-0 justify-self-center" aria-hidden="true" />
                 <span className={label}>{t("section.back")}</span>
               </Link>
@@ -72,7 +72,7 @@ export default function InventorySidebar() {
               return (
                 <SidebarTooltip key={page} label={itemLabel} collapsed={collapsed}>
                   <NavLink
-                    to={`/inventory/${page}`}
+                    to={`/b/inventory/${page}`}
                     onClick={shell?.closeMobile}
                     aria-label={itemLabel}
                     className={({ isActive }) =>

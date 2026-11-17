@@ -371,7 +371,7 @@ export default function PersonalTransactionsWorkspace({ basis = "outstanding" }:
   return <div className="flex h-full min-h-0 min-w-0 flex-col">
     <h1 className="sr-only">{t(basis === "settled" ? "settledTransactions" : "cashFlow")}</h1>
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/personal/settings/accounts" excludeObservationFilter>
+      <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/p/settings/accounts" excludeObservationFilter>
         <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} selectionSuppressed={settlementOpen} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
       </FinancialActivityPanel>
     </div>

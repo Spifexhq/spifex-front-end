@@ -54,7 +54,7 @@ export function permissionIcons(code: string): LucideIcon {
   if (code === "view_entity_settings_page") return Building2;
   if (code === "view_inventory_settings_page") return Package;
   if (code === "view_project_settings_page") return FolderKanban;
-  if (code === "view_member_settings_page") return Users;
+  if (code === "business_view_member_settings_page") return Users;
   if (code === "view_group_settings_page") return Users;
   if (code === "view_ledger_accounts_page") return BookOpen;
 
@@ -75,7 +75,7 @@ export function permissionIcons(code: string): LucideIcon {
   if (code === "view_statement") return FileText;
 
   if (code === "view_user") return User;
-  if (code === "view_member") return Users;
+  if (code === "business_view_member") return Users;
   if (code === "view_group") return Users;
 
   if (code === "view_bank") return Landmark;

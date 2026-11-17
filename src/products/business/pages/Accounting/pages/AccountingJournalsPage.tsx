@@ -376,7 +376,7 @@ const AccountingJournalsPage: React.FC = () => {
         <p className="mt-1 text-sm leading-6 text-slate-500">{t("setupFlow.notActive", "Finish setup before creating accounting entries.")}</p>
       </div>
     </div>
-    <Link to="/accounting/overview" className="inline-flex min-h-9 w-fit items-center gap-2 rounded-md bg-gray-900 px-3 text-xs font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400">{t("setupFlow.continue", "Continue setup")}<ArrowRight size={14} aria-hidden="true"/></Link>
+    <Link to="/b/accounting/overview" className="inline-flex min-h-9 w-fit items-center gap-2 rounded-md bg-gray-900 px-3 text-xs font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400">{t("setupFlow.continue", "Continue setup")}<ArrowRight size={14} aria-hidden="true"/></Link>
   </Card>;
   if (loading && !items.length) return <PageSkeleton variant="accounting" rows={6} />;
 

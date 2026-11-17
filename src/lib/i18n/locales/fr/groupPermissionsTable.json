@@ -69,7 +69,7 @@
       "label": "Utilisateurs (données)",
       "description": "Permet de voir les données des utilisateurs."
     },
-    "view_member": {
+    "business_view_member": {
       "label": "Membres (données)",
       "description": "Permet de voir les données des membres."
     },
@@ -165,15 +165,15 @@
       "label": "Supprimer un utilisateur",
       "description": "Permet de supprimer des utilisateurs."
     },
-    "add_member": {
+    "business_add_member": {
       "label": "Créer un membre",
       "description": "Permet de créer des membres."
     },
-    "change_member": {
+    "business_change_member": {
       "label": "Modifier un membre",
       "description": "Permet de modifier des membres."
     },
-    "delete_member": {
+    "business_delete_member": {
       "label": "Supprimer un membre",
       "description": "Permet de supprimer des membres."
     },
@@ -313,7 +313,7 @@
       "label": "Paramètres des projets",
       "description": "Permet de voir les paramètres des projets."
     },
-    "view_member_settings_page": {
+    "business_view_member_settings_page": {
       "label": "Paramètres des membres",
       "description": "Permet de voir les paramètres des membres."
     },

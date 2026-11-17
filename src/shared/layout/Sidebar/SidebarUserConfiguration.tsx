@@ -54,9 +54,9 @@ export default function SidebarUserConfiguration({ collapsed = false, destinatio
     try { await handleSignOut(); closeForNavigation(); navigate("/signin"); } catch { setError(true); } finally { setPending(false); }
   };
   const links = [
-    { to: destinations?.personal || "/settings/personal", key: "personal", Icon: UserRound },
-    ...(!destinations || destinations.organization ? [{ to: destinations?.organization || "/settings/organization-settings", key: "organization", Icon: Building2 }] : []),
-    { to: destinations?.notifications || "/settings/notifications", key: "notifications", Icon: Bell },
+    { to: destinations?.personal || "/b/settings/personal", key: "personal", Icon: UserRound },
+    ...(!destinations || destinations.organization ? [{ to: destinations?.organization || "/b/settings/organization-settings", key: "organization", Icon: Building2 }] : []),
+    { to: destinations?.notifications || "/b/settings/notifications", key: "notifications", Icon: Bell },
   ];
   return <div className="shrink-0 border-t border-gray-200 p-3">
     <SidebarTooltip label={user?.name || t("account")} collapsed={collapsed}>

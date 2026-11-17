@@ -9,7 +9,7 @@ import InventoryLocationsPage from "./pages/InventoryLocationsPage";
 const InventoryWorkspace = () => {
   const { pathname } = useLocation();
   const { t } = useTranslation("inventory");
-  const page = pathname.split("/")[2] || "overview";
+  const page = pathname.split("/")[3] || "overview";
 
   return (
     <main className="min-w-0 px-4 py-6 text-gray-900 md:px-7">
@@ -19,12 +19,12 @@ const InventoryWorkspace = () => {
         </header>
         <div className="min-w-0">
           <Routes>
-            <Route path="/" element={<Navigate to="/inventory/overview" replace />} />
+            <Route path="/" element={<Navigate to="/b/inventory/overview" replace />} />
             <Route path="overview" element={<InventoryOverviewPage />} />
             <Route path="items" element={<InventoryItemsPage />} />
             <Route path="stock" element={<InventoryStockPage />} />
             <Route path="locations" element={<InventoryLocationsPage />} />
-            <Route path="*" element={<Navigate to="/inventory/overview" replace />} />
+            <Route path="*" element={<Navigate to="/b/inventory/overview" replace />} />
           </Routes>
         </div>
       </div>

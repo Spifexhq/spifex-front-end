@@ -69,7 +69,7 @@
       "label": "Users (data)",
       "description": "Can view users data."
     },
-    "view_member": {
+    "business_view_member": {
       "label": "Members (data)",
       "description": "Can view members data."
     },
@@ -165,15 +165,15 @@
       "label": "Delete user",
       "description": "Allows deleting users."
     },
-    "add_member": {
+    "business_add_member": {
       "label": "Create member",
       "description": "Allows creating members."
     },
-    "change_member": {
+    "business_change_member": {
       "label": "Edit member",
       "description": "Allows editing members."
     },
-    "delete_member": {
+    "business_delete_member": {
       "label": "Delete member",
       "description": "Allows deleting members."
     },
@@ -313,7 +313,7 @@
       "label": "Project settings page",
       "description": "Can view the project settings page."
     },
-    "view_member_settings_page": {
+    "business_view_member_settings_page": {
       "label": "Member settings page",
       "description": "Can view the member settings page."
     },

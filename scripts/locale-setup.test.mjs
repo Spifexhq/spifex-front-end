@@ -28,7 +28,7 @@ test('completed setup passes and missing flags cannot grant access', () => {
 });
 
 test('return targets stay internal and cannot loop back to setup', () => {
-  for (const value of [null, '', '//outside.test', 'https://outside.test', '/\\outside.test', '/locale-setup', '/locale-setup?return=/overview', '/\n/evil']) assert.equal(safeSetupReturn(value), '/overview');
+  for (const value of [null, '', '//outside.test', 'https://outside.test', '/\\outside.test', '/locale-setup', '/locale-setup?return=/overview', '/\n/evil']) assert.equal(safeSetupReturn(value), '/b/overview');
   assert.equal(safeSetupReturn('/accounting/books?status=active'), '/accounting/books?status=active');
 });
 

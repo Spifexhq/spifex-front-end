@@ -4,7 +4,7 @@ import test from "node:test";
 import ts from "typescript";
 const {outputText}=ts.transpileModule(fs.readFileSync('src/shared/layout/Navbar/pageTitle.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext}});
 const {getPageTitleKey,getPageBreadcrumbs,getSettingsDescriptionKey}=await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
-const routes=['/home','/cashflow','/settled','/reports','/settings','/settings/personal','/settings/notifications','/settings/ledger-accounts','/settings/register/ledger-accounts','/accounting','/accounting/books','/accounting/setup/profile','/accounting/setup/review','/accounting/periods','/accounting/chart','/accounting/posting-policies','/settings/manage-currency','/settings/manage-formats','/onboarding'];
+const routes=['/b/home','/b/cashflow','/b/settled','/b/reports','/b/settings','/b/settings/personal','/b/settings/notifications','/b/settings/ledger-accounts','/b/settings/register/ledger-accounts','/b/accounting','/b/accounting/books','/b/accounting/setup/profile','/b/accounting/setup/review','/b/accounting/periods','/b/accounting/chart','/b/accounting/posting-policies','/b/settings/manage-currency','/b/settings/manage-formats','/b/onboarding'];
 test('page titles resolve to translations in every supported language',()=>{
  for(const language of ['en','pt','fr','de']) for(const route of routes){
   const [namespace,key]=getPageTitleKey(route).split(':');
@@ -19,8 +19,8 @@ test('legacy ledger routes resolve to the canonical chart and setup titles',()=>
 });
 
 test('accounting tabs retain their parent breadcrumb',()=>{
- assert.deepEqual(getPageBreadcrumbs('/accounting/books'),[{titleKey:'accountingSettings:section.title',to:'/accounting/overview'},{titleKey:'accountingSettings:nav.books'}]);
- assert.equal(getPageBreadcrumbs('/settings/banks').length,1);
+ assert.deepEqual(getPageBreadcrumbs('/b/accounting/books'),[{titleKey:'accountingSettings:section.title',to:'/b/accounting/overview'},{titleKey:'accountingSettings:nav.books'}]);
+ assert.equal(getPageBreadcrumbs('/b/settings/banks').length,1);
 });
 test('all settings routes have translated short descriptions',()=>{
  const paths=['personal','organization-settings','subscription-management','subscription','security','banks','departments','entities','inventory','projects','members','groups','categories','ledger-accounts','register/ledger-accounts','bank-statements','notifications','manage-currency','manage-formats','limits',...['overview','setup','periods','chart','books','bank-mappings','posting-policies','journals','reconciliation','correlation'].map(tab=>`accounting/${tab}`)];

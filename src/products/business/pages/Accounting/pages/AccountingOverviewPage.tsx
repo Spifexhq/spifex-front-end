@@ -38,9 +38,9 @@ function extractCollection<T>(input: unknown): T[] {
 }
 
 const STEP_TARGET: Record<SetupPhase, string> = {
-  chart: "/accounting/chart-of-accounts",
-  books: "/accounting/books",
-  review: "/accounting/overview",
+  chart: "/b/accounting/chart-of-accounts",
+  books: "/b/accounting/books",
+  review: "/b/accounting/overview",
 };
 
 type OverviewIssue = { code: string; account_code?: string; target: string };
@@ -134,11 +134,11 @@ function SetupOverview() {
   const percent = Math.round((completed / Math.max(status.steps.length, 1)) * 100);
   const issues: OverviewIssue[] = status.steps.flatMap(step => step.available ? step.issues.map(issue => ({ code: issue.code, account_code: issue.account_code, target: STEP_TARGET[step.key] })) : []);
   const next = !profileReady
-    ? { to: "/settings", label: t("setupFlow.openWorkspaceSettings"), title: t("setupFlow.openWorkspaceSettings"), body: t("setupFlow.currencyPrerequisite") }
+    ? { to: "/b/settings", label: t("setupFlow.openWorkspaceSettings"), title: t("setupFlow.openWorkspaceSettings"), body: t("setupFlow.currencyPrerequisite") }
     : !chartComplete
-      ? { to: "/accounting/chart-of-accounts", label: t("setupFlow.openChart"), title: t("nav.chart"), body: t("setupFlow.descriptions.chart") }
+      ? { to: "/b/accounting/chart-of-accounts", label: t("setupFlow.openChart"), title: t("nav.chart"), body: t("setupFlow.descriptions.chart") }
       : !booksComplete
-        ? { to: "/accounting/books", label: t("setupFlow.continue"), title: t("nav.books"), body: t("setupFlow.descriptions.books") }
+        ? { to: "/b/accounting/books", label: t("setupFlow.continue"), title: t("nav.books"), body: t("setupFlow.descriptions.books") }
         : null;
   const setupTone: Tone = status.status === "needs_attention" ? "warning" : status.status === "ready" ? "success" : "neutral";
   const activate = async () => {
@@ -213,10 +213,10 @@ function SetupOverview() {
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <ConfigCard title={t("nav.chart")} description={t("setupFlow.descriptions.chart")} Icon={ListTree} enabled={profileReady} complete={chartComplete} to="/accounting/chart-of-accounts"/>
-        <ConfigCard title={t("nav.books")} description={t("setupFlow.descriptions.books")} Icon={BookOpen} enabled={chartComplete} complete={booksComplete} to="/accounting/books"/>
-        <ConfigCard title={t("nav.postingPolicies")} description={t("setupFlow.policyGuidance")} Icon={Route} enabled={status.can_activate} complete={false} optional to="/accounting/posting-policies"/>
-        <ConfigCard title={t("nav.bankMappings")} description={t("setupFlow.bankGuidance")} Icon={Landmark} enabled={status.can_activate} complete={false} optional to="/accounting/bank-mappings"/>
+        <ConfigCard title={t("nav.chart")} description={t("setupFlow.descriptions.chart")} Icon={ListTree} enabled={profileReady} complete={chartComplete} to="/b/accounting/chart-of-accounts"/>
+        <ConfigCard title={t("nav.books")} description={t("setupFlow.descriptions.books")} Icon={BookOpen} enabled={chartComplete} complete={booksComplete} to="/b/accounting/books"/>
+        <ConfigCard title={t("nav.postingPolicies")} description={t("setupFlow.policyGuidance")} Icon={Route} enabled={status.can_activate} complete={false} optional to="/b/accounting/posting-policies"/>
+        <ConfigCard title={t("nav.bankMappings")} description={t("setupFlow.bankGuidance")} Icon={Landmark} enabled={status.can_activate} complete={false} optional to="/b/accounting/bank-mappings"/>
       </div>
     </section>
   </section>;
@@ -301,7 +301,7 @@ function OperationalOverview() {
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
       <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.trialBalance")} description={t("overview.trialBalanceDescription")} actions={<div className="flex items-center gap-3">
         {!loading && accounts.length > 0 ? <StatusPill tone={balanced ? "success" : "danger"}>{balanced ? t("overview.balanced") : t("overview.unbalanced")}</StatusPill> : null}
-        <Link to="/accounting/chart-of-accounts" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.openChart")}<ArrowRight size={12} aria-hidden="true"/></Link>
+        <Link to="/b/accounting/chart-of-accounts" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.openChart")}<ArrowRight size={12} aria-hidden="true"/></Link>
       </div>}>
         <div className="p-4 sm:p-5">
           {loading ? <div className="space-y-3">{[1,2,3,4,5].map(key => <SkeletonLine key={key} className="h-7 w-full"/>)}</div>
@@ -340,7 +340,7 @@ function OperationalOverview() {
         </div>
       </Card>
 
-      <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.recentJournals")} actions={<Link to="/accounting/journals" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.viewAll")}<ArrowRight size={12} aria-hidden="true"/></Link>}>
+      <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.recentJournals")} actions={<Link to="/b/accounting/journals" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.viewAll")}<ArrowRight size={12} aria-hidden="true"/></Link>}>
         <div className="p-4 sm:p-5">
           {loading ? <div className="space-y-3">{[1,2,3].map(key => <SkeletonLine key={key} className="h-8 w-full"/>)}</div>
             : journalRows.length ? <ul className="divide-y divide-slate-100">
@@ -364,10 +364,10 @@ function OperationalOverview() {
         <p className="mt-1 text-xs leading-5 text-slate-500">{t("overview.quickActionsDescription")}</p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        <QuickAction title={t("nav.journals")} description={t("overview.quickJournals")} Icon={BookOpen} to="/accounting/journals"/>
+        <QuickAction title={t("nav.journals")} description={t("overview.quickJournals")} Icon={BookOpen} to="/b/accounting/journals"/>
         <QuickAction title={t("nav.reconciliation")} description={t("overview.quickReview")} Icon={CheckCheck} onClick={openGuide}/>
-        <QuickAction title={t("nav.postingPolicies")} description={t("overview.quickRules")} Icon={Route} to="/accounting/posting-policies"/>
-        <QuickAction title={t("nav.bankMappings")} description={t("overview.quickBanks")} Icon={Landmark} to="/accounting/bank-mappings"/>
+        <QuickAction title={t("nav.postingPolicies")} description={t("overview.quickRules")} Icon={Route} to="/b/accounting/posting-policies"/>
+        <QuickAction title={t("nav.bankMappings")} description={t("overview.quickBanks")} Icon={Landmark} to="/b/accounting/bank-mappings"/>
       </div>
     </Card>
   </section>;

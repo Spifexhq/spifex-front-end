@@ -80,7 +80,7 @@ export const SpifexLayout: FC = () => {
   const loading = retrying || (pendingKey === identityKey && !configuration) || (!configuration && !failed);
   const retry = async () => { setRetrying(true); try { await loadConfiguration(); } finally { setRetrying(false); } };
   if (loadingAuth) return <TopProgress active variant="center" />;
-  if (personalProduct && !pathname.startsWith("/personal") && pathname !== "/locale-setup") return <Navigate replace to="/personal/overview" />;
+  if (personalProduct && !pathname.startsWith("/p/") && pathname !== "/p" && pathname !== "/locale-setup") return <Navigate replace to="/p/overview" />;
   return <AuthMiddleware>
     <LocaleProfileMiddleware configuration={configuration} loading={loading} failed={failed} retry={retry}>
       {pathname === "/locale-setup" ? <Outlet key={identityKey} context={{ configuration, refreshConfiguration: () => loadConfiguration(true) }} /> : personalProduct ? <Outlet key={identityKey} /> : <Suspense fallback={<TopProgress active variant="center" />}><ApplicationShell onboarding={configuration} showOnboardingWarning={!!configuration && configuration.completed !== true}><Outlet /></ApplicationShell></Suspense>}

@@ -53,7 +53,7 @@ type OrgForm = {
   line2: string;
 };
 
-const CATEGORY_SETTINGS_PATH = "/settings/categories";
+const CATEGORY_SETTINGS_PATH = "/b/settings/categories";
 
 const normalize = (v: unknown) => (v ?? "").toString().trim();
 const normalizeCountry = (v: unknown) => normalize(v).toUpperCase();
@@ -428,7 +428,7 @@ const OnboardingPage: React.FC = () => {
             icon={<CheckCircle2 className="h-5 w-5" aria-hidden="true" />}
           >
             <div className="flex justify-end">
-              <Button onClick={() => navigate("/overview")}>{t("done.cta")}</Button>
+              <Button onClick={() => navigate("/b/overview")}>{t("done.cta")}</Button>
             </div>
           </SectionCard>
         </div>
@@ -723,7 +723,7 @@ const OnboardingPage: React.FC = () => {
                           icon={<CreditCard className="h-4 w-4" aria-hidden="true" />}
                         />
 
-                        <div className="mt-4"><Button variant="outline" onClick={() => navigate("/accounting/overview")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
+                        <div className="mt-4"><Button variant="outline" onClick={() => navigate("/b/accounting/overview")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
                       </div>
 
                       <div className="rounded-lg border border-gray-200 p-4">

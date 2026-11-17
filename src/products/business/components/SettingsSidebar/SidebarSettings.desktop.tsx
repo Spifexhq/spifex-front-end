@@ -59,7 +59,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         title: t("sections.team"),
         id: "team",
         items: [
-          { id: "members", icon: "members", label: t("items.members"), permission: "view_member_settings_page" },
+          { id: "members", icon: "members", label: t("items.members"), permission: "business_view_member_settings_page" },
           { id: "groups", icon: "groups", label: t("items.groups"), permission: "view_group_settings_page" },
         ],
       },
@@ -99,7 +99,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
     footer={<div className="shrink-0">
       <div className="border-t border-gray-200 p-3">
         <SidebarTooltip label={t("actions.back", "Back to workspace")} collapsed={frameCollapsed}>
-          <NavLink to="/" aria-label={t("actions.back", "Back to workspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("actions.back", "Back to workspace")}</span></NavLink>
+          <NavLink to="/b/overview" aria-label={t("actions.back", "Back to workspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("actions.back", "Back to workspace")}</span></NavLink>
         </SidebarTooltip>
       </div>
       <SidebarUserConfiguration collapsed={frameCollapsed} />
@@ -113,7 +113,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         const Icon = Icons[item.icon];
         return <li key={item.id}>
           <SidebarTooltip label={item.label} collapsed={frameCollapsed}>
-            <NavLink to={`/settings/${item.id}`} onClick={mobile ? onMobileClose : undefined} aria-label={item.label} aria-current={activeItem === item.id ? "page" : undefined}
+            <NavLink to={`/b/settings/${item.id}`} onClick={mobile ? onMobileClose : undefined} aria-label={item.label} aria-current={activeItem === item.id ? "page" : undefined}
               className={`sidebar-row group rounded-md text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-gray-400 ${activeItem === item.id ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}>
               <Icon size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{item.label}</span>
             </NavLink>

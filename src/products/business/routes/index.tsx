@@ -30,24 +30,25 @@ const NotificationSettings = lazy(() => import("@/features/account-settings/page
 const FormatSettings = lazy(() => import("@/features/account-settings/pages/FormatSettings"));
 const CurrencySettings = lazy(() => import("@/features/account-settings/pages/CurrencySettings"));
 const SubscriptionCanceled = lazy(() => import("@/features/account-settings/pages/SubscriptionCanceled"));
-export const businessRoutes: RouteObject[] = [
+const businessChildren: RouteObject[] = [
+            { index: true, element: <Navigate to="overview" replace /> },
             // Onboarding
             {
             path: "onboarding",
             element: <OnboardingPage />
             },
-            { path: "overview", element: <PermissionMiddleware codeName="view_overview_page" redirectTo="/cashflow"><Overview /></PermissionMiddleware> },
+            { path: "overview", element: <PermissionMiddleware codeName="view_overview_page" redirectTo="/b/cashflow"><Overview /></PermissionMiddleware> },
             { path: "help", element: <Help /> },
             // Overview
             {
                 path: 'home',
-                element: <Navigate to="/overview" replace />
+                element: <Navigate to="/b/overview" replace />
             },
             // Cash Flow
             {
                 path: 'cashflow',
                 element: (
-                    <PermissionMiddleware codeName="view_cash_flow_page" redirectTo={'/settled'}>
+                    <PermissionMiddleware codeName="view_cash_flow_page" redirectTo={'/b/settled'}>
                         <CashFlow />
                     </PermissionMiddleware>
                 )
@@ -56,7 +57,7 @@ export const businessRoutes: RouteObject[] = [
             {
                 path: 'settled',
                 element: (
-                    <PermissionMiddleware codeName="view_settlement_page" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_settlement_page" redirectTo={'/b/settings'}>
                         <SettledEntries />
                     </PermissionMiddleware>
                 )
@@ -65,8 +66,8 @@ export const businessRoutes: RouteObject[] = [
             {
                 path: 'reports',
                 element: (
-                    <SubscriptionMiddleware redirectTo="/settings">
-                        <PermissionMiddleware codeName="view_report_page" requireSubscription behavior="lock" redirectTo={'/settings'}>
+                    <SubscriptionMiddleware redirectTo="/b/settings">
+                        <PermissionMiddleware codeName="view_report_page" requireSubscription behavior="lock" redirectTo={'/b/settings'}>
                             <Reports />
                         </PermissionMiddleware>
                     </SubscriptionMiddleware>
@@ -74,19 +75,19 @@ export const businessRoutes: RouteObject[] = [
             },
             {
                 path: 'accounting/*',
-                element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/settings"><AccountingLayout><Accounting /></AccountingLayout></PermissionMiddleware>,
+                element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/b/settings"><AccountingLayout><Accounting /></AccountingLayout></PermissionMiddleware>,
             },
             {
                 path: 'inventory/*',
-                element: <PermissionMiddleware codeName={["view_inventory", "view_inventory_settings_page"]} behavior="redirect" redirectTo="/settings"><InventoryLayout><Inventory /></InventoryLayout></PermissionMiddleware>,
+                element: <PermissionMiddleware codeName={["view_inventory", "view_inventory_settings_page"]} behavior="redirect" redirectTo="/b/settings"><InventoryLayout><Inventory /></InventoryLayout></PermissionMiddleware>,
             },
             {
                 path: 'bank-imports',
-                element: <PermissionMiddleware codeName="view_statements_page" redirectTo="/settings"><BankImports /></PermissionMiddleware>,
+                element: <PermissionMiddleware codeName="view_statements_page" redirectTo="/b/settings"><BankImports /></PermissionMiddleware>,
             },
             {
                 path: 'bank-imports/:statementId',
-                element: <PermissionMiddleware codeName="view_statements_page" redirectTo="/settings"><BankImports /></PermissionMiddleware>,
+                element: <PermissionMiddleware codeName="view_statements_page" redirectTo="/b/settings"><BankImports /></PermissionMiddleware>,
             },
             // Settings
             {
@@ -108,7 +109,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'organization-settings',
                     element: (
-                    <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <OrganizationSettings />
                     </PermissionMiddleware>
                     ),
@@ -116,7 +117,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'workspaces',
                     element: (
-                    <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <Workspaces />
                     </PermissionMiddleware>
                     ),
@@ -124,16 +125,16 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'billing',
                     element: (
-                    <PermissionMiddleware codeName="view_billing_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_billing_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <Billing />
                     </PermissionMiddleware>
                     ),
                 },
-                { path: 'subscription-management', element: <Navigate to="/settings/billing" replace /> },
+                { path: 'subscription-management', element: <Navigate to="/b/settings/billing" replace /> },
                 {
                     path: "subscription",
                     element: (
-                    <PermissionMiddleware codeName="view_billing_page" behavior="redirect" redirectTo={"/settings"}>
+                    <PermissionMiddleware codeName="view_billing_page" behavior="redirect" redirectTo={"/b/settings"}>
                         <SubscriptionCanceled />
                     </PermissionMiddleware>
                     ),
@@ -141,7 +142,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'limits',
                     element: (
-                    <PermissionMiddleware codeName="view_limits_and_usage_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_limits_and_usage_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <LimitsAndUsage />
                     </PermissionMiddleware>
                     ),
@@ -149,7 +150,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'security',
                     element: (
-                    <PermissionMiddleware codeName="view_security_and_privacy_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_security_and_privacy_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <SecurityAndPrivacy />
                     </PermissionMiddleware>
                     ),
@@ -157,7 +158,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'banks',
                     element: (
-                    <PermissionMiddleware codeName="view_bank_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_bank_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <BankSettings />
                     </PermissionMiddleware>
                     ),
@@ -165,7 +166,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'departments',
                     element: (
-                    <PermissionMiddleware codeName="view_department_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_department_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <DepartmentSettings />
                     </PermissionMiddleware>
                     ),
@@ -173,7 +174,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'entities',
                     element: (
-                    <PermissionMiddleware codeName="view_entity_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_entity_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <EntitySettings />
                     </PermissionMiddleware>
                     ),
@@ -181,15 +182,15 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'inventory',
                     element: (
-                    <PermissionMiddleware codeName={["view_inventory_settings_page", "view_inventory"]} behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/inventory/items" replace />
+                    <PermissionMiddleware codeName={["view_inventory_settings_page", "view_inventory"]} behavior="redirect" redirectTo={'/b/settings'}>
+                        <Navigate to="/b/inventory/items" replace />
                     </PermissionMiddleware>
                     ),
                 },
                 {
                     path: 'projects',
                     element: (
-                    <PermissionMiddleware codeName="view_project_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_project_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <ProjectSettings />
                     </PermissionMiddleware>
                     ),
@@ -197,7 +198,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'members',
                     element: (
-                    <PermissionMiddleware codeName="view_member_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="business_view_member_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <MemberSettings />
                     </PermissionMiddleware>
                     ),
@@ -205,7 +206,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'groups',
                     element: (
-                    <PermissionMiddleware codeName="view_group_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_group_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <GroupSettings />
                     </PermissionMiddleware>
                     ),
@@ -213,7 +214,7 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'categories',
                     element: (
-                    <PermissionMiddleware codeName="view_cash_flow_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_cash_flow_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <CategorySettings />
                     </PermissionMiddleware>
                     ),
@@ -221,43 +222,45 @@ export const businessRoutes: RouteObject[] = [
                 {
                     path: 'ledger-accounts',
                     element: (
-                    <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/accounting/chart-of-accounts" replace />
+                    <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/b/settings'}>
+                        <Navigate to="/b/accounting/chart-of-accounts" replace />
                     </PermissionMiddleware>
                     ),
                 },
                 {
                     path: 'register/ledger-accounts',
                     element: (
-                    <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/accounting/chart-of-accounts" replace />
+                    <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/b/settings'}>
+                        <Navigate to="/b/accounting/chart-of-accounts" replace />
                     </PermissionMiddleware>
                     ),
                 },
                 {
                     path: 'bank-statements',
                     element: (
-                    <PermissionMiddleware codeName="view_statements_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/bank-imports" replace />
+                    <PermissionMiddleware codeName="view_statements_page" behavior="redirect" redirectTo={'/b/settings'}>
+                        <Navigate to="/b/bank-imports" replace />
                     </PermissionMiddleware>
                     ),
                 },
                 {
                     path: 'notifications',
                     element: (
-                    <PermissionMiddleware codeName="view_notification_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_notification_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <NotificationSettings />
                     </PermissionMiddleware>
                     ),
                 },
                 {
                     path: 'manage-formats',
-                    element: <PermissionMiddleware codeName="view_format_settings_page" redirectTo="/settings"><FormatSettings /></PermissionMiddleware>
+                    element: <PermissionMiddleware codeName="view_format_settings_page" redirectTo="/b/settings"><FormatSettings /></PermissionMiddleware>
                 },
                 {
                     path: 'manage-currency',
-                    element: <PermissionMiddleware codeName="view_currency_settings_page" redirectTo="/settings"><CurrencySettings /></PermissionMiddleware>
+                    element: <PermissionMiddleware codeName="view_currency_settings_page" redirectTo="/b/settings"><CurrencySettings /></PermissionMiddleware>
                 },
             ]
             },
 ];
+
+export const businessRoutes: RouteObject[] = [{ path: "b", children: businessChildren }];

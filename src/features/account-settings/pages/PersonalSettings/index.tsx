@@ -262,8 +262,8 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
     }
   };
 
-  const handleSecurityNavigation = () => navigate(product === "personal" ? "/personal/settings/security" : "/settings/security");
-  const handleFormatsNavigation = () => navigate(product === "personal" ? "/personal/settings/formats" : "/settings/manage-formats");
+  const handleSecurityNavigation = () => navigate(product === "personal" ? "/p/settings/security" : "/b/settings/security");
+  const handleFormatsNavigation = () => navigate(product === "personal" ? "/p/settings/formats" : "/b/settings/manage-formats");
 
   if (isInitialLoading) {
     return (

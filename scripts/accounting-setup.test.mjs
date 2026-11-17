@@ -78,8 +78,8 @@ test("legacy route aliases target the canonical workspace", () => {
     ts.forEachChild(node, visit);
   }
   visit(source);
-  assert.equal(destinations.get("ledger-accounts"), "/accounting/chart");
-  assert.equal(destinations.get("register/ledger-accounts"), "/accounting/setup/chart");
+  assert.equal(destinations.get("ledger-accounts"), "/b/accounting/chart-of-accounts");
+  assert.equal(destinations.get("register/ledger-accounts"), "/b/accounting/chart-of-accounts");
 });
 
 const { apiErrorMessage } = await load("src/lib/apiErrorMessage.ts");

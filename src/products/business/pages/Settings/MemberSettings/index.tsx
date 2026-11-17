@@ -83,7 +83,7 @@ const MemberSettings: React.FC = () => {
 
   const canViewMembers = useMemo(() => {
     if (isOwner) return true;
-    return permissions.includes("view_member");
+    return permissions.includes("business_view_member");
   }, [isOwner, permissions]);
 
   const canViewGroups = useMemo(() => {
@@ -437,7 +437,7 @@ const MemberSettings: React.FC = () => {
               </div>
             </div></div>
 
-          <PermissionMiddleware codeName={"view_member"} behavior="lock">
+          <PermissionMiddleware codeName={"business_view_member"} behavior="lock">
             <section className="mt-6">
               <div className="mb-4">
                   <div className="flex items-center justify-between gap-3 settings-toolbar">
@@ -500,7 +500,7 @@ const MemberSettings: React.FC = () => {
 
                     {/* RIGHT: add button */}
                     <div className="shrink-0">
-                      <PermissionMiddleware codeName={"add_member"}>
+                      <PermissionMiddleware codeName={"business_add_member"}>
                         <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                           {t("btn.addMember")}
                         </Button>
@@ -508,12 +508,12 @@ const MemberSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getMember(item.id)).data.member} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "�"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "�"},{key:"role",label:t("preview.fields.role"),render:item=>t(`preview.roles.${item.role}`)},{key:"groups",label:t("preview.fields.groups"),render:item=>item.groups?.map(group => group.name).join(", ") || "�"},{key:"created_at",label:t("preview.fields.created_at"),render:item=>item.created_at ?? "�"},{key:"updated_at",label:t("preview.fields.updated_at"),render:item=>item.updated_at ?? "�"}]} onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy} items={members} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"role",label:t("common:records.fields.role"),render:item=>String(item.role??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_member")} canDelete={isOwner||isSuperUser||permissions.includes("delete_member")} onEdit={openEditModal} onDelete={item=>api.deleteMember(item.id)} />
+<DataTable loadPreview={async item => (await api.getMember(item.id)).data.member} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "�"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "�"},{key:"role",label:t("preview.fields.role"),render:item=>t(`preview.roles.${item.role}`)},{key:"groups",label:t("preview.fields.groups"),render:item=>item.groups?.map(group => group.name).join(", ") || "�"},{key:"created_at",label:t("preview.fields.created_at"),render:item=>item.created_at ?? "�"},{key:"updated_at",label:t("preview.fields.updated_at"),render:item=>item.updated_at ?? "�"}]} onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy} items={members} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"role",label:t("common:records.fields.role"),render:item=>String(item.role??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("business_change_member")} canDelete={isOwner||isSuperUser||permissions.includes("business_delete_member")} onEdit={openEditModal} onDelete={item=>api.deleteMember(item.id)} />
             </section>
           </PermissionMiddleware>
         </div>
 
-        <PermissionMiddleware codeName={["add_member", "change_member"]}>
+        <PermissionMiddleware codeName={["business_add_member", "business_change_member"]}>
           <MemberModal
             isOpen={modalOpen}
             mode={modalMode}

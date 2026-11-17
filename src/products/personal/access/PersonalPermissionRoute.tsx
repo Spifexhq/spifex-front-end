@@ -22,7 +22,7 @@ export default function PersonalPermissionRoute({ permission, children }: { perm
     <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{access.plan?.name || t("access.planLabel")}</p>
     <h1 className="mt-2 text-lg font-semibold text-gray-900">{t("access.unavailableTitle")}</h1>
     <p className="mt-2 text-sm leading-6 text-gray-600">{t("access.unavailableDescription")}</p>
-    <Link to="/personal/settings/billing" className="mt-4 inline-flex rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800">{t("access.managePlan")}</Link>
+    <Link to="/p/settings/billing" className="mt-4 inline-flex rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800">{t("access.managePlan")}</Link>
   </Card>;
   return <>{children}</>;
 }

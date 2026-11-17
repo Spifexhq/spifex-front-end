@@ -13,12 +13,13 @@ const readCollapsed = (key: string, fallback: boolean) => {
 export default function ApplicationShell({ children, onboarding, showOnboardingWarning }: { children: ReactNode; onboarding?: ConfigurationStatus | null; showOnboardingWarning?: boolean }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const settings = pathname.startsWith("/settings");
-  const accounting = /^\/accounting(?:\/|$)/.test(pathname);
-  const inventory = /^\/inventory(?:\/|$)/.test(pathname);
+  const basePath = pathname.replace(/^\/b(?=\/|$)/, "");
+  const settings = basePath.startsWith("/settings");
+  const accounting = /^\/accounting(?:\/|$)/.test(basePath);
+  const inventory = /^\/inventory(?:\/|$)/.test(basePath);
   const section = settings || accounting || inventory;
   /** Cashflow/settled own their full-bleed workspace; no rail is rendered. */
-  const pageHasActions = /^\/(cashflow|settled)\/?$/.test(pathname);
+  const pageHasActions = /^\/(cashflow|settled)\/?$/.test(basePath);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(() => readCollapsed("spifex.workspace.collapsed", false));
   const [settingsCollapsed, setSettingsCollapsed] = useState(() => readCollapsed("spifex.settings.collapsed", false));
   const [accountingCollapsed, setAccountingCollapsed] = useState(() => readCollapsed("spifex.accounting.collapsed", false));
@@ -38,7 +39,7 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
   }, [settings, accounting, inventory]);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const toggleMobile = useCallback(() => setMobileOpen(previous => !previous), []);
-  const openHelp = useCallback(() => { setMobileOpen(false); navigate("/help"); }, [navigate]);
+  const openHelp = useCallback(() => { setMobileOpen(false); navigate("/b/help"); }, [navigate]);
   useEffect(closeMobile, [pathname, closeMobile]);
   useEffect(() => {
     const media = matchMedia("(min-width: 768px)");

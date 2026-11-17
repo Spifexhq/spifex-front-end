@@ -74,9 +74,9 @@
     "change_bank": { "label": "Bankkonto bearbeiten", "description": "Erlaubt das Bearbeiten der Bankkonto-Konfiguration." },
     "delete_bank": { "label": "Bankkonto löschen", "description": "Erlaubt das Löschen von Bankkonten." },
 
-    "add_member": { "label": "Mitarbeiter anlegen", "description": "Erlaubt das Anlegen von Mitarbeiter-Datensätzen." },
-    "change_member": { "label": "Mitarbeiter bearbeiten", "description": "Erlaubt das Bearbeiten von Mitarbeiterdaten." },
-    "delete_member": { "label": "Mitarbeiter löschen", "description": "Erlaubt das Löschen von Mitarbeiter-Datensätzen." },
+    "business_add_member": { "label": "Mitarbeiter anlegen", "description": "Erlaubt das Anlegen von Mitarbeiter-Datensätzen." },
+    "business_change_member": { "label": "Mitarbeiter bearbeiten", "description": "Erlaubt das Bearbeiten von Mitarbeiterdaten." },
+    "business_delete_member": { "label": "Mitarbeiter löschen", "description": "Erlaubt das Löschen von Mitarbeiter-Datensätzen." },
 
     "add_group": { "label": "Gruppe anlegen", "description": "Erlaubt das Anlegen von Berechtigungsgruppen." },
     "change_group": { "label": "Gruppe bearbeiten", "description": "Erlaubt das Bearbeiten von Berechtigungsgruppen." },

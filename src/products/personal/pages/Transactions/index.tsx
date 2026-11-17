@@ -9,7 +9,7 @@ export default function TransactionsPage({ basis = "outstanding" }: { basis?: Ba
   if (tab && tab !== basis) {
     const next = new URLSearchParams(params);
     next.delete("tab");
-    const target = tab === "settled" ? "/personal/transactions/settled" : "/personal/transactions";
+    const target = tab === "settled" ? "/p/transactions/settled" : "/p/transactions";
     const query = next.toString();
     return <Navigate to={query ? `${target}?${query}` : target} replace />;
   }

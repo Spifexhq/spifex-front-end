@@ -108,7 +108,7 @@ export const PermissionMiddleware = ({
   if (!hasAccess) {
     if (behavior === "hide") return null;
 
-    const target = redirectTo ?? "/settings";
+    const target = redirectTo ?? "/b/settings";
     const showGoBack = behavior === "redirect" && !!redirectTo;
 
     const message = !hasPermission

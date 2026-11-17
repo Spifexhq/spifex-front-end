@@ -80,7 +80,7 @@ export const SubscriptionMiddleware = ({
 
   if (!allowed) {
     if (behavior === "redirect") {
-      return <Navigate to={redirectTo ?? "/settings"} replace state={{ from: location.pathname }} />;
+      return <Navigate to={redirectTo ?? "/b/settings"} replace state={{ from: location.pathname }} />;
     }
 
     if (behavior === "lock") {

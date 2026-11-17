@@ -10,7 +10,7 @@ export default function AccountingReviewGuideContent({ onNavigate }: { onNavigat
     { Icon: Landmark, to: "bank-mappings", title: t("redesign.guide.bank", "A bank is not connected"), description: t("redesign.guide.bankDescription", "Connect the bank used for the payment to an active bank-control account in your primary book."), action: t("redesign.guide.bankAction", "Review bank connections") },
     { Icon: FileText, to: "journals", title: t("redesign.guide.journal", "An accounting entry needs review"), description: t("redesign.guide.journalDescription", "Inspect the journal and its source. Reversing a journal changes accounting only; it does not cancel the payment."), action: t("redesign.guide.journalAction", "Review journals") },
   ];
-  const go = (to: string) => { onNavigate(); navigate(`/accounting/${to}`); };
+  const go = (to: string) => { onNavigate(); navigate(`/b/accounting/${to}`); };
   return <div className="space-y-4">
     <p className="text-[13px] leading-6 text-gray-500">{t("redesign.guide.description", "Start with the issue you see on your cashflow entry. These shortcuts help you find the relevant settings.")}</p>
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">

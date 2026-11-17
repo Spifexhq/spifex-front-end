@@ -26,7 +26,7 @@ export default function StatusPage({ kind, namespace }: { kind: StatusKind; name
   return (
     <div className="flex min-h-dvh flex-col bg-[#fdfcfb] text-black">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 sm:px-10">
-        <Link to="/overview" className="text-lg font-semibold tracking-tight">Spifex<span className="text-[var(--accentPrimary)]">.</span></Link>
+        <Link to="/b/overview" className="text-lg font-semibold tracking-tight">Spifex<span className="text-[var(--accentPrimary)]">.</span></Link>
         <span className="rounded-full border border-[#e9ded4] bg-white px-3 py-1 text-[11px] font-medium tracking-wide text-black/60">{t("badge")}</span>
       </header>
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-6 pb-16 text-center sm:pb-20">
@@ -34,7 +34,7 @@ export default function StatusPage({ kind, namespace }: { kind: StatusKind; name
         <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{t("heading")}</h1>
         <p className="mt-4 max-w-md text-sm leading-7 text-black/60 sm:text-base">{t("subtitle")}</p>
         <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row">
-          {kind === "maintenance" ? <Button variant="outline" onClick={() => window.location.reload()}><RotateCw size={15} className="mr-2" aria-hidden="true" />{t("actions.retry")}</Button> : <Button variant="primary" onClick={() => navigate("/overview")} >{t("actions.overview")}<ArrowRight size={15} className="ml-2" aria-hidden="true" /></Button>}
+          {kind === "maintenance" ? <Button variant="outline" onClick={() => window.location.reload()}><RotateCw size={15} className="mr-2" aria-hidden="true" />{t("actions.retry")}</Button> : <Button variant="primary" onClick={() => navigate("/b/overview")} >{t("actions.overview")}<ArrowRight size={15} className="ml-2" aria-hidden="true" /></Button>}
           {kind === "error" && <Button variant="outline" onClick={() => window.location.reload()}>{t("actions.retry")}</Button>}
         </div>
         {!reduced && <button type="button" onClick={() => setPaused(value => !value)} aria-pressed={paused} className="mt-8 inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs text-black/50 transition-colors hover:text-black">{paused ? <Play size={13} aria-hidden="true" /> : <Pause size={13} aria-hidden="true" />} {t(paused ? "animation.resume" : "animation.pause")}</button>}

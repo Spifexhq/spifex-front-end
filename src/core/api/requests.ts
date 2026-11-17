@@ -324,19 +324,19 @@ export const api = {
 
   /* --- Members --- */
   getMembers: (params?: GetMembersParams) =>
-    request<GetMembersResponse>("organizations/members/", "GET", params),
+    request<GetMembersResponse>("business/members/", "GET", params),
 
   getMember: (memberId: string) =>
-    request<GetMemberResponse>(`organizations/members/${memberId}/`, "GET"),
+    request<GetMemberResponse>(`business/members/${memberId}/`, "GET"),
 
   addMember: (payload: AddMemberRequest) =>
-    request<GetMemberResponse>("organizations/members/", "POST", payload),
+    request<GetMemberResponse>("business/members/", "POST", payload),
 
   editMember: (memberId: string, payload: EditMemberRequest) =>
-    request<GetMemberResponse>(`organizations/members/${memberId}/`, "PATCH", payload),
+    request<GetMemberResponse>(`business/members/${memberId}/`, "PATCH", payload),
 
   deleteMember: (memberId: string) =>
-    request<void>(`organizations/members/${memberId}/`, "DELETE"),
+    request<void>(`business/members/${memberId}/`, "DELETE"),
 
   /* --- KPIs --- */
   getCashflowKpis: (params: KpiQueryParams) =>
@@ -539,133 +539,133 @@ export const api = {
 
   /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>
-    request<GetLedgerAccountsResponse>('ledger/accounts/', 'GET', params, { fresh: true }),
+    request<GetLedgerAccountsResponse>('business/ledger/accounts/', 'GET', params, { fresh: true }),
 
   getLedgerAccountsBulk: (ids: string[]) =>
-    request<LedgerAccountsBulkResponse>('ledger/accounts/bulk/get/', 'POST', {
+    request<LedgerAccountsBulkResponse>('business/ledger/accounts/bulk/get/', 'POST', {
       ids,
     } satisfies LedgerAccountsBulkRequest),
 
   getLedgerAccount: (ledgerAccountId: string) =>
-    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, 'GET'),
+    request<LedgerAccount>(`business/ledger/accounts/${ledgerAccountId}/`, 'GET'),
 
   getLedgerAccountsExists: () =>
-    request<LedgerAccountsExistsResponse>('ledger/accounts/exists/', 'GET'),
+    request<LedgerAccountsExistsResponse>('business/ledger/accounts/exists/', 'GET'),
 
   getLedgerAccountsTree: (params?: GetLedgerAccountsTreeRequest) =>
-    request<GetLedgerAccountsTreeResponse>('ledger/accounts/tree/', 'GET', params),
+    request<GetLedgerAccountsTreeResponse>('business/ledger/accounts/tree/', 'GET', params),
 
   addLedgerAccount: (payload: AddLedgerAccountRequest) =>
-    request<LedgerAccount>('ledger/accounts/', 'POST', payload),
+    request<LedgerAccount>('business/ledger/accounts/', 'POST', payload),
 
   addLedgerAccountsBulk: (payload: AddLedgerAccountRequest[]) =>
-    request<LedgerAccount[]>('ledger/accounts/bulk/create/', 'POST', payload),
+    request<LedgerAccount[]>('business/ledger/accounts/bulk/create/', 'POST', payload),
 
   editLedgerAccount: (ledgerAccountId: string, payload: EditLedgerAccountRequest) =>
-    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, 'PATCH', payload),
+    request<LedgerAccount>(`business/ledger/accounts/${ledgerAccountId}/`, 'PATCH', payload),
 
   deleteAllLedgerAccounts: () =>
-    request<DeleteAllLedgerAccountsResponse>('ledger/accounts/delete-all/', 'POST', {
+    request<DeleteAllLedgerAccountsResponse>('business/ledger/accounts/delete-all/', 'POST', {
       confirm_delete_all: true,
     } satisfies DeleteAllLedgerAccountsRequest),
 
   deleteLedgerAccount: (ledgerAccountId: string) =>
-    request<void>(`ledger/accounts/${ledgerAccountId}/`, 'DELETE'),
+    request<void>(`business/ledger/accounts/${ledgerAccountId}/`, 'DELETE'),
 
   importLedgerAccounts: (formData: FormData) =>
-    request<ImportLedgerAccountsResponse>("ledger/accounts/import/", "POST", formData),
+    request<ImportLedgerAccountsResponse>("business/ledger/accounts/import/", "POST", formData),
 
   importStandardLedgerAccounts: (plan: "organizational") =>
-    request<ImportStandardLedgerAccountsResponse>("ledger/accounts/import-standard/", "POST", {
+    request<ImportStandardLedgerAccountsResponse>("business/ledger/accounts/import-standard/", "POST", {
       plan,
     } satisfies ImportStandardLedgerAccountsRequest),
 
   generateLedgerGuide: (payload: LedgerGuideRequest) =>
-    request<LedgerGuideResponse>("ledger/accounts/ai-guide/", "POST", payload),
+    request<LedgerGuideResponse>("business/ledger/accounts/ai-guide/", "POST", payload),
 
   downloadLedgerCsvTemplate: () =>
-    downloadTemplate("ledger/accounts/template/csv/", "template_ledger_accounts.csv"),
+    downloadTemplate("business/ledger/accounts/template/csv/", "template_ledger_accounts.csv"),
 
   downloadLedgerXlsxTemplate: () =>
-    downloadTemplate("ledger/accounts/template/xlsx/", "template_ledger_accounts.xlsx"),
+    downloadTemplate("business/ledger/accounts/template/xlsx/", "template_ledger_accounts.xlsx"),
 
   /* --- Accounting --- */
-  getAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/', 'GET', undefined, { fresh: true }),
-  startAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/start/', 'POST', {}),
-  activateAccounting: (revision: string) => request<AccountingSetupStatus>('ledger/setup/activate/', 'POST', { revision }),
-  getAccountingAiSetupContext: () => request<AiSetupContext>('ledger/setup/ai-guide/context/', 'GET', undefined, { fresh: true }),
-  previewAccountingAiSetup: (payload: AiSetupPreviewRequest) => request<AiSetupPreviewResponse>('ledger/setup/ai-guide/preview/', 'POST', payload, { timeout: 120_000 }),
-  applyAccountingAiSetup: (payload: AiSetupApplyRequest) => request<AiSetupApplyResponse>('ledger/setup/ai-guide/apply/', 'POST', payload, { timeout: 120_000 }),
-  deleteAccountingBook: (id: string) => request(`ledger/books/${id}/`, "DELETE"),
-  deleteBankAccountLedgerMap: (id: string) => request(`ledger/bank-account-maps/${id}/`, "DELETE"),
-  deleteCategoryPostingPolicy: (id: string) => request(`ledger/category-policies/${id}/`, "DELETE"),
-  deleteFiscalPeriod: (id: string) => request(`ledger/periods/${id}/`, "DELETE"),
-  getAccountingList: <T>(resource: string, params: Record<string, string | number | undefined>) => request<{ results: T[]; next: string | null; count?: number; filters: Record<string, string[]>; filter_labels?: Record<string, Record<string,string>> }>(`ledger/lists/${resource}/`, "GET", params),
-  getFiscalPeriods: () => request<FiscalPeriod[]>('ledger/periods/', 'GET', undefined, { fresh: true }),
-  addFiscalPeriod: (payload: Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'> & { book_id: string }) => request<FiscalPeriod>('ledger/periods/', 'POST', payload),
-  updateFiscalPeriod: (id: string, status: FiscalPeriod['status']) => request<FiscalPeriod>(`ledger/periods/${id}/`, 'PATCH', { status }),
-  editFiscalPeriod: (id: string, payload: Partial<Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'>>) => request<FiscalPeriod>(`ledger/periods/${id}/`, 'PATCH', payload),
-  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('ledger/books/', 'GET', params, { fresh: true }),
+  getAccountingSetup: () => request<AccountingSetupStatus>('business/ledger/setup/', 'GET', undefined, { fresh: true }),
+  startAccountingSetup: () => request<AccountingSetupStatus>('business/ledger/setup/start/', 'POST', {}),
+  activateAccounting: (revision: string) => request<AccountingSetupStatus>('business/ledger/setup/activate/', 'POST', { revision }),
+  getAccountingAiSetupContext: () => request<AiSetupContext>('business/ledger/setup/ai-guide/context/', 'GET', undefined, { fresh: true }),
+  previewAccountingAiSetup: (payload: AiSetupPreviewRequest) => request<AiSetupPreviewResponse>('business/ledger/setup/ai-guide/preview/', 'POST', payload, { timeout: 120_000 }),
+  applyAccountingAiSetup: (payload: AiSetupApplyRequest) => request<AiSetupApplyResponse>('business/ledger/setup/ai-guide/apply/', 'POST', payload, { timeout: 120_000 }),
+  deleteAccountingBook: (id: string) => request(`business/ledger/books/${id}/`, "DELETE"),
+  deleteBankAccountLedgerMap: (id: string) => request(`business/ledger/bank-account-maps/${id}/`, "DELETE"),
+  deleteCategoryPostingPolicy: (id: string) => request(`business/ledger/category-policies/${id}/`, "DELETE"),
+  deleteFiscalPeriod: (id: string) => request(`business/ledger/periods/${id}/`, "DELETE"),
+  getAccountingList: <T>(resource: string, params: Record<string, string | number | undefined>) => request<{ results: T[]; next: string | null; count?: number; filters: Record<string, string[]>; filter_labels?: Record<string, Record<string,string>> }>(`business/ledger/lists/${resource}/`, "GET", params),
+  getFiscalPeriods: () => request<FiscalPeriod[]>('business/ledger/periods/', 'GET', undefined, { fresh: true }),
+  addFiscalPeriod: (payload: Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'> & { book_id: string }) => request<FiscalPeriod>('business/ledger/periods/', 'POST', payload),
+  updateFiscalPeriod: (id: string, status: FiscalPeriod['status']) => request<FiscalPeriod>(`business/ledger/periods/${id}/`, 'PATCH', { status }),
+  editFiscalPeriod: (id: string, payload: Partial<Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'>>) => request<FiscalPeriod>(`business/ledger/periods/${id}/`, 'PATCH', payload),
+  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('business/ledger/books/', 'GET', params, { fresh: true }),
 
   addAccountingBook: (payload: AddAccountingBookRequest) =>
-    request<AccountingBook>('ledger/books/', 'POST', payload),
+    request<AccountingBook>('business/ledger/books/', 'POST', payload),
 
   editAccountingBook: (bookId: string, payload: EditAccountingBookRequest) =>
-    request<AccountingBook>(`ledger/books/${bookId}/`, 'PATCH', payload),
+    request<AccountingBook>(`business/ledger/books/${bookId}/`, 'PATCH', payload),
 
   getCategoryPostingPolicies: () =>
-    request<CategoryPostingPolicy[]>('ledger/category-policies/', 'GET', undefined, { fresh: true }),
+    request<CategoryPostingPolicy[]>('business/ledger/category-policies/', 'GET', undefined, { fresh: true }),
 
   upsertCategoryPostingPolicy: (payload: UpsertCategoryPostingPolicyRequest) =>
-    request<CategoryPostingPolicy>('ledger/category-policies/', 'POST', payload),
+    request<CategoryPostingPolicy>('business/ledger/category-policies/', 'POST', payload),
 
   getBankAccountLedgerMaps: () =>
-    request<BankAccountLedgerMap[]>('ledger/bank-account-maps/', 'GET', undefined, { fresh: true }),
+    request<BankAccountLedgerMap[]>('business/ledger/bank-account-maps/', 'GET', undefined, { fresh: true }),
 
   upsertBankAccountLedgerMap: (payload: UpsertBankAccountLedgerMapRequest) =>
-    request<BankAccountLedgerMap>('ledger/bank-account-maps/', 'POST', payload),
+    request<BankAccountLedgerMap>('business/ledger/bank-account-maps/', 'POST', payload),
 
   getJournalEntries: (params?: GetJournalEntriesParams) =>
-    request<GetJournalEntriesResponse>('ledger/journals/', 'GET', params, { fresh: true }),
+    request<GetJournalEntriesResponse>('business/ledger/journals/', 'GET', params, { fresh: true }),
 
   getJournalEntry: (journalId: string) =>
-    request<JournalEntry>(`ledger/journals/${journalId}/`, 'GET'),
+    request<JournalEntry>(`business/ledger/journals/${journalId}/`, 'GET'),
 
   createJournalEntry: (payload: AddJournalEntryRequest) =>
-    request<JournalEntry>('ledger/journals/', 'POST', payload),
+    request<JournalEntry>('business/ledger/journals/', 'POST', payload),
 
   reverseJournalEntry: (journalId: string, payload: ReverseJournalEntryRequest = {}) =>
-    request<JournalEntry>(`ledger/journals/${journalId}/reverse/`, 'POST', payload),
+    request<JournalEntry>(`business/ledger/journals/${journalId}/reverse/`, 'POST', payload),
 
   deleteJournalEntry: (journalId: string, payload: DeleteJournalEntryRequest = {}) =>
-    request<void>(`ledger/journals/${journalId}/`, 'DELETE', payload),
+    request<void>(`business/ledger/journals/${journalId}/`, 'DELETE', payload),
 
   getJournalHistory: (params?: GetJournalHistoryParams) =>
-    request<GetJournalHistoryResponse>('ledger/journals/history/', 'GET', params, { fresh: true }),
+    request<GetJournalHistoryResponse>('business/ledger/journals/history/', 'GET', params, { fresh: true }),
 
   getTrialBalance: (params?: GetTrialBalanceParams) =>
-    request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', params, { fresh: true }),
+    request<GetTrialBalanceResponse>('business/ledger/journals/trial-balance/', 'GET', params, { fresh: true }),
 
   getCashflowCategories: (params?: GetCashflowCategoriesParams) =>
-    request<GetCashflowCategoriesResponse>("cashflow/categories/", "GET", params),
+    request<GetCashflowCategoriesResponse>("business/categories/", "GET", params),
 
   getCashflowCategory: (categoryId: string) =>
-    request<CashflowCategory>(`cashflow/categories/${categoryId}/`, "GET"),
+    request<CashflowCategory>(`business/categories/${categoryId}/`, "GET"),
 
   addCashflowCategory: (payload: AddCashflowCategoryRequest) =>
-    request<CashflowCategory>("cashflow/categories/", "POST", payload),
+    request<CashflowCategory>("business/categories/", "POST", payload),
 
   editCashflowCategory: (categoryId: string, payload: EditCashflowCategoryRequest) =>
-    request<CashflowCategory>(`cashflow/categories/${categoryId}/`, "PATCH", payload),
+    request<CashflowCategory>(`business/categories/${categoryId}/`, "PATCH", payload),
 
   deleteCashflowCategory: (categoryId: string) =>
-    request<void>(`cashflow/categories/${categoryId}/`, "DELETE"),
+    request<void>(`business/categories/${categoryId}/`, "DELETE"),
 
   bulkDeleteCashflowCategories: (ids: string[]) =>
-    request<{ deleted: string[] }>("cashflow/categories/bulk-delete/", "POST", { ids }),
+    request<{ deleted: string[] }>("business/categories/bulk-delete/", "POST", { ids }),
 
   importCashflowCategoryDefaults: (language?: string) =>
-    request<ImportCashflowCategoryDefaultsResponse>("cashflow/categories/import-defaults/", "POST", language ? { language } : {}),
+    request<ImportCashflowCategoryDefaultsResponse>("business/categories/import-defaults/", "POST", language ? { language } : {}),
 
   getEntryAccountingReadiness: (entryId: string) =>
     request<EntryAccountingReadinessEnvelope>(`cashflow/entries/${entryId}/accounting-readiness/`, 'GET'),
@@ -678,147 +678,147 @@ export const api = {
 
   /* --- Departments --- */
   getDepartments: (params?: GetDepartmentsParams) =>
-    request<GetDepartmentsResponse>(`departments/`, "GET", params),
+    request<GetDepartmentsResponse>(`business/departments/`, "GET", params),
 
   getDepartmentsOptions: (params?: GetDepartmentsParams) =>
-    request<GetDepartmentsResponse>(`departments/options/`, "GET", params),
+    request<GetDepartmentsResponse>(`business/departments/options/`, "GET", params),
 
   getDepartment: (departmentId: string) =>
-    request<GetDepartmentResponse>(`departments/${departmentId}/`, "GET"),
+    request<GetDepartmentResponse>(`business/departments/${departmentId}/`, "GET"),
 
   getDepartmentsBulk: (ids: string[]) =>
-    request<DepartmentsBulkResponse>(`departments/bulk/get/`, "POST", {
+    request<DepartmentsBulkResponse>(`business/departments/bulk/get/`, "POST", {
       ids
     } satisfies DepartmentsBulkRequest),
 
   addDepartment: (payload: AddDepartmentRequest) =>
-    request<Department>(`departments/`, "POST", payload),
+    request<Department>(`business/departments/`, "POST", payload),
 
   editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>, version?: string) =>
-    request<Department>(`departments/${departmentId}/`, "PATCH", payload, { ifMatch: version }),
+    request<Department>(`business/departments/${departmentId}/`, "PATCH", payload, { ifMatch: version }),
 
   deleteDepartment: (departmentId: string, version?: string) =>
-    request<void>(`departments/${departmentId}/`, "DELETE", undefined, { ifMatch: version }),
+    request<void>(`business/departments/${departmentId}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Projects --- */
   getProjects: (params?: GetProjectsParams) =>
-    request<GetProjectsResponse>(`projects/`, "GET", params),
+    request<GetProjectsResponse>(`business/projects/`, "GET", params),
 
   getProjectsOptions: (params?: GetProjectsParams) =>
-    request<GetProjectsResponse>(`projects/options/`, "GET", params),
+    request<GetProjectsResponse>(`business/projects/options/`, "GET", params),
 
   getProjectsBulk: (ids: string[]) =>
-    request<ProjectsBulkResponse>(`projects/bulk/get/`, "POST", {
+    request<ProjectsBulkResponse>(`business/projects/bulk/get/`, "POST", {
       ids
     } satisfies ProjectsBulkRequest),
 
   getProject: (projectId: string) =>
-    request<Project>(`projects/${projectId}/`, "GET"),
+    request<Project>(`business/projects/${projectId}/`, "GET"),
 
   addProject: (payload: AddProjectRequest) =>
-    request<Project>(`projects/`, "POST", payload),
+    request<Project>(`business/projects/`, "POST", payload),
 
   editProject: (projectId: string, payload: EditProjectRequest, version?: string) =>
-    request<Project>(`projects/${projectId}/`, "PATCH", payload, { ifMatch: version }),
+    request<Project>(`business/projects/${projectId}/`, "PATCH", payload, { ifMatch: version }),
 
   deleteProject: (projectId: string, version?: string) =>
-    request<void>(`projects/${projectId}/`, "DELETE", undefined, { ifMatch: version }),
+    request<void>(`business/projects/${projectId}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Inventory --- */
   getInventoryItems: (params?: GetInventoryItemsParams) =>
-    request<GetInventoryItemsResponse>(`inventory/items/`, "GET", params),
+    request<GetInventoryItemsResponse>(`business/inventory/items/`, "GET", params),
 
   getInventoryOptions: (params?: GetInventoryItemsParams) =>
-    request<GetInventoryItemsResponse>(`inventory/items/options/`, "GET", params),
+    request<GetInventoryItemsResponse>(`business/inventory/items/options/`, "GET", params),
 
   getInventoryItemsBulk: (ids: string[]) =>
-    request<InventoryItemsBulkResponse>(`inventory/items/bulk/get/`, "POST", {
+    request<InventoryItemsBulkResponse>(`business/inventory/items/bulk/get/`, "POST", {
       ids
     } satisfies InventoryItemsBulkRequest),
 
   getInventoryItem: (id: string) =>
-    request<InventoryItem>(`inventory/items/${id}/`, "GET"),
+    request<InventoryItem>(`business/inventory/items/${id}/`, "GET"),
 
   addInventoryItem: (payload: AddInventoryItemRequest) =>
-    request<InventoryItem>(`inventory/items/`, "POST", payload),
+    request<InventoryItem>(`business/inventory/items/`, "POST", payload),
 
   editInventoryItem: (id: string, payload: EditInventoryItemRequest, version?: string) =>
-    request<InventoryItem>(`inventory/items/${id}/`, "PATCH", payload, { ifMatch: version }),
+    request<InventoryItem>(`business/inventory/items/${id}/`, "PATCH", payload, { ifMatch: version }),
 
   deleteInventoryItem: (id: string, version?: string) =>
-    request<void>(`inventory/items/${id}/`, "DELETE", undefined, { ifMatch: version }),
+    request<void>(`business/inventory/items/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   getInventoryItemStock: (id: string) =>
-    request<InventoryStockLevel[]>(`inventory/items/${id}/stock/`, "GET"),
+    request<InventoryStockLevel[]>(`business/inventory/items/${id}/stock/`, "GET"),
 
   getInventoryPrices: (params?: GetInventoryPricesParams) =>
-    request<GetInventoryPricesResponse>(`inventory/prices/`, "GET", params),
+    request<GetInventoryPricesResponse>(`business/inventory/prices/`, "GET", params),
 
   addInventoryPrice: (payload: AddInventoryPriceRequest) =>
-    request<InventoryItemPrice>(`inventory/prices/`, "POST", payload),
+    request<InventoryItemPrice>(`business/inventory/prices/`, "POST", payload),
 
   editInventoryPrice: (id: string, payload: EditInventoryPriceRequest, version?: string) =>
-    request<InventoryItemPrice>(`inventory/prices/${id}/`, "PATCH", payload, { ifMatch: version }),
+    request<InventoryItemPrice>(`business/inventory/prices/${id}/`, "PATCH", payload, { ifMatch: version }),
 
   getInventorySummary: () =>
-    request<InventorySummary>(`inventory/summary/`, "GET"),
+    request<InventorySummary>(`business/inventory/summary/`, "GET"),
 
   getInventoryStock: (params?: GetInventoryStockParams) =>
-    request<GetInventoryStockResponse>(`inventory/stock/`, "GET", params),
+    request<GetInventoryStockResponse>(`business/inventory/stock/`, "GET", params),
 
   getInventoryMovements: (params?: GetInventoryMovementsParams) =>
-    request<GetInventoryMovementsResponse>(`inventory/movements/`, "GET", params),
+    request<GetInventoryMovementsResponse>(`business/inventory/movements/`, "GET", params),
 
   addInventoryMovement: (payload: AddStockMovementRequest) =>
-    request<StockMovement>(`inventory/movements/`, "POST", payload),
+    request<StockMovement>(`business/inventory/movements/`, "POST", payload),
 
   transferInventoryStock: (payload: TransferStockRequest) =>
-    request<StockMovement[]>(`inventory/movements/transfer/`, "POST", payload),
+    request<StockMovement[]>(`business/inventory/movements/transfer/`, "POST", payload),
 
   getInventoryLocations: (params?: GetInventoryLocationsParams) =>
-    request<GetInventoryLocationsResponse>(`inventory/locations/`, "GET", params),
+    request<GetInventoryLocationsResponse>(`business/inventory/locations/`, "GET", params),
 
   getInventoryLocationOptions: () =>
-    request<InventoryLocationOption[]>(`inventory/locations/options/`, "GET"),
+    request<InventoryLocationOption[]>(`business/inventory/locations/options/`, "GET"),
 
   getInventoryLocation: (id: string) =>
-    request<InventoryLocation>(`inventory/locations/${id}/`, "GET"),
+    request<InventoryLocation>(`business/inventory/locations/${id}/`, "GET"),
 
   addInventoryLocation: (payload: AddInventoryLocationRequest) =>
-    request<InventoryLocation>(`inventory/locations/`, "POST", payload),
+    request<InventoryLocation>(`business/inventory/locations/`, "POST", payload),
 
   editInventoryLocation: (id: string, payload: EditInventoryLocationRequest, version?: string) =>
-    request<InventoryLocation>(`inventory/locations/${id}/`, "PATCH", payload, { ifMatch: version }),
+    request<InventoryLocation>(`business/inventory/locations/${id}/`, "PATCH", payload, { ifMatch: version }),
 
   deleteInventoryLocation: (id: string, version?: string) =>
-    request<void>(`inventory/locations/${id}/`, "DELETE", undefined, { ifMatch: version }),
+    request<void>(`business/inventory/locations/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Entities --- */
   getEntities: (params?: GetEntitiesParams) =>
-    request<GetEntitiesResponse>(`crm/entities/`, "GET", params),
+    request<GetEntitiesResponse>(`business/crm/entities/`, "GET", params),
 
   getEntitiesTable: (params?: GetEntitiesParams) =>
-    request<GetEntitiesResponse>(`crm/entities/table/`, "GET", params),
+    request<GetEntitiesResponse>(`business/crm/entities/table/`, "GET", params),
 
   getEntitiesOptions: (params?: GetEntitiesParams) =>
-    request<GetEntitiesResponse>(`crm/entities/options/`, "GET", params),
+    request<GetEntitiesResponse>(`business/crm/entities/options/`, "GET", params),
   
   getEntity: (id: string) =>
-    request<GetEntityResponse>(`crm/entities/${id}/`, "GET"),
+    request<GetEntityResponse>(`business/crm/entities/${id}/`, "GET"),
 
   getEntitiesBulk: (ids: string[]) =>
-    request<EntitiesBulkResponse>(`crm/entities/bulk/get/`, "POST", {
+    request<EntitiesBulkResponse>(`business/crm/entities/bulk/get/`, "POST", {
       ids
     } satisfies EntitiesBulkRequest),
 
   addEntity: (payload: AddEntityRequest) =>
-    request<Entity>(`crm/entities/`, "POST", payload),
+    request<Entity>(`business/crm/entities/`, "POST", payload),
 
   editEntity: (id: string, payload: EditEntityRequest, version?: string) =>
-    request<Entity>(`crm/entities/${id}/`, "PATCH", payload, { ifMatch: version }),
+    request<Entity>(`business/crm/entities/${id}/`, "PATCH", payload, { ifMatch: version }),
 
   deleteEntity: (id: string, version?: string) =>
-    request<void>(`crm/entities/${id}/`, "DELETE", undefined, { ifMatch: version }),
+    request<void>(`business/crm/entities/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   // -------------- Statements / AI Import Flow --------------
   getStatement: async (id: string) => {

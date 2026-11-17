@@ -157,7 +157,7 @@ const SignIn: React.FC = () => {
       window.location.assign(safeReturnTo);
       return;
     }
-    navigate("/overview");
+    navigate("/b/overview");
   };
 
   const startTwoFactor = (id: string) => {

@@ -209,7 +209,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
     </Card>;
   }
   if (blocked) {
-    const target = blocker?.code === "profile_required" ? "/settings" : "/accounting/chart-of-accounts";
+    const target = blocker?.code === "profile_required" ? "/b/settings" : "/b/accounting/chart-of-accounts";
     return <Card as="section" radius="xl" tone="slate" padding="default" className="mx-auto max-w-2xl space-y-4">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-500"><Sparkles size={16} aria-hidden="true" /></span>
@@ -305,7 +305,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
   </> : result ? <div className="space-y-4 py-2 text-center">
     <motion.span initial={{ scale: reduced ? 1 : 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: reduced ? 0 : 0.2 }} className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Check size={20} aria-hidden="true" /></motion.span>
     <div><h2 className="text-base font-semibold text-gray-900">{t("guidedSetup.successTitle")}</h2><p className="mt-1 text-sm leading-6 text-gray-500">{t("guidedSetup.successBody", { accounts: result.created.accounts, books: result.created.books, rules: result.created.category_rules })}</p></div>
-    <Button variant="outlineBlack" onClick={() => go("/accounting/overview")}>{t("guidedSetup.openAccounting")}</Button>
+    <Button variant="outlineBlack" onClick={() => go("/b/accounting/overview")}>{t("guidedSetup.openAccounting")}</Button>
   </div> : null;
 
   const primary = step === 0 ? { label: t("guidedSetup.continue"), action: () => setStep(1), disabled: false }

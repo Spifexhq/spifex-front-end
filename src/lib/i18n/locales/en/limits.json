@@ -74,9 +74,9 @@
     "change_bank": { "label": "Edit bank account", "description": "Allows editing bank account configuration." },
     "delete_bank": { "label": "Delete bank account", "description": "Allows deleting bank accounts." },
 
-    "add_member": { "label": "Create member", "description": "Allows creating member records." },
-    "change_member": { "label": "Edit member", "description": "Allows editing member records." },
-    "delete_member": { "label": "Delete member", "description": "Allows deleting member records." },
+    "business_add_member": { "label": "Create member", "description": "Allows creating member records." },
+    "business_change_member": { "label": "Edit member", "description": "Allows editing member records." },
+    "business_delete_member": { "label": "Delete member", "description": "Allows deleting member records." },
 
     "add_group": { "label": "Create group", "description": "Allows creating permission groups." },
     "change_group": { "label": "Edit group", "description": "Allows editing permission groups." },

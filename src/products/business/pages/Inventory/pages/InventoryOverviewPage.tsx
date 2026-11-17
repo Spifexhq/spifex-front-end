@@ -68,7 +68,7 @@ export default function InventoryOverviewPage() {
           radius="xl"
           title={t("overview.lowStockTitle")}
           description={t("overview.lowStockDescription")}
-          actions={<Link to="/inventory/stock?status=low" className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:underline">{t("overview.viewStock")}<ArrowRight size={12} aria-hidden="true" /></Link>}
+          actions={<Link to="/b/inventory/stock?status=low" className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:underline">{t("overview.viewStock")}<ArrowRight size={12} aria-hidden="true" /></Link>}
         >
           <DataTable<InventorySummary["low_stock_items"][number]>
             items={data.low_stock_items}

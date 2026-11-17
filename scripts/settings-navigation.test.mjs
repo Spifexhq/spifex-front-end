@@ -11,7 +11,7 @@ vm.runInContext(compile("src/lib/localeSetup.ts"),policy);
 const ready = {personal_locale_setup:true,org_locale_setup:true};
 function render(configuration, {loading=false,failed=false,owner=false}={}) {
   const modules = {
-    'react-router-dom': {useLocation:()=>({pathname:'/settings/banks',search:''}),Navigate:'navigate'},
+    'react-router-dom': {useLocation:()=>({pathname:'/b/settings/banks',search:''}),Navigate:'navigate'},
     'react-i18next': {useTranslation:()=>({t:key=>key})},
     '@/hooks/useAuth': {useAuthContext:()=>({isOwner:owner})},
     '@/lib/localeSetup':policy.exports,

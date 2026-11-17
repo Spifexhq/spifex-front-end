@@ -25,7 +25,7 @@ export default function PersonalImportsPage() {
   }, [canViewBanks]);
   return <BankImports
     product="personal"
-    basePath="/personal/imports"
+    basePath="/p/imports"
     loadBanks={loadBanks}
     permissions={{
       add: access.can(PERSONAL_PERMISSION.addTransaction),

@@ -23,14 +23,14 @@ const Billing = lazy(() => import("@/features/account-settings/pages/Billing"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const Help = lazy(() => import("@/pages/Help"));
 
-export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layout/>, children: [
+export const personalRoutes: RouteObject[] = [{ path: "p", element: <Layout/>, children: [
   { index: true, element: <Navigate to="overview" replace/> },
   { path: "overview", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.overview}><Overview/></PersonalPermissionRoute> },
   { path: "reports", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.reports}><Reports/></PersonalPermissionRoute> },
   { path: "transactions", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.transactions}><Transactions basis="outstanding"/></PersonalPermissionRoute> },
   { path: "transactions/settled", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settledTransactions}><Transactions basis="settled"/></PersonalPermissionRoute> },
-  { path: "accounts", element: <Navigate to="/personal/settings/accounts" replace/> },
-  { path: "categories", element: <Navigate to="/personal/settings/categories" replace/> },
+  { path: "accounts", element: <Navigate to="/p/settings/accounts" replace/> },
+  { path: "categories", element: <Navigate to="/p/settings/categories" replace/> },
   { path: "budgets", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.budgets}><Budgets/></PersonalPermissionRoute> },
   { path: "goals", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.goals}><Goals/></PersonalPermissionRoute> },
   { path: "transfers", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settledTransactions}><Transfers/></PersonalPermissionRoute> },
@@ -39,9 +39,9 @@ export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layo
   { path: "settings", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settings}><SettingsLayout/></PersonalPermissionRoute>, children: [
     { index: true, element: <SettingsIndex/> },
     { path: "personal", element: <PersonalSettings product="personal"/> },
-    { path: "profile", element: <Navigate to="/personal/settings/personal" replace/> },
-    { path: "address", element: <Navigate to="/personal/settings/personal" replace/> },
-    { path: "personal-data", element: <Navigate to="/personal/settings/personal" replace/> },
+    { path: "profile", element: <Navigate to="/p/settings/personal" replace/> },
+    { path: "address", element: <Navigate to="/p/settings/personal" replace/> },
+    { path: "personal-data", element: <Navigate to="/p/settings/personal" replace/> },
     { path: "security", element: <Security/> },
     { path: "notifications", element: <Notifications/> },
     { path: "accounts", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.bankAccounts}><BankAccounts/></PersonalPermissionRoute> },
@@ -50,8 +50,8 @@ export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layo
     { path: "currency", element: <Currency/> },
     { path: "billing", element: <Billing/> },
     { path: "workspaces", element: <Workspaces/> },
-    { path: "*", element: <Navigate to="/personal/settings/personal" replace/> },
+    { path: "*", element: <Navigate to="/p/settings/personal" replace/> },
   ] },
   { path: "help", element: <Help/> },
-  { path: "*", element: <Navigate to="/personal/overview" replace/> },
+  { path: "*", element: <Navigate to="/p/overview" replace/> },
 ] }];

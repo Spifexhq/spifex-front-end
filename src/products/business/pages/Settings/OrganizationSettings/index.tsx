@@ -193,7 +193,7 @@ const OrganizationSettings: React.FC = () => {
   };
 
   const handleCurrencyNavigation = () => {
-    navigate("/settings/manage-currency");
+    navigate("/b/settings/manage-currency");
   };
 
   if (isInitialLoading) {

@@ -61,7 +61,7 @@ export function AccountingAiSetupProvider({ children }: { children: ReactNode })
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const openSetup = useCallback((next?: string) => {
-    setSource(next || location.pathname.split("/")[2] || "overview");
+    setSource(next || location.pathname.split("/")[3] || "overview");
     setConfirming(false);
     setBusy(false);
     setOpen(true);

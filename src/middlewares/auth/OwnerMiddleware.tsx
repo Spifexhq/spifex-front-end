@@ -88,7 +88,7 @@ export const OwnerMiddleware = ({
     if (behavior === "redirect") {
       return (
         <Navigate
-          to={redirectTo ?? "/settings/personal"}
+          to={redirectTo ?? "/b/settings/personal"}
           replace
           state={{ from: location.pathname }}
         />
@@ -96,7 +96,7 @@ export const OwnerMiddleware = ({
     }
 
     if (behavior === "lock") {
-      const target = redirectTo ?? "/settings/personal";
+      const target = redirectTo ?? "/b/settings/personal";
 
       return (
         <div className="flex h-full w-full items-center justify-center">

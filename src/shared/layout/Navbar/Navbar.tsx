@@ -26,8 +26,8 @@ export default function Navbar({ showOnboardingWarning = false }: NavbarProps) {
       </nav>
     </div>
     <div className="flex shrink-0 items-center gap-2">
-      {showOnboardingWarning && <Link to="/onboarding" title={t("navbar:links.cta")} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-900 hover:bg-amber-100 md:min-h-0"><AlertTriangle size={15} aria-hidden="true" /><span className="hidden sm:inline">{t("navbar:links.cta")}</span></Link>}
-      <NotificationsMenu manageTo="/settings/notifications" />
+      {showOnboardingWarning && <Link to="/b/onboarding" title={t("navbar:links.cta")} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-900 hover:bg-amber-100 md:min-h-0"><AlertTriangle size={15} aria-hidden="true" /><span className="hidden sm:inline">{t("navbar:links.cta")}</span></Link>}
+      <NotificationsMenu manageTo="/b/settings/notifications" />
     </div>
   </header>;
 }

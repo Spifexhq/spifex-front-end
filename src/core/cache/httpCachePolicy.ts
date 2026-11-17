@@ -2,10 +2,10 @@
 const resources: Array<[string, string]> = [
  ["banking/accounts", "banks"], ["banking/statements", "statements"], ["banking/statement-import-sessions", "statements"],
  ["cashflow/entries", "entries"], ["cashflow/settlements", "settlements"],
- ["cashflow/categories", "categories"], ["cashflow/kpis", "metrics"],
+ ["business/categories", "categories"], ["cashflow/kpis", "metrics"],
  ["cashflow/reports", "metrics"], ["cashflow/overview", "metrics"],
- ["departments", "departments"], ["projects", "projects"], ["inventory", "inventory"], ["crm/entities", "entities"],
- ["personal", "personal"], ["ledger", "ledger"], ["identity", "identity"], ["organizations", "organization"],
+ ["business/departments", "departments"], ["business/projects", "projects"], ["business/inventory", "inventory"], ["business/crm/entities", "entities"],
+ ["personal", "personal"], ["business/ledger", "ledger"], ["identity", "identity"], ["organizations", "organization"],
  ["rbac", "permissions"], ["billing", "subscription"], ["entitlements", "subscription"],
 ];
 export function resourceTags(endpoint: string): string[] {

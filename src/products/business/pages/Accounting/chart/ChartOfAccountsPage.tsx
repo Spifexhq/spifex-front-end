@@ -103,7 +103,7 @@ export default function ChartOfAccountsPage() {
         {relatedSetup.map(({ page, key, Icon, enabled }) => {
           const label = accounting(`nav.${key}`);
           return enabled
-            ? <Link key={page} to={`/accounting/${page}`} aria-label={label} title={label} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-gray-400"><Icon size={16} aria-hidden="true"/></Link>
+            ? <Link key={page} to={`/b/accounting/${page}`} aria-label={label} title={label} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-gray-400"><Icon size={16} aria-hidden="true"/></Link>
             : <span key={page} aria-disabled="true" aria-label={`${label} — ${accounting("section.locked")}`} title={`${label} — ${accounting("section.locked")}`} className="inline-flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-gray-400"><Icon size={16} aria-hidden="true"/></span>;
         })}
         <span aria-hidden="true" className="mx-0.5 h-6 w-px bg-gray-200"/>

@@ -15,7 +15,7 @@ function harness() {
 test("workspace switching commits a verified same-user snapshot and product destination", async()=>{
   const {state,deps}=harness();let boundaryPassed=false;await selectWorkspace("new",deps,{beforeCommit:async()=>{boundaryPassed=true;}});
   assert.equal(boundaryPassed,true);
-  assert.equal(state.workspace,"new");assert.deepEqual(state.profileScopes,["new"]);assert.equal(state.commits.length,1);assert.deepEqual(state.paths,["/personal/overview"]);assert.equal(state.gate,null);assert.equal(state.clears,1);
+  assert.equal(state.workspace,"new");assert.deepEqual(state.profileScopes,["new"]);assert.equal(state.commits.length,1);assert.deepEqual(state.paths,["/p/overview"]);assert.equal(state.gate,null);assert.equal(state.clears,1);
 });
 test("a rejected tenant selection restores the previous context and clears its caches", async()=>{
   const {state,deps,snapshot}=harness();snapshot.organization.organization.id="not-new";

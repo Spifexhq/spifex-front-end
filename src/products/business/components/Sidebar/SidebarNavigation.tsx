@@ -79,7 +79,7 @@ export default function SidebarNavigation({
         <div className="shrink-0 border-t border-gray-200 p-3">
           <SidebarTooltip label={t("sidebar.settings")} collapsed={collapsed}>
             <Link
-              to="/settings"
+              to="/b/settings"
               onClick={() => {
                 if (mobile && isOpen) toggleSidebar();
               }}
@@ -108,19 +108,19 @@ export default function SidebarNavigation({
 
             {[
               {
-                to: "/overview",
+                to: "/b/overview",
                 label: t("navbar:pages.overview"),
                 Icon: LayoutDashboard,
                 permission: "view_overview_page",
               },
               {
-                to: "/cashflow",
+                to: "/b/cashflow",
                 label: t("navbar:links.cashflow"),
                 Icon: Wallet,
                 permission: "view_cash_flow_page",
               },
               {
-                to: "/settled",
+                to: "/b/settled",
                 label: t("navbar:links.settled"),
                 Icon: CircleCheck,
                 permission: "view_settlement_page",
@@ -128,7 +128,7 @@ export default function SidebarNavigation({
               ...((isSubscribed || isSuperUser || retainedHistory)
                 ? [
                     {
-                      to: "/reports",
+                      to: "/b/reports",
                       label: t("navbar:links.reports"),
                       Icon: ChartNoAxesCombined,
                       permission: "view_report_page",
@@ -136,19 +136,19 @@ export default function SidebarNavigation({
                   ]
                 : []),
               {
-                to: "/bank-imports",
+                to: "/b/bank-imports",
                 label: t("navbar:pages.bankImports"),
                 Icon: FileUp,
                 permission: "view_statements_page",
               },
               {
-                to: "/accounting",
+                to: "/b/accounting",
                 label: t("accountingSettings:section.title"),
                 Icon: BookOpen,
                 permission: "view_ledger_accounts_page",
               },
               {
-                to: "/inventory",
+                to: "/b/inventory",
                 label: t("inventory:section.title"),
                 Icon: Boxes,
                 permission: ["view_inventory", "view_inventory_settings_page"],

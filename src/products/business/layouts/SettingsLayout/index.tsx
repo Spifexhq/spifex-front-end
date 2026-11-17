@@ -16,7 +16,7 @@ export const SettingsLayout = () => {
   const shell = useAppShell();
   const { t } = useTranslation(["navbar", "settingsSidebar", "accountingSettings"]);
   const { pathname } = useLocation();
-  const [, , slug, setupSlug] = pathname.split("/");
+  const [, , , slug, setupSlug] = pathname.split("/");
   const activeItem = slug === "register" && setupSlug === "ledger-accounts" ? "ledger-accounts" : slug || "personal";
   return <SectionLayout
     sidebar={<SidebarSettings activeItem={activeItem} topOffsetPx={0} collapsed={shell?.collapsed ?? false} onToggleCollapsed={shell?.toggleCollapsed} mobileOpen={shell?.mobileOpen ?? false} onMobileClose={shell?.closeMobile} />}

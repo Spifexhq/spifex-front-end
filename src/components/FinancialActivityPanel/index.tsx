@@ -35,7 +35,7 @@ function getInitials(name: string) {
 }
 
 /** The single Cash flow / Settled panel; hooks isolate API and filter logic. */
-export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/settings/banks", excludeObservationFilter = false }: {
+export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/b/settings/banks", excludeObservationFilter = false }: {
  children: ReactNode; filters: EntryFilters; onApply(payload: {filters: EntryFilters}): void;
  contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean; manageBanksPath?: string; excludeObservationFilter?: boolean;
 }) {
