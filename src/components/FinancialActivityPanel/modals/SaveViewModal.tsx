@@ -216,7 +216,7 @@ export const SaveViewModal: React.FC<{
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:justify-end">
             <Button
               variant="outline"
               size="sm"

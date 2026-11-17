@@ -13,7 +13,7 @@ export function ModalShell({ title, busy, onClose, children, maxWidthClass = "ma
     title={title}
     busy={busy}
     maxWidthClass={maxWidthClass}
-    bodyClassName="overflow-y-auto overscroll-contain p-5"
+    bodyClassName="overflow-y-auto overscroll-contain p-4 sm:p-5"
     panelOverlay={busy ? <div role="status" className="absolute inset-0 flex items-center justify-center bg-white/75 text-xs text-gray-600">{t("configModal.loading")}</div> : undefined}
   >{children}</DialogShell>;
 }

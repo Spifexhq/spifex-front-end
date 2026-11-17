@@ -131,35 +131,40 @@ export const ViewsConfigModal: React.FC<{
             const isRenaming = renamingId === v.id;
 
             return (
-              <div key={v.id} className="flex flex-wrap items-center gap-3 px-3 py-3">
-                <Switch
-                  checked={!!v.is_default}
-                  onChange={() => void toggleDefaultView(v)}
-                  label={`${t("filterBar:saveModal.setDefault")}: ${v.name}`}
-                  disabled={busy || isRenamingAny}
-                />
+              <div
+                key={v.id}
+                className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center"
+              >
+                <div className="flex min-w-0 items-center gap-3 sm:flex-1">
+                  <Switch
+                    checked={!!v.is_default}
+                    onChange={() => void toggleDefaultView(v)}
+                    label={`${t("filterBar:saveModal.setDefault")}: ${v.name}`}
+                    disabled={busy || isRenamingAny}
+                  />
 
-                <div className="min-w-0 flex-1">
-                  {isRenaming ? (
-                    <input
-                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                      value={renamingName}
-                      onChange={(e) => setRenamingName(e.target.value)}
-                      autoFocus
-                    />
-                  ) : (
-                    <span className="text-sm text-gray-800">{v.name}</span>
-                  )}
+                  <div className="min-w-0 flex-1">
+                    {isRenaming ? (
+                      <input
+                        className="w-full min-w-0 rounded border border-gray-300 px-2 py-1 text-base sm:text-sm"
+                        value={renamingName}
+                        onChange={(e) => setRenamingName(e.target.value)}
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="block truncate text-sm text-gray-800">{v.name}</span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="ml-auto flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 sm:ml-auto sm:shrink-0">
                   {isRenaming ? (
                     <>
                       <Button
                         variant="outline"
                         size="sm"
                         disabled={busy || !renamingName.trim()}
-                        className="bg-white hover:bg-gray-50"
+                        className="bg-white hover:bg-gray-50 max-sm:flex-1"
                         onClick={() => void renameView()}
                       >
                         {t("filterBar:configModal.saveName")}
@@ -169,7 +174,7 @@ export const ViewsConfigModal: React.FC<{
                         variant="outline"
                         size="sm"
                         disabled={busy}
-                        className="bg-white hover:bg-gray-50"
+                        className="bg-white hover:bg-gray-50 max-sm:flex-1"
                         onClick={() => {
                           setRenamingId(null);
                           setRenamingName("");
@@ -188,7 +193,7 @@ export const ViewsConfigModal: React.FC<{
                           setRenamingId(v.id);
                           setRenamingName(v.name);
                         }}
-                        className="inline-flex items-center gap-2"
+                        className="inline-flex items-center justify-center gap-2 max-sm:flex-1"
                       >
                         <Pencil className="h-4 w-4" aria-hidden />
                         {t("filterBar:configModal.rename")}
@@ -200,6 +205,7 @@ export const ViewsConfigModal: React.FC<{
                     variant="outline"
                     size="sm"
                     disabled={busy}
+                    className="max-sm:flex-1"
                     onClick={() => {
                       const fresh = viewById.get(v.id) ?? v;
                       onApplyViewToForm(fresh);
@@ -208,7 +214,13 @@ export const ViewsConfigModal: React.FC<{
                     {t("filterBar:configModal.apply")}
                   </Button>
                   <PermissionMiddleware codeName="delete_entry_view">
-                    <Button variant="outline" size="sm" disabled={busy} onClick={() => void deleteView(v.id)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={busy}
+                      className="max-sm:flex-1"
+                      onClick={() => void deleteView(v.id)}
+                    >
                       {t("filterBar:configModal.delete")}
                     </Button>
                   </PermissionMiddleware>
