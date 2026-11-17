@@ -1,5 +1,6 @@
 import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { productPathname } from "@/app/routing/productPaths";
 
 
 
@@ -18,7 +19,7 @@ import AccountingJournalsPage from "./pages/AccountingJournalsPage";
 const AccountingWorkspace: React.FC = () => {
   const { pathname } = useLocation();
   const { t } = useTranslation("accountingSettings");
-  const page = pathname.split("/")[3] || "overview";
+  const page = productPathname(pathname).split("/")[3] || "overview";
   const heading = ({ "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", "chart-of-accounts": "chart", assistant: "assistant" } as Record<string, string>)[page] || page;
 
   return (

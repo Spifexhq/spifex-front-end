@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearchParams, useLocation } from "react-router-dom";
+import { productPathname } from "@/app/routing/productPaths";
 import { useTranslation } from "react-i18next";
 import { ArrowUpRight, BookOpen, ChevronDown, Search, Wallet, FileUp, Settings2, ShieldCheck, Landmark } from "lucide-react";
 import Input from "@/shared/ui/Input";
@@ -11,7 +12,7 @@ const normalize = (text: string) => text.normalize("NFD").replace(/[\u0300-\u036
 export default function Help() {
   const { t } = useTranslation("help"), [params, setParams] = useSearchParams();
   const { pathname } = useLocation();
-  const backTo = pathname.startsWith("/p/") ? "/p/overview" : "/b/overview";
+  const backTo = productPathname(pathname).startsWith("/p/") ? "/p/overview" : "/b/overview";
   const query = params.get("q") || "", topic = params.get("topic") || "all";
   const content = t("topics", { returnObjects: true }) as Topic[];
   const topics = useMemo(()=>Array.isArray(content) ? content : [],[content]);

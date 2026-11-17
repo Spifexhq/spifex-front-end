@@ -16,6 +16,7 @@
     "jsx": "react-jsx",
 
     "paths": {
+      "react-router-dom": ["./src/app/routing/productRouter.tsx"],
       "src/*": ["./src/*"],
       "@/*": ["./src/*"]
     },

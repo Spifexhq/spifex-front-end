@@ -1,8 +1,8 @@
 import { advanceAuthGeneration } from "../core/authentication/authGeneration";
 // src/lib/tokens.ts
 
-export const ORG_EXTERNAL_ID_STORAGE_KEY = "spx_tenant";
-export const USER_ID_STORAGE_KEY = "spx_uid";
+export const ORG_EXTERNAL_ID_STORAGE_KEY = "spx_tenant_v2";
+export const USER_ID_STORAGE_KEY = "spx_uid_v2";
 
 let _access = "";
 let _orgExternalId = "";

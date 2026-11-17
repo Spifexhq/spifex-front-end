@@ -36,6 +36,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: tailwindcss(),
     resolve: {
       alias: {
+        "react-router-dom": path.resolve(__dirname, "src/app/routing/productRouter.tsx"),
         src: path.resolve(__dirname, "src"),
         "@": path.resolve(__dirname, "src"),
       },

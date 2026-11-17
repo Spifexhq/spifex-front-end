@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QUOTA_WARNING_EVENT, quotaErrorMessage, type QuotaIssue } from "@/lib/apiErrorMessage";
 import { Link, useLocation } from "react-router-dom";
+import { productPathname } from "@/app/routing/productPaths";
 import { useAuthContext } from "@/hooks/useAuth";
 import Snackbar from "@/shared/ui/Snackbar";
 
@@ -9,7 +10,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 export default function QuotaWarning() {
   const { t } = useTranslation("common");
   const { pathname } = useLocation();
-  const usagePath = pathname.startsWith("/p/") ? "/p/settings/billing" : "/b/settings/limits";
+  const usagePath = productPathname(pathname).startsWith("/p/") ? "/p/settings/billing" : "/b/settings/limits";
   const { isOwner, isSuperUser, permissions, user, organization } = useAuthContext();
   const canViewUsage = isOwner || isSuperUser || permissions.includes("view_limits_and_usage_page");
   const [warning, setWarning] = useState<{ issue: QuotaIssue; id: number } | null>(null);

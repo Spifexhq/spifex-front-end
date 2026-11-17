@@ -10,10 +10,12 @@ import { CookieBanner } from "@/components/Cookies/CookieBanner";
 import { api } from "@/core/api/requests";
 import type { ConfigurationStatus } from "@/models/auth/configuration";
 import { AUTH_SYNC_EVENT } from "@/core/api/http";
+import { productPathname } from "@/app/routing/productPaths";
 
 export const SpifexLayout: FC = () => {
   const { handleInitUser, user, organization } = useAuthContext();
   const { pathname } = useLocation();
+  const productPath = productPathname(pathname);
   const personalProduct = organization?.organization?.product_category === "personal";
   const identityKey = `${user?.id || ""}:${organization?.organization?.id || ""}`;
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -80,7 +82,7 @@ export const SpifexLayout: FC = () => {
   const loading = retrying || (pendingKey === identityKey && !configuration) || (!configuration && !failed);
   const retry = async () => { setRetrying(true); try { await loadConfiguration(); } finally { setRetrying(false); } };
   if (loadingAuth) return <TopProgress active variant="center" />;
-  if (personalProduct && !pathname.startsWith("/p/") && pathname !== "/p" && pathname !== "/locale-setup") return <Navigate replace to="/p/overview" />;
+  if (personalProduct && !productPath.startsWith("/p/") && productPath !== "/p" && pathname !== "/locale-setup") return <Navigate replace to="/p/overview" />;
   return <AuthMiddleware>
     <LocaleProfileMiddleware configuration={configuration} loading={loading} failed={failed} retry={retry}>
       {pathname === "/locale-setup" ? <Outlet key={identityKey} context={{ configuration, refreshConfiguration: () => loadConfiguration(true) }} /> : personalProduct ? <Outlet key={identityKey} /> : <Suspense fallback={<TopProgress active variant="center" />}><ApplicationShell onboarding={configuration} showOnboardingWarning={!!configuration && configuration.completed !== true}><Outlet /></ApplicationShell></Suspense>}

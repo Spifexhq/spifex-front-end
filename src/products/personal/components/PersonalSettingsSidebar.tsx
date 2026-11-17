@@ -5,6 +5,7 @@ import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarTooltip from "@/shared/ui/SidebarTooltip";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
 import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
+import { productPathname } from "@/app/routing/productPaths";
 
 type Props = { open: boolean; mobile: boolean; collapsed: boolean; onToggle(): void; onMobileClose(): void };
 const groups = [
@@ -17,7 +18,7 @@ const groups = [
 export default function PersonalSettingsSidebar({ open, mobile, collapsed, onToggle, onMobileClose }: Props) {
   const { t } = useTranslation(["personal", "personalSettings"]);
   const location = useLocation();
-  const active = location.pathname.split("/")[3] || "profile";
+  const active = productPathname(location.pathname).split("/")[3] || "profile";
   const railCollapsed = collapsed && !mobile;
   return <SidebarFrame open={open} mobile={mobile} onToggle={onToggle} product="Personal" label={t("settingsNavigation")} toggleLabel={t(!mobile && collapsed ? "expandNavigation" : "collapseNavigation")} workspace={<WorkspaceSwitcher compact={railCollapsed} />} footer={<>
     <div className="shrink-0 border-t border-gray-200 p-3"><SidebarTooltip label={t("backToWorkspace")} collapsed={railCollapsed}><NavLink to="/p/overview" onClick={onMobileClose} aria-label={t("backToWorkspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{t("backToWorkspace")}</span></NavLink></SidebarTooltip></div>

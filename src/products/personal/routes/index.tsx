@@ -1,5 +1,6 @@
 import { lazy } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
+import ProductPrefixGuard from "@/app/routing/ProductPrefixGuard";
 import PersonalPermissionRoute from "../access/PersonalPermissionRoute";
 import { PERSONAL_PERMISSION } from "../access/permissions";
 const Layout = lazy(() => import("../layouts/PersonalLayout"));
@@ -23,7 +24,7 @@ const Billing = lazy(() => import("@/features/account-settings/pages/Billing"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const Help = lazy(() => import("@/pages/Help"));
 
-export const personalRoutes: RouteObject[] = [{ path: "p", element: <Layout/>, children: [
+export const personalRoutes: RouteObject[] = [{ path: ":userExternalId/p/:organizationExternalId", element: <ProductPrefixGuard product="p"><Layout/></ProductPrefixGuard>, children: [
   { index: true, element: <Navigate to="overview" replace/> },
   { path: "overview", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.overview}><Overview/></PersonalPermissionRoute> },
   { path: "reports", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.reports}><Reports/></PersonalPermissionRoute> },

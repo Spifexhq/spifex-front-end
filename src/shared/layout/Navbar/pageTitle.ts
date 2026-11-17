@@ -2,10 +2,11 @@ const settingsPages = new Set(["personal", "organization-settings", "workspaces"
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", "chart-of-accounts": "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", periods: "periods" };
 const inventoryPages: Record<string, string> = { overview: "overview", items: "items", stock: "stock", locations: "locations" };
 
-/** Business pages live under `/b`; strip it so page logic only sees the section. */
+/** Canonical product URLs include the user and workspace IDs; strip them for page logic. */
 function sectionPath(pathname: string): string {
   const parts = pathname.split("/").filter(Boolean);
-  if (parts[0] === "b") parts.shift();
+  if (parts.length >= 3 && (parts[1] === "p" || parts[1] === "b")) parts.splice(0, 3);
+  else if (parts[0] === "b") parts.shift();
   return `/${parts.join("/")}`;
 }
 

@@ -24,6 +24,8 @@ const PasswordVerification = lazy(() => import("@/pages/Auth/PasswordVerificatio
 
 import { businessRoutes } from "@/products/business/routes";
 import { personalRoutes } from "@/products/personal/routes";
+import LegacyProductRedirect from "@/app/routing/LegacyProductRedirect";
+import ProductHomeRedirect from "@/app/routing/ProductHomeRedirect";
 
 // Main Pages
 const PersonalLocaleSetup = lazy(() => import("@/app/authentication/PersonalLocaleSetup"));
@@ -53,8 +55,11 @@ const routes: RouteObject[] = [
         children: [
             {
                 index: true,
-                element: <Navigate to="/b/overview" replace />,
+                element: <ProductHomeRedirect />,
             },
+            // Legacy product entry points upgrade to the canonical ID-aware URL.
+            { path: "p/*", element: <LegacyProductRedirect /> },
+            { path: "b/*", element: <LegacyProductRedirect /> },
             { path: "legal/privacy", element: <LegalPage /> },
             { path: "legal/terms", element: <LegalPage /> },
             // Auth

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { productPathname } from "@/app/routing/productPaths";
 import SidePanel from "@/components/Modal/SidePanel";
 import { useTranslation } from "react-i18next";
 import { ArchiveRestore, Trash2 } from "lucide-react";
@@ -61,7 +62,7 @@ export function AccountingAiSetupProvider({ children }: { children: ReactNode })
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const openSetup = useCallback((next?: string) => {
-    setSource(next || location.pathname.split("/")[3] || "overview");
+    setSource(next || productPathname(location.pathname).split("/")[3] || "overview");
     setConfirming(false);
     setBusy(false);
     setOpen(true);

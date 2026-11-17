@@ -5,6 +5,7 @@ import { AppShellContext } from "@/contexts/AppShellContext";
 import { Sidebar } from "@/products/business/components/Sidebar";
 import { Navbar } from "@/shared/layout/Navbar";
 import type { ConfigurationStatus } from "@/models/auth/configuration";
+import { productPathname } from "@/app/routing/productPaths";
 import "./shell.css";
 
 const readCollapsed = (key: string, fallback: boolean) => {
@@ -13,7 +14,7 @@ const readCollapsed = (key: string, fallback: boolean) => {
 export default function ApplicationShell({ children, onboarding, showOnboardingWarning }: { children: ReactNode; onboarding?: ConfigurationStatus | null; showOnboardingWarning?: boolean }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const basePath = pathname.replace(/^\/b(?=\/|$)/, "");
+  const basePath = productPathname(pathname).replace(/^\/b(?=\/|$)/, "");
   const settings = basePath.startsWith("/settings");
   const accounting = /^\/accounting(?:\/|$)/.test(basePath);
   const inventory = /^\/inventory(?:\/|$)/.test(basePath);

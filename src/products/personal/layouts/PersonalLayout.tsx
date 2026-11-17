@@ -3,6 +3,7 @@ import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, LayoutDashboard, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, CircleGauge, Target, ChartNoAxesCombined, CircleCheck, FileUp, Settings2, Wallet } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
+import { productPathname } from "@/app/routing/productPaths";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
 import NotificationsMenu from "@/shared/layout/NotificationsMenu";
@@ -35,9 +36,10 @@ function PersonalLayoutContent() {
   const { organization } = useAuthContext();
   const access = usePersonalAccess();
   const location = useLocation();
-  const section = location.pathname.split("/")[2] || "overview";
+  const pathname = productPathname(location.pathname);
+  const section = pathname.split("/")[2] || "overview";
   const transactionView = section === "transactions"
-    ? (location.pathname.split("/")[3] === "settled" ? "settledTransactions" : "cashFlow")
+    ? (pathname.split("/")[3] === "settled" ? "settledTransactions" : "cashFlow")
     : null;
   const sectionLabelKey = transactionView ?? section;
   const inSettings = section === "settings";
@@ -57,7 +59,7 @@ function PersonalLayoutContent() {
     if (!desktop) { setMobile(value => !value); return; }
     setCollapsed(value => { const next = !value; try { localStorage.setItem("spifex.personal.collapsed", String(next)); } catch { /* Optional persistence. */ } return next; });
   }, [desktop]);
-  useEffect(() => { closeMobile(); document.title = `${t(inSettings ? (location.pathname.split("/")[3] === "personal" ? "personalSettings:title" : "settings") : sectionLabelKey)} · Spifex Personal`; }, [location.pathname, location.search, section, sectionLabelKey, inSettings, t, closeMobile]);
+  useEffect(() => { closeMobile(); document.title = `${t(inSettings ? (pathname.split("/")[3] === "personal" ? "personalSettings:title" : "settings") : sectionLabelKey)} · Spifex Personal`; }, [pathname, location.search, section, sectionLabelKey, inSettings, t, closeMobile]);
   useEffect(() => {
     const media = matchMedia("(min-width: 768px)");
     const update = () => { setDesktop(media.matches); if (media.matches) closeMobile(); };
@@ -85,7 +87,7 @@ function PersonalLayoutContent() {
       </SidebarFrame>}
     </div>
     <div ref={main} className={`flex h-full min-w-0 flex-col transition-[margin-left] duration-[220ms] ease-out motion-reduce:transition-none ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:px-6"><button type="button" aria-label={t("navigation")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 md:hidden" onClick={toggle}><Menu size={18} aria-hidden="true" /></button><p className="min-w-0 flex-1 truncate text-xs text-gray-500">Personal <span className="mx-2 text-gray-300">/</span>{inSettings && <><span className="text-gray-500">{t("settings")}</span><span className="mx-2 text-gray-300">/</span></>}<span className="font-medium text-gray-800">{inSettings ? (location.pathname.split("/")[3] === "personal" ? t("personalSettings:title") : t(`settingsPages.${location.pathname.split("/")[3] || "workspaces"}.title`)) : t(sectionLabelKey)}</span></p><div className="shrink-0"><NotificationsMenu manageTo="/p/settings/notifications" /></div></header>
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:px-6"><button type="button" aria-label={t("navigation")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 md:hidden" onClick={toggle}><Menu size={18} aria-hidden="true" /></button><p className="min-w-0 flex-1 truncate text-xs text-gray-500">Personal <span className="mx-2 text-gray-300">/</span>{inSettings && <><span className="text-gray-500">{t("settings")}</span><span className="mx-2 text-gray-300">/</span></>}<span className="font-medium text-gray-800">{inSettings ? (pathname.split("/")[3] === "personal" ? t("personalSettings:title") : t(`settingsPages.${pathname.split("/")[3] || "workspaces"}.title`)) : t(sectionLabelKey)}</span></p><div className="shrink-0"><NotificationsMenu manageTo="/p/settings/notifications" /></div></header>
       <WorkspaceLifecycleBanner/>
       <main className={`min-h-0 flex-1 px-4 py-6 sm:px-7 ${isTransactionsPage ? "flex flex-col overflow-hidden" : "overflow-y-auto"}`}><div className={`mx-auto max-w-[1440px] ${isTransactionsPage ? "flex min-h-0 w-full flex-1 flex-col" : ""}`}><Suspense fallback={<PageSkeleton rows={7}/>}><Outlet/></Suspense></div></main>
     </div>

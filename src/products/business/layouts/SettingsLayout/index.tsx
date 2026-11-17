@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { getPageTitleKey } from "@/shared/layout/Navbar/pageTitle";
+import { productPathname } from "@/app/routing/productPaths";
 import SectionLayout from "@/shared/layout/SectionLayout";
 
 import SettingsSurface from "@/shared/ui/Settings/SettingsSurface";
@@ -16,7 +17,7 @@ export const SettingsLayout = () => {
   const shell = useAppShell();
   const { t } = useTranslation(["navbar", "settingsSidebar", "accountingSettings"]);
   const { pathname } = useLocation();
-  const [, , , slug, setupSlug] = pathname.split("/");
+  const [, , , slug, setupSlug] = productPathname(pathname).split("/");
   const activeItem = slug === "register" && setupSlug === "ledger-accounts" ? "ledger-accounts" : slug || "personal";
   return <SectionLayout
     sidebar={<SidebarSettings activeItem={activeItem} topOffsetPx={0} collapsed={shell?.collapsed ?? false} onToggleCollapsed={shell?.toggleCollapsed} mobileOpen={shell?.mobileOpen ?? false} onMobileClose={shell?.closeMobile} />}

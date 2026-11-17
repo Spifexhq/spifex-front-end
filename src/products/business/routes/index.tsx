@@ -1,5 +1,6 @@
 import { lazy } from "react";
-import { Navigate, type RouteObject } from "react-router-dom";
+import { Navigate, Outlet, type RouteObject } from "react-router-dom";
+import ProductPrefixGuard from "@/app/routing/ProductPrefixGuard";
 const SettingsLayout = lazy(() => import("../layouts/SettingsLayout").then(module => ({ default: module.SettingsLayout })));
 const AccountingLayout = lazy(() => import("../layouts/AccountingLayout").then(module => ({ default: module.AccountingLayout })));
 const InventoryLayout = lazy(() => import("../layouts/InventoryLayout"));
@@ -261,6 +262,11 @@ const businessChildren: RouteObject[] = [
                 },
             ]
             },
+            { path: "*", element: <Navigate to="/b/overview" replace /> },
 ];
 
-export const businessRoutes: RouteObject[] = [{ path: "b", children: businessChildren }];
+export const businessRoutes: RouteObject[] = [{
+  path: ":userExternalId/b/:organizationExternalId",
+  element: <ProductPrefixGuard product="b"><Outlet /></ProductPrefixGuard>,
+  children: businessChildren,
+}];
