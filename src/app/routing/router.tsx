@@ -26,6 +26,7 @@ import { businessRoutes } from "@/products/business/routes";
 import { personalRoutes } from "@/products/personal/routes";
 import LegacyProductRedirect from "@/app/routing/LegacyProductRedirect";
 import ProductHomeRedirect from "@/app/routing/ProductHomeRedirect";
+import LegacyRouteRedirect from "@/app/routing/LegacyRouteRedirect";
 
 // Main Pages
 const PersonalLocaleSetup = lazy(() => import("@/app/authentication/PersonalLocaleSetup"));
@@ -33,7 +34,6 @@ const PersonalLocaleSetup = lazy(() => import("@/app/authentication/PersonalLoca
 // Settings
 
 // Status Pages
-const Status404 = lazy(() => import("@/pages/Status/Status404"));
 const Status500 = lazy(() => import("@/pages/Status/Status500"));
 const StatusComingSoon = lazy(() => import("@/pages/Status/ComingSoon"));
 const StatusMaintenance = lazy(() => import("@/pages/Status/Maintenance"));
@@ -45,7 +45,7 @@ const routes: RouteObject[] = [
         children: [
             {
             path: '*',
-            element: <Status404 />
+            element: <LegacyRouteRedirect />
             }
         ]
     },

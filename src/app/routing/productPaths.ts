@@ -9,6 +9,51 @@ export function isProductPath(pathname: string): boolean {
   return PRODUCT_PATH.test(pathname);
 }
 
+const LEGACY_BUSINESS_ROOTS = new Set([
+  "overview",
+  "home",
+  "help",
+  "onboarding",
+  "cashflow",
+  "settled",
+  "reports",
+  "accounting",
+  "inventory",
+  "bank-imports",
+  "settings",
+]);
+
+const LEGACY_PERSONAL_ROOTS = new Set([
+  "transactions",
+  "accounts",
+  "categories",
+  "budgets",
+  "goals",
+  "transfers",
+  "imports",
+]);
+
+/** Map a removed root-level product path to its internal `/p/...` or `/b/...` shape. */
+export function legacyProductPath(
+  pathname: string,
+): { product: ProductSegment; suffix: string } | null {
+  const parts = pathname.split("/").filter(Boolean);
+  const root = parts[0];
+  if (!root) return null;
+
+  if (root === "personal") {
+    const suffix = parts.length > 1 ? `/${parts.slice(1).join("/")}` : "/overview";
+    return { product: "p", suffix };
+  }
+  if (LEGACY_PERSONAL_ROOTS.has(root) && !LEGACY_BUSINESS_ROOTS.has(root)) {
+    return { product: "p", suffix: pathname };
+  }
+  if (LEGACY_BUSINESS_ROOTS.has(root)) {
+    return { product: "b", suffix: pathname };
+  }
+  return null;
+}
+
 export function buildProductPath(
   userExternalId: string,
   product: ProductSegment,
