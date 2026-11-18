@@ -159,7 +159,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const greeting = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
   const displayName = user?.name?.trim().split(/\s+/).slice(0, 2).join(" ") || t("there", { ns: "overview" });
 
-  return <div className="space-y-5" aria-busy={loading}>
+  return <div className="min-w-0 space-y-5 overflow-x-auto" aria-busy={loading}>
     <header className="space-y-1">
       <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{reports ? t("reports") : t(`greetings.${greeting}`, { ns: "overview", name: displayName })}</h1>
       <p className="text-sm text-slate-500">{t(reports ? "reportsDescription" : "overviewDescription")}</p>

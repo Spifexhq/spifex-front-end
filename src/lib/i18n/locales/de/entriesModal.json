@@ -159,7 +159,8 @@
     },
     "installments": {
       "title": "Ungültige Raten",
-      "message": "Geben Sie eine ganze Zahl größer als 0 ein oder deaktivieren Sie die Wiederholung."
+      "message": "Geben Sie eine ganze Zahl größer als 0 ein oder deaktivieren Sie die Wiederholung.",
+      "tooMany": "Verwenden Sie höchstens 1500 Raten."
     },
     "quantity": {
       "title": "Ungültige Menge",

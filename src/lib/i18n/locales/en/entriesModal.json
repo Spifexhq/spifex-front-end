@@ -159,7 +159,8 @@
     },
     "installments": {
       "title": "Invalid installments",
-      "message": "Enter an integer greater than 0 or disable recurrence."
+      "message": "Enter an integer greater than 0 or disable recurrence.",
+      "tooMany": "Use 1500 installments or fewer."
     },
     "quantity": {
       "title": "Invalid quantity",

@@ -212,7 +212,7 @@ export default function Overview() {
       .join(" ") || t("there");
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-5 px-4 py-6 sm:px-8 lg:px-10">
+    <main className="mx-auto min-w-0 max-w-[1600px] space-y-5 overflow-x-auto px-4 py-6 sm:px-8 lg:px-10">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
           {t(`greetings.${greeting}`, {

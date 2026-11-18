@@ -159,7 +159,8 @@
     },
     "installments": {
       "title": "Échéances invalides",
-      "message": "Entrez un nombre entier supérieur à 0 ou désactivez la récurrence."
+      "message": "Entrez un nombre entier supérieur à 0 ou désactivez la récurrence.",
+      "tooMany": "Utilisez au maximum 1500 échéances."
     },
     "quantity": {
       "title": "Quantité invalide",

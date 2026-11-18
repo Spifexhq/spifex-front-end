@@ -114,6 +114,7 @@ const RecurrenceTab: React.FC<Props> = ({
             label={t("entriesModal:recurrence.installments")}
             type="number"
             min={1}
+            max={1500}
             step={1}
             value={formData.recurrence.installments}
             onChange={handleInstallmentsChange}

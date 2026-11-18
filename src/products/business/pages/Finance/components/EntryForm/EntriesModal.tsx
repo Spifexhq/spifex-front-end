@@ -415,6 +415,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           message: t("entriesModal:errors.installments.message"),
         };
       }
+      if (n > 1500) {
+        return {
+          ok: false,
+          tab: "recurrence",
+          focusId: IDS.installmentsInput,
+          title: t("entriesModal:errors.installments.title"),
+          message: t("entriesModal:errors.installments.tooMany"),
+        };
+      }
     }
 
     if (formData.inventory.product) {

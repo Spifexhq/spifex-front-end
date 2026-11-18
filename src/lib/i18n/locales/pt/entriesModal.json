@@ -159,7 +159,8 @@
     },
     "installments": {
       "title": "Parcelas inválidas",
-      "message": "Informe um número de parcelas inteiro e maior que 0 ou desative a recorrência."
+      "message": "Informe um número de parcelas inteiro e maior que 0 ou desative a recorrência.",
+      "tooMany": "Use no máximo 1500 parcelas."
     },
     "quantity": {
       "title": "Quantidade inválida",

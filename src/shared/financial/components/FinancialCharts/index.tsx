@@ -2,6 +2,7 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import { useReducedMotion } from "framer-motion";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { OverviewData } from "@/models/finance/overview";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import InfoTooltip from "@/shared/ui/InfoTooltip";
@@ -13,6 +14,9 @@ export default function FinancialCharts({ data, group, onGroup }: {
   data: OverviewData; group: "day"|"week"|"month"; onGroup(group: "day"|"week"|"month"): void;
 }) {
   const { t, i18n } = useTranslation("overview"), reduced = useReducedMotion();
+  // On narrow screens the chart must not swallow the page gesture: keep the
+  // visualisation but leave panning/scrolling to the browser.
+  const mobileChart = useMediaQuery("(max-width: 639px)");
   const id = useId().replace(/:/g, "");
   const money = (value: string|number) => formatCurrency(value,data.currency || undefined);
   // Accumulate in minor units to avoid floating-point drift across buckets.
@@ -37,7 +41,7 @@ export default function FinancialCharts({ data, group, onGroup }: {
         <div><h2 className="flex items-center gap-1 text-sm font-semibold text-slate-900">{t("trend")}<InfoTooltip label={t("calculation")}>{t("scope")}</InfoTooltip></h2><p className="mt-1 text-xs text-slate-500">{t(`trendDescriptions.${data.period.basis}`)}</p></div>
         <SegmentedControl<"day" | "week" | "month"> value={group} onChange={onGroup} label={t("groupBy")} items={(["day","week","month"] as const).map(value=>({value,label:t(`groups.${value}`)}))}/>
       </div>
-      <div className="relative h-[260px] w-full sm:h-[300px]" role="img" aria-label={t("chartLabel")}>
+      <div className="relative h-[260px] w-full min-w-0 sm:h-[300px]" role="img" aria-label={t("chartLabel")}>
         {points.length > 0 && <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={points} margin={{top:12,right:10,left:0,bottom:4}}>
             <defs>
@@ -48,7 +52,7 @@ export default function FinancialCharts({ data, group, onGroup }: {
             <CartesianGrid vertical={false} stroke="#f1f5f9"/>
             <XAxis dataKey="date" tickFormatter={value=>new Date(`${value}T12:00:00`).toLocaleDateString(i18n.language,{month:"short",day:"numeric"})} tick={{fill:"#94a3b8",fontSize:10}} tickLine={false} axisLine={false} minTickGap={36}/>
             <YAxis width={55} tickFormatter={value=>Intl.NumberFormat(i18n.language,{notation:"compact",maximumFractionDigits:1}).format(value)} tick={{fill:"#94a3b8",fontSize:10}} tickLine={false} axisLine={false}/>
-            <Tooltip labelFormatter={value=>formatDateFromISO(String(value))} formatter={(value,name)=>[money(Number(value)),String(name)]} contentStyle={{border:"1px solid #e2e8f0",borderRadius:9,fontSize:12,boxShadow:"0 8px 24px #0f172a0a"}}/>
+            {!mobileChart && <Tooltip labelFormatter={value=>formatDateFromISO(String(value))} formatter={(value,name)=>[money(Number(value)),String(name)]} contentStyle={{border:"1px solid #e2e8f0",borderRadius:9,fontSize:12,boxShadow:"0 8px 24px #0f172a0a"}}/>}
             <Area type="monotone" dataKey="incoming" name={t("received")} stroke="#6366f1" strokeWidth={2} fill={`url(#${id}-receipts)`} baseValue={0} dot={points.length===1 ? {r:3} : false} activeDot={{r:4}} isAnimationActive={!reduced} animationBegin={0} animationDuration={450} animationEasing="ease-out"/>
             <Area type="monotone" dataKey="outgoing" name={t("paid")} stroke="#94a3b8" strokeWidth={2} fill={`url(#${id}-payments)`} baseValue={0} dot={points.length===1 ? {r:3} : false} activeDot={{r:4}} isAnimationActive={!reduced} animationBegin={0} animationDuration={450} animationEasing="ease-out"/>
             <Area type="monotone" dataKey="periodNet" name={t("periodNetTrend")} stroke="#10b981" strokeWidth={2} fill={`url(#${id}-period-net)`} baseValue={0} dot={points.length===1 ? {r:3} : false} activeDot={{r:4}} isAnimationActive={!reduced} animationBegin={0} animationDuration={450} animationEasing="ease-out"/>
