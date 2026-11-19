@@ -29,7 +29,9 @@ export default function ProductBillingSettings() {
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const readOnly = readonlyWorkspace(organization?.lifecycle);
-  const canManage = auth.isOwner || auth.organization?.role === "admin" || auth.isSuperUser;
+  const canManageSubscription = auth.isOwner || auth.isSuperUser || auth.permissions.includes("manage_billing_subscription");
+  const canManagePaymentMethods = auth.isOwner || auth.isSuperUser || auth.permissions.includes("manage_billing_payment_methods");
+  const canManage = canManageSubscription || canManagePaymentMethods;
 
   useEffect(() => {
     let active = true;
@@ -54,7 +56,7 @@ export default function ProductBillingSettings() {
   const isCanceled = status === "canceled";
   const canManageCurrentSubscription = ["active", "trialing", "past_due", "incomplete", "unpaid"].includes(status);
   const checkout = async (plan: ProductPlan) => {
-    if (!canManage || busy || readOnly) return;
+    if (!canManageSubscription || busy || readOnly) return;
     const price = plan.prices.find(item => item.currency === billing.currency);
     if (!price) return;
     setBusy(true); setError("");
@@ -62,7 +64,7 @@ export default function ProductBillingSettings() {
     catch (cause) { setError(apiErrorMessage(cause, t("errors.checkout"))); setBusy(false); }
   };
   const portal = async (plan?: ProductPlan, selectedPrice?: ProductPlan["prices"][number]) => {
-    if (!canManage || busy || readOnly) return;
+    if (!canManagePaymentMethods || busy || readOnly) return;
     setBusy(true); setError("");
     try {
       const response = await api.createCustomerPortalSession(plan ? {
@@ -88,7 +90,7 @@ export default function ProductBillingSettings() {
     <Card className="overflow-hidden" padding="none">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4"><div className="flex min-w-0 items-center gap-3"><h2 className="text-sm font-semibold text-gray-900">{t("section.withPlan")}</h2><span className={`rounded-full border px-2 py-1 text-[10px] font-medium ${statusTone}`}>{t(`status.${status}`, t("status.unknown"))}</span></div></div>
       <div className={`mx-4 my-3 rounded-md border-l-4 px-4 py-3 ${statusTone}`}><p className="text-[13px] font-medium">{statusTitle}</p><p className="mt-1 text-xs leading-5">{subscriptionBody}</p>{subscription?.subscription && !subscription?.has_access && !isCanceled && <p className="mt-1 text-xs">{t("current.noAccessHint")}</p>}</div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 text-[13px] text-gray-600"><span>{currentPlan ? <>{t(isCanceled ? "current.lastPlan" : "current.youAreOn")} <strong className="font-semibold text-gray-900">{currentPlan.name}</strong></> : t("current.noActive")}{isCanceled ? endedDate && <> <span className="mx-1">·</span>{t("current.endedOn")} {dateLabel(endedDate, i18n.language)}</> : periodDate && <> <span className="mx-1">·</span>{subscription?.subscription?.cancel_at_period_end ? t("current.cancelAt") : t("current.renews")} {dateLabel(periodDate, i18n.language)}</>}</span>{subscription?.subscription && canManage && canManageCurrentSubscription && <Button variant="outline" disabled={busy || readOnly} onClick={() => void portal()}>{t("btn.manage")}</Button>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 text-[13px] text-gray-600"><span>{currentPlan ? <>{t(isCanceled ? "current.lastPlan" : "current.youAreOn")} <strong className="font-semibold text-gray-900">{currentPlan.name}</strong></> : t("current.noActive")}{isCanceled ? endedDate && <> <span className="mx-1">·</span>{t("current.endedOn")} {dateLabel(endedDate, i18n.language)}</> : periodDate && <> <span className="mx-1">·</span>{subscription?.subscription?.cancel_at_period_end ? t("current.cancelAt") : t("current.renews")} {dateLabel(periodDate, i18n.language)}</>}</span>{subscription?.subscription && canManagePaymentMethods && canManageCurrentSubscription && <Button variant="outline" disabled={busy || readOnly} onClick={() => void portal()}>{t("btn.manage")}</Button>}</div>
     </Card>
     {error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}<Button size="xs" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("personal:retry")}</Button></div>}
     {!canManage && <p className="text-xs text-gray-500">{t("errors.ownerOnly")}</p>}
@@ -101,7 +103,7 @@ export default function ProductBillingSettings() {
         <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>{isCurrent && <Badge tone="success">{t("btn.current")}</Badge>}</div>
         <p className="mt-4 text-xl font-semibold tracking-tight text-gray-900">{plan.tier === "free" ? t("personal:free") : price ? <>{formatCurrency(price.amount_minor / 100, price.currency)}<span className="ml-1 text-xs font-normal text-gray-500">{t(price.billing_interval === "year" ? "personal:perYear" : "personal:perMonth")}</span></> : t("personal:notAvailable")}</p>
         {plan.description && <p className="mt-3 text-xs leading-5 text-gray-500">{plan.description}</p>}
-        {plan.tier !== "free" && <Button className="mt-auto self-start" variant={isCurrent || activeSubscription ? "outline" : "primary"} disabled={busy || readOnly || !canManage || !price || isCurrent} onClick={() => activeSubscription && (status === "active" || status === "trialing") ? void portal(plan, price) : activeSubscription ? void portal() : void checkout(plan)}>{price ? actionLabel : t("personal:notAvailable")}</Button>}
+        {plan.tier !== "free" && <Button className="mt-auto self-start" variant={isCurrent || activeSubscription ? "outline" : "primary"} disabled={busy || readOnly || (activeSubscription ? !canManagePaymentMethods : !canManageSubscription) || !price || isCurrent} onClick={() => activeSubscription && (status === "active" || status === "trialing") ? void portal(plan, price) : activeSubscription ? void portal() : void checkout(plan)}>{price ? actionLabel : t("personal:notAvailable")}</Button>}
       </Card>;
     })}</div>
     <p className="text-xs leading-5 text-gray-500">{t("personal:billingHint")}</p>

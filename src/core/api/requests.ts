@@ -33,7 +33,7 @@ import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesR
   UpdateNotificationPreferencesResponse } from '@/models/auth/notifications';
 import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse,
   GetGroupsResponse, GetPermissionsResponse, UpdateGroupPermissionsResponse } from '@/models/auth/rbac';
-import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse } from '@/models/auth/members';
+import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse, EffectiveAccess } from '@/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from '@/models/components/cardKpis';
 import type { OverviewData, OverviewQuery } from "@/models/finance/overview";
 import type { ReportsSummaryParams, ReportsSummary } from '@/models/components/reports';
@@ -328,6 +328,9 @@ export const api = {
 
   getMember: (memberId: string) =>
     request<GetMemberResponse>(`business/members/${memberId}/`, "GET"),
+
+  getMemberEffectiveAccess: (memberId: string) =>
+    request<EffectiveAccess>(`business/members/${memberId}/effective-access/`, "GET"),
 
   addMember: (payload: AddMemberRequest) =>
     request<GetMemberResponse>("business/members/", "POST", payload),

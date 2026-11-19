@@ -81,6 +81,8 @@ export function permissionIcons(code: string): LucideIcon {
   if (code === "manage_members") return Users;
   if (code === "manage_member_roles") return KeyRound;
   if (code === "manage_access") return Shield;
+  if (code.startsWith("manage_billing_")) return CreditCard;
+  if (code === "view_integrations") return KeyRound;
 
   if (code === "view_bank") return Landmark;
   if (code === "view_ledger_account") return BookOpen;

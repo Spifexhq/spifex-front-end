@@ -15,9 +15,10 @@ import { Select } from "src/shared/ui/Select";
 import { api } from "@/core/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
 import { validatePassword } from "@/lib";
+import { useAuthContext } from "@/hooks/useAuth";
 
 import type { GroupListItem } from "@/models/auth/rbac";
-import type { Member } from "@/models/auth/members";
+import type { EffectiveAccess, Member, Role } from "@/models/auth/members";
 
 type Mode = "create" | "edit";
 
@@ -25,11 +26,23 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
+type RoleOption = { key: Exclude<Role, "owner">; label: string };
+
+const EFFECTIVE_ACCESS_WARNING_DEFAULTS: Record<string, string> = {
+  owner_protected_authority: "Owner authority is protected and is not granted through groups.",
+  administrator_has_no_groups: "This administrator has no permission groups and therefore no access.",
+  member_has_no_groups: "This member has no permission groups and therefore no access.",
+  plan_unavailable_codes: "Some assigned permissions are not available under the current plan.",
+  missing_dependencies: "Some permissions are missing required read/page dependencies.",
+  inactive_assigned_codes: "Some assigned permissions are inactive and do not grant access.",
+};
+
 type FormState = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
+  role: Exclude<Role, "owner">;
   groups: GroupListItem[];
 };
 
@@ -38,6 +51,7 @@ const emptyForm: FormState = {
   email: "",
   password: "",
   confirmPassword: "",
+  role: "member",
   groups: [],
 };
 
@@ -53,6 +67,7 @@ function normalizeComparable(form: FormState) {
     email: trim(form.email),
     password: form.password,
     confirmPassword: form.confirmPassword,
+    role: form.role,
     groupIds,
   };
 }
@@ -93,12 +108,23 @@ const MemberModal: React.FC<MemberModalProps> = ({
   onSaved,
 }) => {
   const { t } = useTranslation("memberSettings");
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
 
   const memberId = member?.id ?? null;
 
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [effectiveAccess, setEffectiveAccess] = useState<EffectiveAccess | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+  const [selectedGroupCodes, setSelectedGroupCodes] = useState<Record<string, string[]>>({});
+  const [isGroupsPreviewLoading, setIsGroupsPreviewLoading] = useState(false);
+  const [groupsPreviewError, setGroupsPreviewError] = useState("");
+
+  const canAssignRole = isOwner;
+  const canPreviewAccess =
+    isOwner || isSuperUser || permissions.includes("view_effective_access");
 
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [warning, setWarning] = useState<{ title: string; message: string } | null>(null);
@@ -131,12 +157,113 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
   const canSubmit = !busy && requiredFilled;
 
+  const roleOptions = useMemo<RoleOption[]>(
+    () => [
+      { key: "member", label: t("field.memberRole", { defaultValue: "Member" }) },
+      { key: "admin", label: t("field.adminRole", { defaultValue: "Administrator" }) },
+    ],
+    [t],
+  );
+  const selectedRole = roleOptions.filter((option) => option.key === formData.role);
+  const adminTemplate = useMemo(
+    () =>
+      allGroups.find(
+        (group) =>
+          group.is_system &&
+          (group.slug === "administrators" || group.slug.startsWith("administrators-")),
+      ),
+    [allGroups],
+  );
+  const hasAdminTemplate = formData.groups.some(
+    (group) =>
+      group.is_system &&
+      (group.slug === "administrators" || group.slug.startsWith("administrators-")),
+  );
+
+  const changeRole = (items: RoleOption[]) => {
+    const nextRole = items[0]?.key;
+    if (!nextRole) return;
+    setEffectiveAccess(null);
+    setSelectedGroupCodes({});
+    setGroupsPreviewError("");
+    setFormData((prev) => ({
+      ...prev,
+      role: nextRole,
+      groups:
+        nextRole === "member"
+          ? prev.groups.filter(
+              (group) =>
+                !(
+                  group.is_system &&
+                  (group.slug === "administrators" ||
+                    group.slug.startsWith("administrators-") ||
+                    group.slug.startsWith("access-administrators"))
+                ),
+            )
+          : prev.groups,
+    }));
+  };
+
+  const assignAdminTemplate = () => {
+    if (!adminTemplate) return;
+    setEffectiveAccess(null);
+    setSelectedGroupCodes({});
+    setGroupsPreviewError("");
+    setFormData((prev) => ({
+      ...prev,
+      groups: [
+        ...prev.groups.filter((group) => group.id !== adminTemplate.id),
+        adminTemplate,
+      ],
+    }));
+  };
+
+  const loadEffectiveAccess = useCallback(async () => {
+    if (!memberId) return;
+    setIsPreviewLoading(true);
+    setPreviewError("");
+    try {
+      const response = await api.getMemberEffectiveAccess(memberId);
+      setEffectiveAccess(response.data);
+    } catch {
+      setPreviewError(t("effectiveAccess.loadError", { defaultValue: "Failed to load effective access." }));
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  }, [memberId, t]);
+
+  const loadSelectedGroupCodes = useCallback(async () => {
+    setIsGroupsPreviewLoading(true);
+    setGroupsPreviewError("");
+    try {
+      const rows = await Promise.all(
+        formData.groups.map(async (group) => {
+          const response = await api.getGroup(group.id);
+          return [group.id, (response.data.permissions ?? []).map((permission) => permission.code)] as const;
+        }),
+      );
+      setSelectedGroupCodes(Object.fromEntries(rows));
+    } catch {
+      setGroupsPreviewError(
+        t("effectiveAccess.groupsLoadError", { defaultValue: "Failed to load selected group permissions." }),
+      );
+    } finally {
+      setIsGroupsPreviewLoading(false);
+    }
+  }, [formData.groups, t]);
+
   const hardReset = useCallback(() => {
     setFormData(emptyForm);
     setIsDetailLoading(false);
     setIsSubmitting(false);
     setShowDiscardConfirm(false);
     setWarning(null);
+    setEffectiveAccess(null);
+    setIsPreviewLoading(false);
+    setPreviewError("");
+    setSelectedGroupCodes({});
+    setIsGroupsPreviewLoading(false);
+    setGroupsPreviewError("");
     baselineRef.current = JSON.stringify(normalizeComparable(emptyForm));
   }, []);
 
@@ -197,6 +324,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
           email: detail.email ?? "",
           password: "",
           confirmPassword: "",
+          role: detail.role === "admin" ? "admin" : "member",
           groups: ((detail as unknown as { groups?: GroupListItem[] }).groups ?? []) as GroupListItem[],
         };
 
@@ -277,6 +405,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
       }
 
       const group_ids = (formData.groups ?? []).map((group) => group.id);
+      const role = canAssignRole ? formData.role : undefined;
 
       setIsSubmitting(true);
 
@@ -286,11 +415,13 @@ const MemberModal: React.FC<MemberModalProps> = ({
             name,
             email,
             password: formData.password || undefined,
+            role,
             group_ids,
           });
         } else if (memberId) {
           await api.editMember(memberId, {
             name,
+            role,
             group_ids,
           });
         }
@@ -308,7 +439,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [formData, mode, memberId, onNotify, onSaved, closeNow, t]
+    [formData, mode, memberId, onNotify, onSaved, closeNow, t, canAssignRole]
   );
 
   return (
@@ -380,13 +511,41 @@ const MemberModal: React.FC<MemberModalProps> = ({
                   </>
                 )}
 
+                {canAssignRole && (
+                  <div className="md:col-span-2">
+                    <Select<RoleOption>
+                      label={t("field.role", { defaultValue: "Role" })}
+                      items={roleOptions}
+                      selected={selectedRole}
+                      onChange={changeRole}
+                      getItemKey={(option) => option.key}
+                      getItemLabel={(option) => option.label}
+                      buttonLabel={t("btnLabel.role", { defaultValue: "Select role" })}
+                      singleSelect
+                      hideCheckboxes
+                      clearOnClickOutside={false}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      {t("field.roleHint", {
+                        defaultValue:
+                          "Only the owner can assign administrators. Administrator access comes from the selected groups.",
+                      })}
+                    </p>
+                  </div>
+                )}
+
                 <PermissionMiddleware codeName={["manage_access", "view_group"]} requireAll>
                   <div className="md:col-span-2">
                     <Select<GroupListItem>
                       label={t("field.groups")}
                       items={allGroups}
                       selected={formData.groups}
-                      onChange={(items) => setFormData((prev) => ({ ...prev, groups: items }))}
+                      onChange={(items) => {
+                        setEffectiveAccess(null);
+                        setSelectedGroupCodes({});
+                        setGroupsPreviewError("");
+                        setFormData((prev) => ({ ...prev, groups: items }));
+                      }}
                       getItemKey={(group) => group.id}
                       getItemLabel={(group) => group.name}
                       buttonLabel={t("btnLabel.groups")}
@@ -394,8 +553,202 @@ const MemberModal: React.FC<MemberModalProps> = ({
                       clearOnClickOutside={false}
                       customStyles={{ maxHeight: "280px" }}
                     />
+
+                    {adminTemplate && !hasAdminTemplate && (
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                        <p className="text-xs text-gray-600">
+                          {t("field.adminTemplateHint", {
+                            defaultValue:
+                              "Use the full Administrator template only when broad administrative access is intended.",
+                          })}
+                        </p>
+                        <Button type="button" variant="outline" size="xs" onClick={assignAdminTemplate} disabled={busy}>
+                          {t("btn.useAdminTemplate", { defaultValue: "Use Administrator template" })}
+                        </Button>
+                      </div>
+                    )}
+
+                    {formData.role === "admin" && formData.groups.length === 0 && (
+                      <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        {t("field.adminNoGroups", {
+                          defaultValue:
+                            "This administrator has no access until at least one permission group is assigned.",
+                        })}
+                      </p>
+                    )}
+
+                    {hasAdminTemplate && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        {t("field.adminTemplateSelected", {
+                          defaultValue:
+                            "The full Administrator system bundle is selected. The owner can still remove it later.",
+                        })}
+                      </p>
+                    )}
+
+                    {formData.groups.length > 0 && (
+                      <div className="mt-2 rounded-md border border-gray-200 bg-white px-3 py-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs text-gray-600">
+                            {t("effectiveAccess.selectedGroupsHint", {
+                              defaultValue:
+                                "Preview the permissions in the selected groups before saving. Plan restrictions still apply.",
+                            })}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="xs"
+                            onClick={() => void loadSelectedGroupCodes()}
+                            disabled={isGroupsPreviewLoading || busy}
+                          >
+                            {isGroupsPreviewLoading
+                              ? t("effectiveAccess.loading", { defaultValue: "Loading…" })
+                              : t("effectiveAccess.previewGroups", { defaultValue: "Preview selected groups" })}
+                          </Button>
+                        </div>
+                        {groupsPreviewError && (
+                          <p className="mt-2 text-xs text-red-700">{groupsPreviewError}</p>
+                        )}
+                        {Object.keys(selectedGroupCodes).length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {formData.groups.map((group) => (
+                              <p key={group.id} className="break-words text-[11px] text-gray-600">
+                                <span className="font-medium">{group.name}</span>
+                                {": "}
+                                {(selectedGroupCodes[group.id] ?? []).join(", ") || "—"}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </PermissionMiddleware>
+
+                {mode === "edit" && memberId && canPreviewAccess && (
+                  <div className="md:col-span-2 rounded-md border border-gray-200 bg-white">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-3 py-2">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-900">
+                          {t("effectiveAccess.title", { defaultValue: "Effective access" })}
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          {t("effectiveAccess.savedHint", {
+                            defaultValue: "Preview reflects saved assignments. Save changes, then refresh.",
+                          })}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        onClick={() => void loadEffectiveAccess()}
+                        disabled={isPreviewLoading || busy}
+                      >
+                        {isPreviewLoading
+                          ? t("effectiveAccess.loading", { defaultValue: "Loading…" })
+                          : t("effectiveAccess.preview", { defaultValue: "Preview" })}
+                      </Button>
+                    </div>
+
+                    {previewError && (
+                      <p className="px-3 py-2 text-xs text-red-700">{previewError}</p>
+                    )}
+
+                    {effectiveAccess && (
+                      <div className="space-y-3 px-3 py-3 text-xs text-gray-700">
+                        {effectiveAccess.warnings.length > 0 && (
+                          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+                            {effectiveAccess.warnings.map((warning) => (
+                              <p key={warning}>
+                                {t(`effectiveAccess.warnings.${warning}`, {
+                                  defaultValue:
+                                    EFFECTIVE_ACCESS_WARNING_DEFAULTS[warning] ?? warning,
+                                })}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {t("effectiveAccess.assignedCodes", { defaultValue: "Assigned codes" })}:{" "}
+                            {effectiveAccess.assigned_codes.length}
+                          </p>
+                          <p className="mt-1 break-words text-[11px] text-gray-600">
+                            {effectiveAccess.assigned_codes.join(", ") || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {t("effectiveAccess.effectiveCodes", { defaultValue: "Effective codes" })}:{" "}
+                            {effectiveAccess.effective_codes.length}
+                          </p>
+                          <p className="mt-1 break-words text-[11px] text-gray-600">
+                            {effectiveAccess.effective_codes.join(", ") || "—"}
+                          </p>
+                        </div>
+                        {effectiveAccess.plan.unavailable_codes.length > 0 && (
+                          <div>
+                            <p className="font-semibold text-amber-800">
+                              {t("effectiveAccess.planUnavailable", {
+                                defaultValue: "Unavailable under the current plan",
+                              })}
+                            </p>
+                            <p className="mt-1 break-words text-[11px] text-amber-700">
+                              {effectiveAccess.plan.unavailable_codes.join(", ")}
+                            </p>
+                          </div>
+                        )}
+                        {Object.keys(effectiveAccess.missing_dependencies).length > 0 && (
+                          <div>
+                            <p className="font-semibold text-amber-800">
+                              {t("effectiveAccess.missingDependencies", {
+                                defaultValue: "Missing read/page dependencies",
+                              })}
+                            </p>
+                            <p className="mt-1 break-words text-[11px] text-amber-700">
+                              {Object.entries(effectiveAccess.missing_dependencies)
+                                .map(([code, missing]) => `${code}: ${missing.join(", ")}`)
+                                .join(" · ")}
+                            </p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {t("effectiveAccess.groupSources", { defaultValue: "Group sources" })}
+                          </p>
+                          <ul className="mt-1 space-y-1">
+                            {effectiveAccess.groups.map((group) => (
+                              <li key={group.id} className="text-[11px]">
+                                <span className="font-medium">{group.name}</span>
+                                {group.is_system ? ` (${t("field.systemGroup", { defaultValue: "system" })})` : ""}
+                                {": "}
+                                {group.permission_codes.join(", ") || "—"}
+                              </li>
+                            ))}
+                            {effectiveAccess.groups.length === 0 && <li className="text-gray-500">—</li>}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {t("effectiveAccess.ownerOnly", { defaultValue: "Protected owner-only operations" })}
+                          </p>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            {effectiveAccess.protected_operations.map((operation) => operation.code).join(", ")}
+                          </p>
+                          {effectiveAccess.owner_only_capabilities.length > 0 && (
+                            <p className="mt-1 break-words text-[11px] text-gray-500">
+                              {effectiveAccess.owner_only_capabilities
+                                .map((permission) => permission.code)
+                                .join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

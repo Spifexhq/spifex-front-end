@@ -47,6 +47,7 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "view_project", category: "visualization" },
   { code: "view_inventory", category: "visualization" },
   { code: "view_entity", category: "visualization" },
+  { code: "view_integrations", category: "visualization" },
 
   // ACTIONS
   { code: "add_cash_flow_entries", category: "actions" },
@@ -92,6 +93,11 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "add_entity", category: "actions" },
   { code: "change_entity", category: "actions" },
   { code: "delete_entity", category: "actions" },
+  { code: "change_organization_profile", category: "actions" },
+  { code: "change_organization_currency", category: "actions" },
+  { code: "change_organization_ledger_profile", category: "actions" },
+  { code: "manage_billing_subscription", category: "actions" },
+  { code: "manage_billing_payment_methods", category: "actions" },
 
   // PAGES
   { code: "view_overview_page", category: "pages" },
@@ -122,6 +128,12 @@ const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
   manage_member_roles: ["business_view_member", "business_view_member_settings_page"],
   manage_access: ["view_group", "view_permission", "view_group_settings_page"],
   view_effective_access: ["business_view_member", "business_view_member_settings_page"],
+  change_organization_profile: ["view_organization_settings_page"],
+  change_organization_currency: ["view_currency_settings_page"],
+  change_organization_ledger_profile: ["view_organization_settings_page", "view_ledger_accounts_page"],
+  manage_billing_subscription: ["view_billing_page"],
+  manage_billing_payment_methods: ["view_billing_page"],
+  view_integrations: ["view_ai_connections"],
 };
 
 type GroupPermissionsTableProps = {

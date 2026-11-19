@@ -360,6 +360,30 @@
     "view_effective_access": {
       "label": "Effektiven Zugriff anzeigen",
       "description": "Effektive Berechtigungen eines anderen Mitglieds und deren Quelle pr?fen."
+    },
+    "change_organization_profile": {
+      "label": "Organization profile",
+      "description": "Can change the organization name, address, country and timezone."
+    },
+    "change_organization_currency": {
+      "label": "Organization currency",
+      "description": "Can change the organization currency."
+    },
+    "change_organization_ledger_profile": {
+      "label": "Accounting preferences",
+      "description": "Can change organization accounting preferences."
+    },
+    "manage_billing_subscription": {
+      "label": "Subscription management",
+      "description": "Can start, change or cancel the workspace subscription."
+    },
+    "manage_billing_payment_methods": {
+      "label": "Payment methods",
+      "description": "Can manage payment methods and billing portal actions."
+    },
+    "view_integrations": {
+      "label": "Integration activity",
+      "description": "Can view workspace integration activity."
     }
   }
 }

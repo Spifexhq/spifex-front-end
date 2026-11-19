@@ -29,6 +29,7 @@ import { getCurrencies } from "@/lib/currency/currencies";
 
 import type { RootState } from "@/redux/store";
 import { setUserOrganization } from "@/redux";
+import { useAuthContext } from "@/hooks/useAuth";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =
@@ -67,6 +68,9 @@ const CurrencySettings: React.FC = () => {
 
   const dispatch = useDispatch();
   const organization = useSelector((s: RootState) => s.auth.organization);
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
+  const canManage =
+    isOwner || isSuperUser || permissions.includes("change_organization_currency");
 
   useEffect(() => {
     document.title = t("currencySettings:title");
@@ -137,6 +141,7 @@ const CurrencySettings: React.FC = () => {
   }, []);
 
   const handleSubmit = useCallback(async () => {
+    if (!canManage) return;
     if (!selectedCurrency) {
       setSnack({
         message: t("currencySettings:toast.noSelection"),
@@ -207,7 +212,7 @@ const CurrencySettings: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedCurrency, currentPassword, t, closeModal, dispatch, organization]);
+  }, [selectedCurrency, currentPassword, t, closeModal, dispatch, organization, canManage]);
 
   const onEsc = useCallback(() => {
     closeModal();
@@ -251,11 +256,11 @@ const CurrencySettings: React.FC = () => {
                   label={t("currencySettings:field.current")}
                   value={currentCurrencyLabel}
                   action={
-                    <Button variant="outline" onClick={openModal} disabled={isSubmitting}>
+                    <Button variant="outline" onClick={openModal} disabled={isSubmitting || !canManage}>
                       {t("currencySettings:btn.change")}
                     </Button>
                   }
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !canManage}
                 />
               </div>
             </div>
