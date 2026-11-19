@@ -344,6 +344,22 @@
     "view_overview_page": {
       "label": "Übersicht",
       "description": "Darf die Übersicht ansehen."
+    },
+    "manage_members": {
+      "label": "Mitglieder verwalten",
+      "description": "Normale Mitglieder gem?? Hierarchie einladen, bearbeiten und entfernen."
+    },
+    "manage_member_roles": {
+      "label": "Mitgliederrollen verwalten",
+      "description": "Zul?ssige Nicht-Eigent?merrollen ?ndern; Administratorzuweisung bleibt dem Eigent?mer vorbehalten."
+    },
+    "manage_access": {
+      "label": "Zugriff verwalten",
+      "description": "Gruppen, Berechtigungss?tze und Gruppenzuweisungen verwalten."
+    },
+    "view_effective_access": {
+      "label": "Effektiven Zugriff anzeigen",
+      "description": "Effektive Berechtigungen eines anderen Mitglieds und deren Quelle pr?fen."
     }
   }
 }

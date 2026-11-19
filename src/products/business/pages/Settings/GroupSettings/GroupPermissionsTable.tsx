@@ -25,8 +25,7 @@ const TABS: { id: PermissionTabId }[] = [{ id: "visualization" }, { id: "actions
 
 const PERMISSION_ROWS: PermissionRow[] = [
   // VISUALIZATION
-  { code: "view_cash_flow_entries", category: "visualization" },
-  { code: "view_settled_entries", category: "visualization" },
+  { code: "view_cash_flow_entries", category: "visualization" },  { code: "view_settled_entries", category: "visualization" },
   { code: "view_filters", category: "visualization" },
   { code: "view_consolidated_balance", category: "visualization" },
   { code: "view_cash_flow_amount", category: "visualization" },
@@ -40,6 +39,7 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "view_permission", category: "visualization" },
   { code: "view_user", category: "visualization" },
   { code: "business_view_member", category: "visualization" },
+  { code: "view_effective_access", category: "visualization" },
   { code: "view_group", category: "visualization" },
   { code: "view_bank", category: "visualization" },
   { code: "view_ledger_account", category: "visualization" },
@@ -68,6 +68,9 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "business_add_member", category: "actions" },
   { code: "business_change_member", category: "actions" },
   { code: "business_delete_member", category: "actions" },
+  { code: "manage_members", category: "actions" },
+  { code: "manage_member_roles", category: "actions" },
+  { code: "manage_access", category: "actions" },
   { code: "add_group", category: "actions" },
   { code: "change_group", category: "actions" },
   { code: "delete_group", category: "actions" },
@@ -114,6 +117,13 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "view_currency_settings_page", category: "pages" },
 ];
 
+const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
+  manage_members: ["business_view_member", "business_view_member_settings_page"],
+  manage_member_roles: ["business_view_member", "business_view_member_settings_page"],
+  manage_access: ["view_group", "view_permission", "view_group_settings_page"],
+  view_effective_access: ["business_view_member", "business_view_member_settings_page"],
+};
+
 type GroupPermissionsTableProps = {
   selectedCodes: Set<string>;
   disabled?: boolean;
@@ -138,10 +148,18 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
 
   const canChangeGroup = useMemo(() => {
     if (isOwner) return true;
-    return permissions.includes("change_group");
+    return permissions.includes("manage_access");
   }, [isOwner, permissions]);
 
   const selectionDisabled = !!disabled || !canChangeGroup;
+
+  const togglePermission = (code: string, enabled: boolean) => {
+    onToggle(code, enabled);
+    if (!enabled) return;
+    for (const dependency of PERMISSION_DEPENDENCIES[code] ?? []) {
+      if (!selectedCodes.has(dependency)) onToggle(dependency, true);
+    }
+  };
 
   const rowsForActiveTab = useMemo(
     () => PERMISSION_ROWS.filter((row) => row.category === activeTab),
@@ -183,7 +201,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
                 </div>
 
                 <div className="mt-1 shrink-0">
-                  <Switch checked={checked} onChange={value => onToggle(row.code, value)} disabled={selectionDisabled} label={label} />
+                  <Switch checked={checked} onChange={value => togglePermission(row.code, value)} disabled={selectionDisabled} label={label} />
                 </div>
               </div>
             );

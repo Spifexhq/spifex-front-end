@@ -328,7 +328,7 @@ const GroupSettings: React.FC = () => {
                     <h2 className="text-sm font-semibold text-gray-900">{t("left.groups")}</h2>
                     <p className="text-[11px] text-gray-500">{filteredGroups.length} {t("left.results", "groups")}</p>
                   </div>
-                  <PermissionMiddleware codeName={"add_group"}>
+                  <PermissionMiddleware codeName={"manage_access"}>
                     <Button className="!px-3 !py-1.5" onClick={openCreateModal} disabled={busy}>{t("left.create")}</Button>
                   </PermissionMiddleware>
                 </div>
@@ -363,10 +363,10 @@ const GroupSettings: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <PermissionMiddleware codeName={"change_group"}>
+                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
                             <Button variant="outline" className="inline-flex items-center gap-2" onClick={openRenameModal} disabled={busy}><Pencil size={15} aria-hidden="true" />{t("right.rename")}</Button>
-                          </PermissionMiddleware>
-                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"delete_group"}>
+                          </PermissionMiddleware>}
+                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
                             <Button variant="outline" onClick={requestDeleteGroup} disabled={busy} aria-busy={busy || undefined}>{t("right.delete")}</Button>
                           </PermissionMiddleware>}
                           <button type="button" aria-label={t("right.closePanel")} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50" onClick={() => setSelectedGroupId(null)} disabled={busy}><X size={16} aria-hidden="true" /></button>
@@ -382,7 +382,7 @@ const GroupSettings: React.FC = () => {
             </div>
           </PermissionMiddleware>
 
-          <PermissionMiddleware codeName={["add_group", "change_group"]}>
+          <PermissionMiddleware codeName={"manage_access"}>
             <GroupModal isOpen={modal.open} mode={modal.mode} initialName={modal.initialName} busy={busy} onClose={closeModal} onSubmit={async (name) => {
               if (modal.mode === "create") return handleCreateGroup(name);
               return handleRenameGroup(name);

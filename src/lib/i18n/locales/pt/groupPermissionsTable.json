@@ -344,6 +344,22 @@
     "view_overview_page": {
       "label": "Visão geral",
       "description": "Pode ver a página de visão geral."
+    },
+    "manage_members": {
+      "label": "Gerenciar colaboradores",
+      "description": "Convidar, editar perfis e remover colaboradores comuns respeitando a hierarquia."
+    },
+    "manage_member_roles": {
+      "label": "Gerenciar fun??es",
+      "description": "Alterar fun??es eleg?veis que n?o sejam do propriet?rio; atribuir administrador continua sendo exclusivo do propriet?rio."
+    },
+    "manage_access": {
+      "label": "Gerenciar acessos",
+      "description": "Administrar grupos, conjuntos de permiss?es e atribui??es de grupo."
+    },
+    "view_effective_access": {
+      "label": "Ver acesso efetivo",
+      "description": "Inspecionar as permiss?es efetivas de outro colaborador e sua origem."
     }
   }
 }

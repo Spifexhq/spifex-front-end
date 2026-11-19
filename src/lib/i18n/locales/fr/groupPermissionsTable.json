@@ -344,6 +344,22 @@
     "view_overview_page": {
       "label": "Vue d’ensemble",
       "description": "Peut consulter la vue d’ensemble."
+    },
+    "manage_members": {
+      "label": "G?rer les membres",
+      "description": "Inviter, modifier et retirer des membres ordinaires selon la hi?rarchie."
+    },
+    "manage_member_roles": {
+      "label": "G?rer les r?les",
+      "description": "Modifier les r?les non-propri?taires ?ligibles ; l'attribution d'administrateur reste r?serv?e au propri?taire."
+    },
+    "manage_access": {
+      "label": "G?rer les acc?s",
+      "description": "Administrer les groupes, les ensembles de permissions et les affectations."
+    },
+    "view_effective_access": {
+      "label": "Voir l'acc?s effectif",
+      "description": "Inspecter les permissions effectives d'un autre membre et leur source."
     }
   }
 }

@@ -380,7 +380,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                   </>
                 )}
 
-                <PermissionMiddleware codeName={"view_group"}>
+                <PermissionMiddleware codeName={["manage_access", "view_group"]} requireAll>
                   <div className="md:col-span-2">
                     <Select<GroupListItem>
                       label={t("field.groups")}

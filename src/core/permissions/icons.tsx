@@ -76,7 +76,11 @@ export function permissionIcons(code: string): LucideIcon {
 
   if (code === "view_user") return User;
   if (code === "business_view_member") return Users;
+  if (code === "view_effective_access") return Eye;
   if (code === "view_group") return Users;
+  if (code === "manage_members") return Users;
+  if (code === "manage_member_roles") return KeyRound;
+  if (code === "manage_access") return Shield;
 
   if (code === "view_bank") return Landmark;
   if (code === "view_ledger_account") return BookOpen;

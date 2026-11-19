@@ -344,6 +344,22 @@
     "view_overview_page": {
       "label": "Overview",
       "description": "Can view the overview page."
+    },
+    "manage_members": {
+      "label": "Manage members",
+      "description": "Invite, edit profiles and remove ordinary members within hierarchy rules."
+    },
+    "manage_member_roles": {
+      "label": "Manage member roles",
+      "description": "Change eligible non-owner roles; administrator assignment remains owner-only."
+    },
+    "manage_access": {
+      "label": "Manage access",
+      "description": "Administer groups, permission sets and group assignments."
+    },
+    "view_effective_access": {
+      "label": "View effective access",
+      "description": "Inspect another member's effective permissions and their source."
     }
   }
 }
