@@ -1,8 +1,12 @@
 {
   "title": "Permissões de grupo",
-  "header": { "settings": "Configurações", "title": "Grupos e acesso" },
-  "badge": { "syncing": "Sincronizando dados…" },
-
+  "header": {
+    "settings": "Configurações",
+    "title": "Grupos e acesso"
+  },
+  "badge": {
+    "syncing": "Sincronizando dados…"
+  },
   "left": {
     "groups": "Grupos",
     "create": "Adicionar grupo",
@@ -10,39 +14,41 @@
     "meta": "{{perms}} permissões • {{members}} membros",
     "empty": "Nenhum grupo encontrado."
   },
-
   "right": {
     "selectPrompt": "Selecione um grupo à esquerda para gerenciar as permissões.",
     "nameLabel": "Nome do grupo",
     "rename": "Renomear",
     "delete": "Excluir",
-    "closePanel": "Fechar painel"
+    "closePanel": "Fechar painel",
+    "duplicate": "Duplicar"
   },
-
-  "btn": { "cancel": "Cancelar", "save": "Salvar" },
-
+  "btn": {
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
   "modal": {
     "createTitle": "Criar novo grupo",
     "renameTitle": "Renomear grupo",
     "close": "Fechar",
     "nameLabelCreate": "Nome do grupo",
     "nameLabelRename": "Novo nome do grupo",
-    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
+    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar",
+    "descriptionLabel": "Descri??o",
+    "descriptionPlaceholder": "Explique para que serve este grupo e quem o deve receber."
   },
-
-  "actions": { "ok": "OK", "discard": "Descartar" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Descartar"
+  },
   "confirmDiscard": {
     "title": "Descartar alterações?",
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
-
   "errors": {
     "validationTitle": "Informações obrigatórias",
     "validationNameRequired": "Informe o nome do grupo.",
     "submitFailed": "Não foi possível salvar. Tente novamente."
   },
-
   "toast": {
     "loadAllError": "Não foi possível carregar os grupos. Tente novamente.",
     "detailError": "Não foi possível carregar os detalhes deste grupo.",
@@ -53,9 +59,10 @@
     "deleteSuccess": "Grupo excluído.",
     "deleteError": "Não foi possível excluir o grupo.",
     "saveSuccess": "Permissões atualizadas para este grupo.",
-    "saveError": "Não foi possível atualizar as permissões. Tente novamente."
+    "saveError": "Não foi possível atualizar as permissões. Tente novamente.",
+    "duplicateSuccess": "Grupo duplicado.",
+    "duplicateError": "N?o foi poss?vel duplicar o grupo."
   },
-
   "confirm": {
     "deleteText": "Tem certeza que deseja excluir o grupo \"{{name}}\"? Esta ação não pode ser desfeita.",
     "confirmLabel": "Excluir grupo",

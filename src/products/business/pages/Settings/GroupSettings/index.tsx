@@ -16,9 +16,9 @@ import Badge from "@/shared/ui/Badge";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import { EmptyState } from "@/shared/ui/State";
 import { AnimatePresence, motion } from "framer-motion";
-import { Pencil, ShieldCheck, Users, X } from "lucide-react";
+import { Pencil, ShieldCheck, Users, X, Copy } from "lucide-react";
 
-import GroupPermissionsTable from "./GroupPermissionsTable";
+import PermissionExplorer from "./permissions/PermissionExplorer";
 import GroupModal from "./GroupModal";
 
 import { api } from "@/core/api/requests";
@@ -33,8 +33,8 @@ type Snack =
   | null;
 
 type ModalState =
-  | { open: false; mode: "create" | "rename"; initialName: string }
-  | { open: true; mode: "create" | "rename"; initialName: string };
+  | { open: false; mode: "create" | "rename"; initialName: string; initialDescription: string }
+  | { open: true; mode: "create" | "rename"; initialName: string; initialDescription: string };
 
 /* --------------------------- Page Component -------------------------------- */
 const GroupSettings: React.FC = () => {
@@ -51,6 +51,10 @@ const GroupSettings: React.FC = () => {
     return permissions.includes("view_permission");
   }, [isOwner, permissions]);
 
+  const [catalog, setCatalog] = useState<Permission[]>([]);
+  const [planAvailableCodes, setPlanAvailableCodes] = useState<Set<string>>(new Set<string>());
+  const [planLoaded, setPlanLoaded] = useState(false);
+
   useEffect(() => {
     document.title = t("title");
   }, [t]);
@@ -58,6 +62,69 @@ const GroupSettings: React.FC = () => {
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!canViewPermissions) {
+      setCatalog([]);
+      return;
+    }
+    void api
+      .getPermissions()
+      .then((response) => {
+        if (alive) setCatalog(response.data.permissions || []);
+      })
+      .catch(() => {
+        if (alive) setCatalog([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [canViewPermissions]);
+
+  useEffect(() => {
+    let alive = true;
+    const canReadLimits = isOwner || permissions.includes("view_limits_and_usage");
+    if (!canReadLimits) {
+      setPlanLoaded(false);
+      setPlanAvailableCodes(new Set<string>());
+      return;
+    }
+    void api
+      .getEntitlementLimits()
+      .then((response) => {
+        if (!alive) return;
+        setPlanAvailableCodes(
+          new Set(
+            (response.data.items || []).map((item) => item.permission.code),
+          ),
+        );
+        setPlanLoaded(true);
+      })
+      .catch(() => {
+        if (alive) {
+          setPlanLoaded(false);
+          setPlanAvailableCodes(new Set<string>());
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isOwner, permissions]);
+
+  const actorCodes = useMemo(() => new Set(permissions), [permissions]);
+  const planUnavailableCodes = useMemo(() => {
+    if (!planLoaded || !isOwner) return new Set<string>();
+    return new Set(
+      catalog
+        .filter(
+          (permission) =>
+            !permission.code.startsWith("view_") &&
+            !planAvailableCodes.has(permission.code),
+        )
+        .map((permission) => permission.code),
+    );
+  }, [planLoaded, isOwner, catalog, planAvailableCodes]);
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isBackgroundSync, setIsBackgroundSync] = useState(false);
@@ -75,7 +142,7 @@ const GroupSettings: React.FC = () => {
 
   const [groupSearch, setGroupSearch] = useState("");
 
-  const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", initialName: "" });
+  const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", initialName: "", initialDescription: "" });
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -188,12 +255,17 @@ const GroupSettings: React.FC = () => {
   };
 
   const openCreateModal = () => {
-    setModal({ open: true, mode: "create", initialName: "" });
+    setModal({ open: true, mode: "create", initialName: "", initialDescription: "" });
   };
 
   const openRenameModal = () => {
     if (!selectedGroupDetail) return;
-    setModal({ open: true, mode: "rename", initialName: selectedGroupDetail.name || "" });
+    setModal({
+      open: true,
+      mode: "rename",
+      initialName: selectedGroupDetail.name || "",
+      initialDescription: selectedGroupDetail.description || "",
+    });
   };
 
   const closeModal = () => {
@@ -201,11 +273,11 @@ const GroupSettings: React.FC = () => {
     setModal((prev) => ({ ...prev, open: false }));
   };
 
-  const handleCreateGroup = async (name: string) => {
+  const handleCreateGroup = async (name: string, description: string) => {
     setIsSubmitting(true);
 
     try {
-      const payload: AddGroupRequest = { name, permission_codes: [] };
+      const payload: AddGroupRequest = { name, description, permission_codes: [] };
       const response = await api.addGroup(payload);
       const created = response.data;
 
@@ -222,22 +294,44 @@ const GroupSettings: React.FC = () => {
     }
   };
 
-  const handleRenameGroup = async (name: string) => {
+  const handleRenameGroup = async (name: string, description: string) => {
     if (!selectedGroupDetail) return;
 
     setIsSubmitting(true);
 
     try {
-      await api.editGroup(selectedGroupDetail.id, { name });
+      await api.editGroup(selectedGroupDetail.id, { name, description });
 
       await fetchAll({ background: true });
-      setSelectedGroupDetail((prev) => (prev ? { ...prev, name } : prev));
+      setSelectedGroupDetail((prev) => (prev ? { ...prev, name, description } : prev));
 
       setSnack({ message: t("toast.renameSuccess"), severity: "success" });
     } catch (error) {
       console.error(error);
       setSnack({ message: apiErrorMessage(error, t("toast.renameError")), severity: "error" });
       throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDuplicateGroup = async () => {
+    if (!selectedGroupDetail || selectedGroupDetail.is_system) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await api.addGroup({
+        name: `${selectedGroupDetail.name} (copy)`,
+        description: selectedGroupDetail.description || "",
+        permission_codes: Array.from(selectedCodes),
+      });
+      await fetchAll({ background: true });
+      setSelectedGroupId(response.data.id);
+      setSnack({ message: t("toast.duplicateSuccess"), severity: "success" });
+    } catch (error) {
+      console.error(error);
+      setSnack({ message: apiErrorMessage(error, t("toast.duplicateError")), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -359,10 +453,14 @@ const GroupSettings: React.FC = () => {
                           <div className="min-w-0">
                             <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{t("right.nameLabel")}</p>
                             <h2 className="truncate text-base font-semibold text-gray-900">{selectedGroupDetail.name}</h2>
+                            {selectedGroupDetail.description && <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{selectedGroupDetail.description}</p>}
                             <p className="mt-0.5 text-xs text-gray-500">{selectedGroupDetail.permissions?.length ?? 0} {t("right.permissions", "permissions")}{selectedGroupDetail.is_system ? ` · ${t("right.system", "system group")}` : ""}</p>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
+                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
+                            <Button variant="outline" className="inline-flex items-center gap-2" onClick={handleDuplicateGroup} disabled={busy}><Copy size={15} aria-hidden="true" />{t("right.duplicate", { defaultValue: "Duplicate" })}</Button>
+                          </PermissionMiddleware>}
                           {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
                             <Button variant="outline" className="inline-flex items-center gap-2" onClick={openRenameModal} disabled={busy}><Pencil size={15} aria-hidden="true" />{t("right.rename")}</Button>
                           </PermissionMiddleware>}
@@ -373,7 +471,21 @@ const GroupSettings: React.FC = () => {
                         </div>
                       </div>
                       <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
-                        <GroupPermissionsTable selectedCodes={selectedCodes} disabled={busy} dirty={dirty} onToggle={setPermissionChecked} onUndo={handleDiscard} onSave={handleSavePermissions} />
+                        <PermissionExplorer
+                          key={selectedGroupDetail.id}
+                          selectedCodes={selectedCodes}
+                          disabled={busy}
+                          readOnly={!!selectedGroupDetail.is_system}
+                          dirty={dirty}
+                          catalog={catalog}
+                          planUnavailableCodes={planUnavailableCodes}
+                          actorCodes={actorCodes}
+                          isOwner={isOwner}
+                          onToggle={setPermissionChecked}
+                          onSetCodes={setSelectedCodes}
+                          onUndo={handleDiscard}
+                          onSave={handleSavePermissions}
+                        />
                       </PermissionMiddleware>
                     </Card>
                   </motion.div>}
@@ -383,9 +495,9 @@ const GroupSettings: React.FC = () => {
           </PermissionMiddleware>
 
           <PermissionMiddleware codeName={"manage_access"}>
-            <GroupModal isOpen={modal.open} mode={modal.mode} initialName={modal.initialName} busy={busy} onClose={closeModal} onSubmit={async (name) => {
-              if (modal.mode === "create") return handleCreateGroup(name);
-              return handleRenameGroup(name);
+            <GroupModal isOpen={modal.open} mode={modal.mode} initialName={modal.initialName} initialDescription={modal.initialDescription} busy={busy} onClose={closeModal} onSubmit={async (name, description) => {
+              if (modal.mode === "create") return handleCreateGroup(name, description);
+              return handleRenameGroup(name, description);
             }} />
           </PermissionMiddleware>
         </div>

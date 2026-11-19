@@ -15,7 +15,8 @@
     "prod": "npm run build && npm run preview",
     "lint": "eslint .",
     "lint:a11y": "eslint src",
-    "check:accounting-i18n": "node scripts/check-accounting-translations.mjs"
+    "check:accounting-i18n": "node scripts/check-accounting-translations.mjs",
+    "test:permissions": "esbuild scripts/permission-ux.test.ts --bundle --platform=node --format=esm --outfile=.tmp/permission-ux.test.mjs && node --test .tmp/permission-ux.test.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.1",

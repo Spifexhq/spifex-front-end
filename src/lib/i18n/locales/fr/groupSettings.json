@@ -1,8 +1,12 @@
 {
   "title": "Autorisations de groupe",
-  "header": { "settings": "Paramètres", "title": "Groupes & accès" },
-  "badge": { "syncing": "Synchronisation des données…" },
-
+  "header": {
+    "settings": "Paramètres",
+    "title": "Groupes & accès"
+  },
+  "badge": {
+    "syncing": "Synchronisation des données…"
+  },
   "left": {
     "groups": "Groupes",
     "create": "Ajouter un groupe",
@@ -10,39 +14,41 @@
     "meta": "{{perms}} autorisations • {{members}} membres",
     "empty": "Aucun groupe trouvé."
   },
-
   "right": {
     "selectPrompt": "Sélectionnez un groupe à gauche pour gérer ses autorisations.",
     "nameLabel": "Nom du groupe",
     "rename": "Renommer",
     "delete": "Supprimer",
-    "closePanel": "Fermer le panneau"
+    "closePanel": "Fermer le panneau",
+    "duplicate": "Dupliquer"
   },
-
-  "btn": { "cancel": "Annuler", "save": "Enregistrer" },
-
+  "btn": {
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
   "modal": {
     "createTitle": "Créer un nouveau groupe",
     "renameTitle": "Renommer le groupe",
     "close": "Fermer",
     "nameLabelCreate": "Nom du groupe",
     "nameLabelRename": "Nouveau nom du groupe",
-    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Expliquez ? quoi sert ce groupe et ? qui il doit ?tre attribu?."
   },
-
-  "actions": { "ok": "OK", "discard": "Ignorer" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Ignorer"
+  },
   "confirmDiscard": {
     "title": "Ignorer les modifications ?",
     "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
   },
-
   "errors": {
     "validationTitle": "Informations manquantes",
     "validationNameRequired": "Veuillez saisir un nom de groupe.",
     "submitFailed": "Impossible d’enregistrer les modifications. Veuillez réessayer."
   },
-
   "toast": {
     "loadAllError": "Impossible de charger les groupes. Veuillez réessayer.",
     "detailError": "Impossible de charger les détails de ce groupe.",
@@ -53,9 +59,10 @@
     "deleteSuccess": "Groupe supprimé.",
     "deleteError": "Impossible de supprimer le groupe.",
     "saveSuccess": "Autorisations mises à jour pour ce groupe.",
-    "saveError": "Impossible de mettre à jour les autorisations. Veuillez réessayer."
+    "saveError": "Impossible de mettre à jour les autorisations. Veuillez réessayer.",
+    "duplicateSuccess": "Groupe dupliqu?.",
+    "duplicateError": "Impossible de dupliquer le groupe."
   },
-
   "confirm": {
     "deleteText": "Voulez-vous vraiment supprimer le groupe \"{{name}}\" ? Cette action est irréversible.",
     "confirmLabel": "Supprimer le groupe",

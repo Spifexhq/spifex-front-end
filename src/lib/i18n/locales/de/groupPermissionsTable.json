@@ -384,6 +384,231 @@
     "view_integrations": {
       "label": "Integration activity",
       "description": "Can view workspace integration activity."
+    },
+    "view_ai_connections": {
+      "label": "KI-Verbindungen",
+      "description": "Auf KI-Verbindungen und verbundene Dienste zugreifen."
     }
+  },
+  "taxonomy": {
+    "modules": {
+      "financial": {
+        "name": "Finanzverwaltung",
+        "description": "Cashflow, Abrechnungen, Banken, Abstimmung und Berichte."
+      },
+      "accounting": {
+        "name": "Buchhaltung",
+        "description": "Sachkonten, Kontenplan und Buchhaltungseinstellungen."
+      },
+      "team": {
+        "name": "Team & Zugriff",
+        "description": "Mitglieder, Rollen, Gruppen, Berechtigungskatalog und effektiver Zugriff."
+      },
+      "settings": {
+        "name": "Organisation & Einstellungen",
+        "description": "Organisationsprofil, Währung, Abteilungen und Arbeitsbereichseinstellungen."
+      },
+      "billing": {
+        "name": "Abrechnung & Abonnement",
+        "description": "Tarif-, Abonnement- und Zahlungsmethodenfunktionen."
+      },
+      "integrations": {
+        "name": "Integrationen",
+        "description": "Verbundene Dienste und Integrationsaktivität."
+      },
+      "operations": {
+        "name": "Geschäftsbetrieb",
+        "description": "Inventar, CRM-Einheiten und Projekte."
+      }
+    },
+    "features": {
+      "cash-flow": {
+        "name": "Cashflow",
+        "description": "Cashflow-Einträge, Beträge und KPIs erfassen, filtern und prüfen."
+      },
+      "settlements": {
+        "name": "Abrechnungen",
+        "description": "Abrechnungslisten, Beträge, KPIs und Abrechnungslebenszyklus."
+      },
+      "saved-views": {
+        "name": "Gespeicherte Ansichten",
+        "description": "Wiederverwendbare Ansichtsvorgaben für Cashflow und Abrechnungen."
+      },
+      "bank-accounts": {
+        "name": "Bankkonten",
+        "description": "Bankkontodatensätze und Bankeinstellungen."
+      },
+      "bank-reconciliation": {
+        "name": "Bankabstimmung",
+        "description": "Kontoauszüge und Abstimmungsdaten."
+      },
+      "overview-reporting": {
+        "name": "Übersicht & Berichte",
+        "description": "Arbeitsbereichsübersicht, Berichte und konsolidierte Salden."
+      },
+      "chart-of-accounts": {
+        "name": "Kontenplan",
+        "description": "Kontenplanseite, Sachkonten und Kontenlebenszyklus."
+      },
+      "accounting-preferences": {
+        "name": "Buchhaltungseinstellungen",
+        "description": "Buchhaltungsprofil der Organisation und Standardverhalten."
+      },
+      "members": {
+        "name": "Mitglieder",
+        "description": "Mitgliederliste, Profile und Zugriff auf Mitgliedereinstellungen."
+      },
+      "roles": {
+        "name": "Rollen",
+        "description": "Rollenänderungen für Nicht-Eigentümer."
+      },
+      "user-accounts": {
+        "name": "Benutzerkonten (Legacy)",
+        "description": "Legacy-Benutzerkontocodes aus Kompatibilitätsgründen."
+      },
+      "permission-groups": {
+        "name": "Berechtigungsgruppen",
+        "description": "Gruppenliste, Einstellungen, Zuweisungen und Gruppenlebenszyklus."
+      },
+      "permission-catalog": {
+        "name": "Berechtigungskatalog",
+        "description": "Globalen Berechtigungskatalog lesen."
+      },
+      "effective-access": {
+        "name": "Effektiver Zugriff",
+        "description": "Zugewiesenen und effektiven Mitgliederzugriff prüfen."
+      },
+      "organization-profile": {
+        "name": "Organisationsprofil",
+        "description": "Name, Adresse, Land und Zeitzone der Organisation."
+      },
+      "currency": {
+        "name": "Währung",
+        "description": "Währungskonfiguration des Arbeitsbereichs."
+      },
+      "departments": {
+        "name": "Abteilungen",
+        "description": "Abteilungseinstellungen und -datensätze."
+      },
+      "workspace-preferences": {
+        "name": "Arbeitsbereichseinstellungen",
+        "description": "Seiten für Benachrichtigungen und Formate."
+      },
+      "security-privacy": {
+        "name": "Sicherheit & Datenschutz",
+        "description": "Seite für Sicherheits- und Datenschutzeinstellungen."
+      },
+      "personal-preferences": {
+        "name": "Persönliche Einstellungen",
+        "description": "Seite für persönliche Einstellungen."
+      },
+      "usage-limits": {
+        "name": "Nutzung & Limits",
+        "description": "Tariflimits und Nutzungsdaten."
+      },
+      "billing-overview": {
+        "name": "Abrechnungsübersicht",
+        "description": "Tarif- und Abrechnungsinformationen anzeigen."
+      },
+      "subscription-management": {
+        "name": "Abonnementverwaltung",
+        "description": "Arbeitsbereichsabonnement starten, ändern oder kündigen."
+      },
+      "payment-methods": {
+        "name": "Zahlungsmethoden",
+        "description": "Abrechnungsportal und Zahlungsmethodenaktionen."
+      },
+      "connected-services": {
+        "name": "Verbundene Dienste",
+        "description": "KI-Verbindungen und Zugriff auf verbundene Dienste."
+      },
+      "integration-activity": {
+        "name": "Integrationsaktivität",
+        "description": "Aktivität der Arbeitsbereichskonnektoren anzeigen."
+      },
+      "inventory": {
+        "name": "Inventar",
+        "description": "Inventareinstellungen und Artikeldatensätze."
+      },
+      "crm-entities": {
+        "name": "CRM & Einheiten",
+        "description": "Einheiteneinstellungen und -datensätze."
+      },
+      "projects": {
+        "name": "Projekte",
+        "description": "Projekteinstellungen und -datensätze."
+      }
+    }
+  },
+  "explorer": {
+    "title": "Berechtigungen nach Geschäftsbereich",
+    "summary": "Berechtigungen werden über alle zugewiesenen Gruppen kombiniert und dann durch Tarif- und Autorisierungsregeln eingeschränkt.",
+    "enabledCount": "{{enabled}} von {{total}} aktiviert",
+    "missingDependencies": "{{count}} fehlende Abhängigkeit{{suffix}}",
+    "unsaved": "Nicht gespeicherte Änderungen",
+    "searchPlaceholder": "Module, Funktionen, Berechtigungen oder Codes suchen",
+    "disclosureHint": "Öffnen Sie ein Modul und dann eine Funktion. Vorgaben gelten nur für diese Funktion und enthalten die nötigen Lese-/Seitenabhängigkeiten.",
+    "expandAll": "Alle erweitern",
+    "collapseAll": "Alle einklappen",
+    "dismiss": "Schließen",
+    "systemReadOnly": "Dies ist eine Systemgruppe. Ihre Berechtigungen werden von der Plattform verwaltet und können hier nicht bearbeitet werden.",
+    "noMatches": "Keine Berechtigungen entsprechen Suche und Filter.",
+    "enabled": "aktiviert",
+    "quickAccess": "Schnellzugriff",
+    "showActions": "Aktionen anzeigen",
+    "hideActions": "Aktionen ausblenden",
+    "noDescription": "Keine Beschreibung verfügbar.",
+    "planUnavailableHint": "Ihr aktueller Tarif stellt diese Berechtigung nicht bereit.",
+    "nonDelegableHint": "Sie können diese Berechtigung nicht vergeben, da Sie sie nicht besitzen oder sie nicht delegierbar ist.",
+    "missingActionDependencies": "Diese Berechtigung erfordert: {{codes}}.",
+    "footerMissing": "Beheben Sie fehlende Abhängigkeiten vor dem Speichern: {{codes}}.",
+    "footerHint": "Das Backend bleibt maßgeblich. Tarif- und Delegationsgrenzen werden beim Speichern durchgesetzt.",
+    "systemFooter": "Systemgruppen sind schreibgeschützt. Duplizieren Sie die Gruppe, wenn Sie eine anpassbare Kopie benötigen.",
+    "filters": {
+      "all": "Alle",
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert",
+      "sensitive": "Sensibel",
+      "administrative": "Administrativ",
+      "planUnavailable": "Im Tarif nicht verfügbar"
+    },
+    "states": {
+      "enabled": "Aktiviert",
+      "partial": "Teilweise",
+      "disabled": "Deaktiviert",
+      "custom": "Benutzerdefiniert"
+    },
+    "kinds": {
+      "page": "Seite öffnen",
+      "view": "Daten anzeigen",
+      "create": "Erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "configure": "Konfigurieren",
+      "manage": "Zugriff verwalten",
+      "legacy": "Legacy"
+    },
+    "badges": {
+      "sensitive": "Sensibel",
+      "administrative": "Administrativ",
+      "legacy": "Legacy",
+      "planUnavailable": "Im Tarif nicht verfügbar",
+      "nonDelegable": "Nicht delegierbar",
+      "missingDependency": "Fehlende Abhängigkeit"
+    }
+  },
+  "presets": {
+    "none": "Kein Zugriff",
+    "read": "Nur Lesen",
+    "edit": "Bearbeiten",
+    "full": "Vollzugriff",
+    "custom": "Benutzerdefiniert",
+    "blocked": "Diese Vorgabe enth?lt Berechtigungen, die Sie nicht vergeben k?nnen oder die im Tarif nicht enthalten sind: {{codes}}."
+  },
+  "dependency": {
+    "blockedRemoval": "Diese Berechtigung wird von anderen aktiven Berechtigungen benötigt: {{codes}}. Entfernen Sie diese zuerst.",
+    "added": "Erforderliche Abhängigkeiten hinzugefügt: {{codes}}.",
+    "required": "Diese Änderung würde erforderliche Abhängigkeiten entfernen: {{codes}}. Passen Sie sie zuerst mit Benutzerdefiniert an.",
+    "blockedAddition": "Diese Aktion ben?tigt Berechtigungen, die Sie nicht vergeben k?nnen oder die im Tarif nicht enthalten sind: {{codes}}."
   }
 }

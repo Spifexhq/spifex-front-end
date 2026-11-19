@@ -18,10 +18,11 @@ export type GroupModalProps = {
   mode: Mode;
 
   initialName?: string;
+  initialDescription?: string;
   busy?: boolean;
 
   onClose: () => void;
-  onSubmit: (name: string) => Promise<void> | void;
+  onSubmit: (name: string, description: string) => Promise<void> | void;
 };
 
 const ModalSkeleton: React.FC = () => (
@@ -38,6 +39,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   isOpen,
   mode,
   initialName = "",
+  initialDescription = "",
   busy = false,
   onClose,
   onSubmit,
@@ -46,12 +48,13 @@ const GroupModal: React.FC<GroupModalProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(initialName);
+  const [description, setDescription] = useState(initialDescription);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [warning, setWarning] = useState<{ title: string; message: string } | null>(null);
 
-  const baselineRef = useRef<string>(initialName.trim());
+  const baselineRef = useRef<string>(`${initialName.trim()}\u0000${initialDescription.trim()}`);
 
   const effectiveBusy = busy || isSubmitting;
 
@@ -63,15 +66,19 @@ const GroupModal: React.FC<GroupModalProps> = ({
     return mode === "create" ? t("modal.nameLabelCreate") : t("modal.nameLabelRename");
   }, [mode, t]);
 
-  const isDirty = useMemo(() => name.trim() !== baselineRef.current, [name]);
+  const isDirty = useMemo(
+    () => `${name.trim()}\u0000${description.trim()}` !== baselineRef.current,
+    [name, description],
+  );
 
   const resetState = useCallback(() => {
     setName(initialName);
-    baselineRef.current = initialName.trim();
+    setDescription(initialDescription);
+    baselineRef.current = `${initialName.trim()}\u0000${initialDescription.trim()}`;
     setIsSubmitting(false);
     setShowCloseConfirm(false);
     setWarning(null);
-  }, [initialName]);
+  }, [initialName, initialDescription]);
 
   const hardClose = useCallback(() => {
     resetState();
@@ -132,6 +139,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
       if (effectiveBusy) return;
 
       const trimmed = name.trim();
+      const trimmedDescription = description.trim();
 
       if (!trimmed) {
         setWarning({
@@ -144,7 +152,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
       setIsSubmitting(true);
 
       try {
-        await onSubmit(trimmed);
+        await onSubmit(trimmed, trimmedDescription);
         hardClose();
       } catch (err) {
         const message = err instanceof Error ? err.message : t("errors.submitFailed");
@@ -156,7 +164,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [effectiveBusy, name, onSubmit, hardClose, t]
+    [effectiveBusy, name, description, onSubmit, hardClose, t]
   );
 
   return (
@@ -173,16 +181,35 @@ const GroupModal: React.FC<GroupModalProps> = ({
             {effectiveBusy && mode === "rename" ? (
               <ModalSkeleton />
             ) : (
-              <Input
-                kind="text"
-                label={label}
-                name="groupName"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={effectiveBusy}
-                required
-                ref={inputRef}
-              />
+              <div className="space-y-3">
+                <Input
+                  kind="text"
+                  label={label}
+                  name="groupName"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={effectiveBusy}
+                  required
+                  ref={inputRef}
+                />
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-gray-700">
+                    {t("modal.descriptionLabel", { defaultValue: "Description" })}
+                  </span>
+                  <textarea
+                    name="groupDescription"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    disabled={effectiveBusy}
+                    rows={3}
+                    maxLength={255}
+                    placeholder={t("modal.descriptionPlaceholder", {
+                      defaultValue: "Explain what this group is for and who should receive it.",
+                    })}
+                    className="w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 disabled:opacity-60"
+                  />
+                </label>
+              </div>
             )}
           </div>
 

@@ -384,6 +384,231 @@
     "view_integrations": {
       "label": "Integration activity",
       "description": "Can view workspace integration activity."
+    },
+    "view_ai_connections": {
+      "label": "Ligações de IA",
+      "description": "Aceder a ligações de IA e serviços ligados."
     }
+  },
+  "taxonomy": {
+    "modules": {
+      "financial": {
+        "name": "Gestão financeira",
+        "description": "Fluxo de caixa, liquidações, bancos, reconciliação e relatórios."
+      },
+      "accounting": {
+        "name": "Contabilidade",
+        "description": "Contas do razão, configuração do plano e preferências contabilísticas."
+      },
+      "team": {
+        "name": "Equipa e acesso",
+        "description": "Membros, funções, grupos, catálogo de permissões e acesso efetivo."
+      },
+      "settings": {
+        "name": "Organização e definições",
+        "description": "Perfil, moeda, departamentos e preferências do espaço de trabalho."
+      },
+      "billing": {
+        "name": "Faturação e subscrição",
+        "description": "Capacidades de plano, subscrição e métodos de pagamento."
+      },
+      "integrations": {
+        "name": "Integrações",
+        "description": "Serviços ligados e atividade de integrações."
+      },
+      "operations": {
+        "name": "Operações de negócio",
+        "description": "Inventário, entidades CRM e projetos."
+      }
+    },
+    "features": {
+      "cash-flow": {
+        "name": "Fluxo de caixa",
+        "description": "Registe, filtre e consulte entradas, valores e KPIs de fluxo de caixa."
+      },
+      "settlements": {
+        "name": "Liquidações",
+        "description": "Listas, valores, KPIs e ciclo de vida das liquidações."
+      },
+      "saved-views": {
+        "name": "Vistas guardadas",
+        "description": "Predefinições reutilizáveis de fluxo de caixa e liquidações."
+      },
+      "bank-accounts": {
+        "name": "Contas bancárias",
+        "description": "Registos de contas bancárias e definições bancárias."
+      },
+      "bank-reconciliation": {
+        "name": "Reconciliação bancária",
+        "description": "Extratos e dados de reconciliação."
+      },
+      "overview-reporting": {
+        "name": "Visão geral e relatórios",
+        "description": "Visão geral, relatórios e saldos consolidados."
+      },
+      "chart-of-accounts": {
+        "name": "Plano de contas",
+        "description": "Página do plano, contas do razão e ciclo de vida das contas."
+      },
+      "accounting-preferences": {
+        "name": "Preferências contabilísticas",
+        "description": "Perfil contabilístico da organização e comportamento predefinido."
+      },
+      "members": {
+        "name": "Membros",
+        "description": "Lista, perfis e acesso às definições de membros."
+      },
+      "roles": {
+        "name": "Funções",
+        "description": "Alterações de funções de membros que não são proprietários."
+      },
+      "user-accounts": {
+        "name": "Contas de utilizador (legado)",
+        "description": "Códigos legados de contas de utilizador mantidos por compatibilidade."
+      },
+      "permission-groups": {
+        "name": "Grupos de permissões",
+        "description": "Lista, definições, atribuições e ciclo de vida dos grupos."
+      },
+      "permission-catalog": {
+        "name": "Catálogo de permissões",
+        "description": "Consultar o catálogo global de permissões."
+      },
+      "effective-access": {
+        "name": "Acesso efetivo",
+        "description": "Inspecionar o acesso atribuído e efetivo dos membros."
+      },
+      "organization-profile": {
+        "name": "Perfil da organização",
+        "description": "Nome, morada, país e fuso horário da organização."
+      },
+      "currency": {
+        "name": "Moeda",
+        "description": "Configuração da moeda do espaço de trabalho."
+      },
+      "departments": {
+        "name": "Departamentos",
+        "description": "Definições e registos de departamentos."
+      },
+      "workspace-preferences": {
+        "name": "Preferências do espaço",
+        "description": "Páginas de notificações e formatos."
+      },
+      "security-privacy": {
+        "name": "Segurança e privacidade",
+        "description": "Página de definições de segurança e privacidade."
+      },
+      "personal-preferences": {
+        "name": "Preferências pessoais",
+        "description": "Página de definições pessoais."
+      },
+      "usage-limits": {
+        "name": "Utilização e limites",
+        "description": "Limites do plano e dados de utilização."
+      },
+      "billing-overview": {
+        "name": "Visão geral da faturação",
+        "description": "Consultar informações do plano e faturação."
+      },
+      "subscription-management": {
+        "name": "Gestão da subscrição",
+        "description": "Iniciar, alterar ou cancelar a subscrição do espaço."
+      },
+      "payment-methods": {
+        "name": "Métodos de pagamento",
+        "description": "Portal de faturação e ações de métodos de pagamento."
+      },
+      "connected-services": {
+        "name": "Serviços ligados",
+        "description": "Ligações de IA e acesso a serviços ligados."
+      },
+      "integration-activity": {
+        "name": "Atividade de integrações",
+        "description": "Consultar a atividade dos conectores do espaço."
+      },
+      "inventory": {
+        "name": "Inventário",
+        "description": "Definições e registos de artigos de inventário."
+      },
+      "crm-entities": {
+        "name": "CRM e entidades",
+        "description": "Definições e registos de entidades."
+      },
+      "projects": {
+        "name": "Projetos",
+        "description": "Definições e registos de projetos."
+      }
+    }
+  },
+  "explorer": {
+    "title": "Permissões por área de negócio",
+    "summary": "As permissões são combinadas entre todos os grupos atribuídos e depois limitadas pelo plano e pelas regras de autorização.",
+    "enabledCount": "{{enabled}} de {{total}} ativas",
+    "missingDependencies": "{{count}} dependência{{suffix}} em falta",
+    "unsaved": "Alterações não guardadas",
+    "searchPlaceholder": "Pesquisar módulos, funcionalidades, permissões ou códigos",
+    "disclosureHint": "Abra um módulo e depois uma funcionalidade. As predefinições aplicam-se apenas a essa funcionalidade e incluem as dependências de leitura/página necessárias.",
+    "expandAll": "Expandir tudo",
+    "collapseAll": "Recolher tudo",
+    "dismiss": "Fechar",
+    "systemReadOnly": "Este é um grupo de sistema. As suas permissões são mantidas pela plataforma e não podem ser editadas aqui.",
+    "noMatches": "Nenhuma permissão corresponde à pesquisa e ao filtro.",
+    "enabled": "ativas",
+    "quickAccess": "Acesso rápido",
+    "showActions": "Mostrar ações",
+    "hideActions": "Ocultar ações",
+    "noDescription": "Sem descrição disponível.",
+    "planUnavailableHint": "O plano atual não disponibiliza esta permissão.",
+    "nonDelegableHint": "Não pode conceder esta permissão porque não a possui ou não é delegável.",
+    "missingActionDependencies": "Esta permissão requer: {{codes}}.",
+    "footerMissing": "Resolva as dependências em falta antes de guardar: {{codes}}.",
+    "footerHint": "O backend continua a ser autoritativo. Os limites de plano e delegação são aplicados ao guardar.",
+    "systemFooter": "Os grupos de sistema são só de leitura. Duplique o grupo se precisar de uma cópia personalizável.",
+    "filters": {
+      "all": "Todas",
+      "enabled": "Ativas",
+      "disabled": "Inativas",
+      "sensitive": "Sensíveis",
+      "administrative": "Administrativas",
+      "planUnavailable": "Indisponíveis no plano"
+    },
+    "states": {
+      "enabled": "Ativo",
+      "partial": "Parcial",
+      "disabled": "Inativo",
+      "custom": "Personalizado"
+    },
+    "kinds": {
+      "page": "Aceder à página",
+      "view": "Ver dados",
+      "create": "Criar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "configure": "Configurar",
+      "manage": "Gerir acesso",
+      "legacy": "Legado"
+    },
+    "badges": {
+      "sensitive": "Sensível",
+      "administrative": "Administrativa",
+      "legacy": "Legado",
+      "planUnavailable": "Indisponível no plano",
+      "nonDelegable": "Não delegável",
+      "missingDependency": "Dependência em falta"
+    }
+  },
+  "presets": {
+    "none": "Sem acesso",
+    "read": "Apenas leitura",
+    "edit": "Edição",
+    "full": "Acesso total",
+    "custom": "Personalizado",
+    "blocked": "Esta predefini??o inclui permiss?es que n?o pode conceder ou que n?o est?o inclu?das no plano: {{codes}}."
+  },
+  "dependency": {
+    "blockedRemoval": "Esta permissão é necessária para outras permissões ativas: {{codes}}. Remova primeiro essas permissões.",
+    "added": "Dependências necessárias adicionadas: {{codes}}.",
+    "required": "Esta alteração removeria dependências necessárias: {{codes}}. Use Personalizado para as ajustar primeiro.",
+    "blockedAddition": "Esta a??o requer permiss?es que n?o pode conceder ou que n?o est?o inclu?das no plano: {{codes}}."
   }
 }

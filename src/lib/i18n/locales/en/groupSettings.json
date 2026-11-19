@@ -1,8 +1,12 @@
 {
   "title": "Group Permissions",
-  "header": { "settings": "Settings", "title": "Groups & access" },
-  "badge": { "syncing": "Syncing data…" },
-
+  "header": {
+    "settings": "Settings",
+    "title": "Groups & access"
+  },
+  "badge": {
+    "syncing": "Syncing data…"
+  },
   "left": {
     "groups": "Groups",
     "create": "Add group",
@@ -10,39 +14,41 @@
     "meta": "{{perms}} permissions • {{members}} members",
     "empty": "No groups found."
   },
-
   "right": {
     "selectPrompt": "Select a group on the left to manage its permissions.",
     "nameLabel": "Group name",
     "rename": "Rename",
     "delete": "Delete",
-    "closePanel": "Close panel"
+    "closePanel": "Close panel",
+    "duplicate": "Duplicate"
   },
-
-  "btn": { "cancel": "Cancel", "save": "Save" },
-
+  "btn": {
+    "cancel": "Cancel",
+    "save": "Save"
+  },
   "modal": {
     "createTitle": "Create new group",
     "renameTitle": "Rename group",
     "close": "Close",
     "nameLabelCreate": "Group name",
     "nameLabelRename": "New group name",
-    "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
+    "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Explain what this group is for and who should receive it."
   },
-
-  "actions": { "ok": "OK", "discard": "Discard" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Discard"
+  },
   "confirmDiscard": {
     "title": "Discard changes?",
     "message": "You have unsaved changes. Do you want to discard them?"
   },
-
   "errors": {
     "validationTitle": "Missing information",
     "validationNameRequired": "Please enter a group name.",
     "submitFailed": "We couldn't save changes. Please try again."
   },
-
   "toast": {
     "loadAllError": "We couldn't load the groups. Please try again.",
     "detailError": "We couldn't load this group's details.",
@@ -53,9 +59,10 @@
     "deleteSuccess": "Group deleted.",
     "deleteError": "We couldn't delete the group.",
     "saveSuccess": "Permissions updated for this group.",
-    "saveError": "We couldn't update permissions. Please try again."
+    "saveError": "We couldn't update permissions. Please try again.",
+    "duplicateSuccess": "Duplicate group created.",
+    "duplicateError": "Could not duplicate group."
   },
-
   "confirm": {
     "deleteText": "Are you sure you want to delete the group \"{{name}}\"? This action cannot be undone.",
     "confirmLabel": "Delete group",

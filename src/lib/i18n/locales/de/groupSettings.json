@@ -1,8 +1,12 @@
 {
   "title": "Gruppenberechtigungen",
-  "header": { "settings": "Einstellungen", "title": "Gruppen & Zugriff" },
-  "badge": { "syncing": "Daten werden synchronisiert…" },
-
+  "header": {
+    "settings": "Einstellungen",
+    "title": "Gruppen & Zugriff"
+  },
+  "badge": {
+    "syncing": "Daten werden synchronisiert…"
+  },
   "left": {
     "groups": "Gruppen",
     "create": "Gruppe hinzufügen",
@@ -10,39 +14,41 @@
     "meta": "{{perms}} Berechtigungen • {{members}} Mitglieder",
     "empty": "Keine Gruppen gefunden."
   },
-
   "right": {
     "selectPrompt": "Wählen Sie links eine Gruppe aus, um deren Berechtigungen zu verwalten.",
     "nameLabel": "Gruppenname",
     "rename": "Umbenennen",
     "delete": "Löschen",
-    "closePanel": "Panel schließen"
+    "closePanel": "Panel schließen",
+    "duplicate": "Duplizieren"
   },
-
-  "btn": { "cancel": "Abbrechen", "save": "Speichern" },
-
+  "btn": {
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
   "modal": {
     "createTitle": "Neue Gruppe erstellen",
     "renameTitle": "Gruppe umbenennen",
     "close": "Schließen",
     "nameLabelCreate": "Gruppenname",
     "nameLabelRename": "Neuer Gruppenname",
-    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern",
+    "descriptionLabel": "Beschreibung",
+    "descriptionPlaceholder": "Erkl?ren Sie, wof?r die Gruppe gedacht ist und wer sie erhalten soll."
   },
-
-  "actions": { "ok": "OK", "discard": "Verwerfen" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Verwerfen"
+  },
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
     "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
   },
-
   "errors": {
     "validationTitle": "Fehlende Angaben",
     "validationNameRequired": "Bitte geben Sie einen Gruppennamen ein.",
     "submitFailed": "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen."
   },
-
   "toast": {
     "loadAllError": "Gruppen konnten nicht geladen werden. Bitte erneut versuchen.",
     "detailError": "Details dieser Gruppe konnten nicht geladen werden.",
@@ -53,9 +59,10 @@
     "deleteSuccess": "Gruppe gelöscht.",
     "deleteError": "Gruppe konnte nicht gelöscht werden.",
     "saveSuccess": "Berechtigungen für diese Gruppe aktualisiert.",
-    "saveError": "Berechtigungen konnten nicht aktualisiert werden. Bitte erneut versuchen."
+    "saveError": "Berechtigungen konnten nicht aktualisiert werden. Bitte erneut versuchen.",
+    "duplicateSuccess": "Gruppe dupliziert.",
+    "duplicateError": "Gruppe konnte nicht dupliziert werden."
   },
-
   "confirm": {
     "deleteText": "Möchten Sie die Gruppe \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmLabel": "Gruppe löschen",

@@ -384,6 +384,231 @@
     "view_integrations": {
       "label": "Integration activity",
       "description": "Can view workspace integration activity."
+    },
+    "view_ai_connections": {
+      "label": "Connexions IA",
+      "description": "Accéder aux connexions IA et services connectés."
     }
+  },
+  "taxonomy": {
+    "modules": {
+      "financial": {
+        "name": "Gestion financière",
+        "description": "Trésorerie, règlements, banques, rapprochement et rapports."
+      },
+      "accounting": {
+        "name": "Comptabilité",
+        "description": "Comptes du grand livre, plan comptable et préférences comptables."
+      },
+      "team": {
+        "name": "Équipe et accès",
+        "description": "Membres, rôles, groupes, catalogue des permissions et accès effectif."
+      },
+      "settings": {
+        "name": "Organisation et paramètres",
+        "description": "Profil, devise, départements et préférences de l’espace de travail."
+      },
+      "billing": {
+        "name": "Facturation et abonnement",
+        "description": "Fonctions de forfait, abonnement et moyens de paiement."
+      },
+      "integrations": {
+        "name": "Intégrations",
+        "description": "Services connectés et activité des intégrations."
+      },
+      "operations": {
+        "name": "Opérations métier",
+        "description": "Stock, entités CRM et projets."
+      }
+    },
+    "features": {
+      "cash-flow": {
+        "name": "Trésorerie",
+        "description": "Enregistrez, filtrez et consultez les écritures, montants et KPI de trésorerie."
+      },
+      "settlements": {
+        "name": "Règlements",
+        "description": "Listes, montants, KPI et cycle de vie des règlements."
+      },
+      "saved-views": {
+        "name": "Vues enregistrées",
+        "description": "Préréglages réutilisables de trésorerie et de règlements."
+      },
+      "bank-accounts": {
+        "name": "Comptes bancaires",
+        "description": "Comptes bancaires et paramètres bancaires."
+      },
+      "bank-reconciliation": {
+        "name": "Rapprochement bancaire",
+        "description": "Relevés et données de rapprochement."
+      },
+      "overview-reporting": {
+        "name": "Vue d’ensemble et rapports",
+        "description": "Vue d’ensemble, rapports et soldes consolidés."
+      },
+      "chart-of-accounts": {
+        "name": "Plan comptable",
+        "description": "Page du plan, comptes du grand livre et cycle de vie des comptes."
+      },
+      "accounting-preferences": {
+        "name": "Préférences comptables",
+        "description": "Profil comptable de l’organisation et comportement par défaut."
+      },
+      "members": {
+        "name": "Membres",
+        "description": "Liste, profils et accès aux paramètres des membres."
+      },
+      "roles": {
+        "name": "Rôles",
+        "description": "Modification des rôles hors propriétaire."
+      },
+      "user-accounts": {
+        "name": "Comptes utilisateur (hérités)",
+        "description": "Codes hérités de comptes utilisateur conservés pour compatibilité."
+      },
+      "permission-groups": {
+        "name": "Groupes de permissions",
+        "description": "Liste, paramètres, affectations et cycle de vie des groupes."
+      },
+      "permission-catalog": {
+        "name": "Catalogue des permissions",
+        "description": "Consulter le catalogue global des permissions."
+      },
+      "effective-access": {
+        "name": "Accès effectif",
+        "description": "Inspecter l’accès attribué et effectif des membres."
+      },
+      "organization-profile": {
+        "name": "Profil de l’organisation",
+        "description": "Nom, adresse, pays et fuseau horaire de l’organisation."
+      },
+      "currency": {
+        "name": "Devise",
+        "description": "Configuration de la devise de l’espace de travail."
+      },
+      "departments": {
+        "name": "Départements",
+        "description": "Paramètres et enregistrements des départements."
+      },
+      "workspace-preferences": {
+        "name": "Préférences de l’espace",
+        "description": "Pages de notifications et de formats."
+      },
+      "security-privacy": {
+        "name": "Sécurité et confidentialité",
+        "description": "Page des paramètres de sécurité et de confidentialité."
+      },
+      "personal-preferences": {
+        "name": "Préférences personnelles",
+        "description": "Page des paramètres personnels."
+      },
+      "usage-limits": {
+        "name": "Utilisation et limites",
+        "description": "Limites du forfait et données d’utilisation."
+      },
+      "billing-overview": {
+        "name": "Aperçu de la facturation",
+        "description": "Consulter les informations de forfait et de facturation."
+      },
+      "subscription-management": {
+        "name": "Gestion de l’abonnement",
+        "description": "Démarrer, modifier ou annuler l’abonnement de l’espace."
+      },
+      "payment-methods": {
+        "name": "Moyens de paiement",
+        "description": "Portail de facturation et actions sur les moyens de paiement."
+      },
+      "connected-services": {
+        "name": "Services connectés",
+        "description": "Connexions IA et accès aux services connectés."
+      },
+      "integration-activity": {
+        "name": "Activité des intégrations",
+        "description": "Consulter l’activité des connecteurs de l’espace."
+      },
+      "inventory": {
+        "name": "Stock",
+        "description": "Paramètres et enregistrements d’articles."
+      },
+      "crm-entities": {
+        "name": "CRM et entités",
+        "description": "Paramètres et enregistrements d’entités."
+      },
+      "projects": {
+        "name": "Projets",
+        "description": "Paramètres et enregistrements de projets."
+      }
+    }
+  },
+  "explorer": {
+    "title": "Permissions par domaine métier",
+    "summary": "Les permissions sont combinées entre tous les groupes attribués, puis limitées par le forfait et les règles d’autorisation.",
+    "enabledCount": "{{enabled}} sur {{total}} activées",
+    "missingDependencies": "{{count}} dépendance{{suffix}} manquante",
+    "unsaved": "Modifications non enregistrées",
+    "searchPlaceholder": "Rechercher des modules, fonctionnalités, permissions ou codes",
+    "disclosureHint": "Ouvrez un module puis une fonctionnalité. Les préréglages ne s’appliquent qu’à cette fonctionnalité et incluent les dépendances lecture/page nécessaires.",
+    "expandAll": "Tout développer",
+    "collapseAll": "Tout réduire",
+    "dismiss": "Fermer",
+    "systemReadOnly": "Ceci est un groupe système. Ses permissions sont gérées par la plateforme et ne peuvent pas être modifiées ici.",
+    "noMatches": "Aucune permission ne correspond à la recherche et au filtre.",
+    "enabled": "activées",
+    "quickAccess": "Accès rapide",
+    "showActions": "Afficher les actions",
+    "hideActions": "Masquer les actions",
+    "noDescription": "Aucune description disponible.",
+    "planUnavailableHint": "Votre forfait actuel ne rend pas cette permission disponible.",
+    "nonDelegableHint": "Vous ne pouvez pas accorder cette permission car vous ne la détenez pas ou elle n’est pas délégable.",
+    "missingActionDependencies": "Cette permission nécessite : {{codes}}.",
+    "footerMissing": "Résolvez les dépendances manquantes avant d’enregistrer : {{codes}}.",
+    "footerHint": "Le backend reste la source de vérité. Les limites de forfait et de délégation sont appliquées à l’enregistrement.",
+    "systemFooter": "Les groupes système sont en lecture seule. Dupliquez le groupe si vous avez besoin d’une copie personnalisable.",
+    "filters": {
+      "all": "Toutes",
+      "enabled": "Activées",
+      "disabled": "Désactivées",
+      "sensitive": "Sensibles",
+      "administrative": "Administratives",
+      "planUnavailable": "Indisponibles dans le forfait"
+    },
+    "states": {
+      "enabled": "Activé",
+      "partial": "Partiel",
+      "disabled": "Désactivé",
+      "custom": "Personnalisé"
+    },
+    "kinds": {
+      "page": "Accéder à la page",
+      "view": "Voir les données",
+      "create": "Créer",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "configure": "Configurer",
+      "manage": "Gérer l’accès",
+      "legacy": "Hérité"
+    },
+    "badges": {
+      "sensitive": "Sensible",
+      "administrative": "Administrative",
+      "legacy": "Hérité",
+      "planUnavailable": "Indisponible dans le forfait",
+      "nonDelegable": "Non délégable",
+      "missingDependency": "Dépendance manquante"
+    }
+  },
+  "presets": {
+    "none": "Aucun accès",
+    "read": "Lecture seule",
+    "edit": "Modification",
+    "full": "Accès complet",
+    "custom": "Personnalisé",
+    "blocked": "Ce pr?r?glage contient des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
+  },
+  "dependency": {
+    "blockedRemoval": "Cette permission est requise par d’autres permissions actives : {{codes}}. Retirez-les d’abord.",
+    "added": "Dépendances requises ajoutées : {{codes}}.",
+    "required": "Cette modification supprimerait des dépendances requises : {{codes}}. Utilisez Personnalisé pour les ajuster d’abord.",
+    "blockedAddition": "Cette action n?cessite des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
   }
 }

@@ -384,6 +384,231 @@
     "view_integrations": {
       "label": "Integration activity",
       "description": "Can view workspace integration activity."
+    },
+    "view_ai_connections": {
+      "label": "AI connections",
+      "description": "Access AI connections and connected services."
     }
+  },
+  "taxonomy": {
+    "modules": {
+      "financial": {
+        "name": "Financial Management",
+        "description": "Cash flow, settlements, banking, reconciliation and reporting."
+      },
+      "accounting": {
+        "name": "Accounting",
+        "description": "Ledger accounts, chart configuration and accounting preferences."
+      },
+      "team": {
+        "name": "Team & Access",
+        "description": "Members, roles, groups, the permission catalog and effective access."
+      },
+      "settings": {
+        "name": "Organization & Settings",
+        "description": "Organization profile, currency, departments and workspace preferences."
+      },
+      "billing": {
+        "name": "Billing & Subscription",
+        "description": "Plan, subscription and payment-method capabilities."
+      },
+      "integrations": {
+        "name": "Integrations",
+        "description": "Connected services and integration activity."
+      },
+      "operations": {
+        "name": "Business Operations",
+        "description": "Inventory, CRM entities and projects."
+      }
+    },
+    "features": {
+      "cash-flow": {
+        "name": "Cash Flow",
+        "description": "Record, filter and review cash-flow entries, amounts and KPIs."
+      },
+      "settlements": {
+        "name": "Settlements",
+        "description": "Settlement lists, amounts, KPIs and settlement lifecycle."
+      },
+      "saved-views": {
+        "name": "Saved Views",
+        "description": "Reusable cash-flow and settlement view presets."
+      },
+      "bank-accounts": {
+        "name": "Bank Accounts",
+        "description": "Bank account records and bank settings."
+      },
+      "bank-reconciliation": {
+        "name": "Bank Reconciliation",
+        "description": "Statements and reconciliation data."
+      },
+      "overview-reporting": {
+        "name": "Overview & Reporting",
+        "description": "Workspace overview, reports and consolidated balances."
+      },
+      "chart-of-accounts": {
+        "name": "Chart of Accounts",
+        "description": "Chart page, ledger accounts and account lifecycle."
+      },
+      "accounting-preferences": {
+        "name": "Accounting Preferences",
+        "description": "Organization accounting profile and default behavior."
+      },
+      "members": {
+        "name": "Members",
+        "description": "Member list, member profiles and access to member settings."
+      },
+      "roles": {
+        "name": "Roles",
+        "description": "Non-owner membership role changes."
+      },
+      "user-accounts": {
+        "name": "User Accounts (Legacy)",
+        "description": "Legacy user-account codes retained for compatibility."
+      },
+      "permission-groups": {
+        "name": "Permission Groups",
+        "description": "Group list, group settings, assignments and group lifecycle."
+      },
+      "permission-catalog": {
+        "name": "Permission Catalog",
+        "description": "Read the global permission catalog."
+      },
+      "effective-access": {
+        "name": "Effective Access",
+        "description": "Inspect assigned and effective member access."
+      },
+      "organization-profile": {
+        "name": "Organization Profile",
+        "description": "Organization name, address, country and timezone."
+      },
+      "currency": {
+        "name": "Currency",
+        "description": "Workspace currency configuration."
+      },
+      "departments": {
+        "name": "Departments",
+        "description": "Department settings and department records."
+      },
+      "workspace-preferences": {
+        "name": "Workspace Preferences",
+        "description": "Notification and format settings pages."
+      },
+      "security-privacy": {
+        "name": "Security & Privacy",
+        "description": "Security and privacy settings page."
+      },
+      "personal-preferences": {
+        "name": "Personal Preferences",
+        "description": "Personal settings page."
+      },
+      "usage-limits": {
+        "name": "Usage & Limits",
+        "description": "Plan limits and usage data."
+      },
+      "billing-overview": {
+        "name": "Billing Overview",
+        "description": "View plan and billing information."
+      },
+      "subscription-management": {
+        "name": "Subscription Management",
+        "description": "Start, change or cancel the workspace subscription."
+      },
+      "payment-methods": {
+        "name": "Payment Methods",
+        "description": "Billing portal and payment-method actions."
+      },
+      "connected-services": {
+        "name": "Connected Services",
+        "description": "AI connections and connected-service access."
+      },
+      "integration-activity": {
+        "name": "Integration Activity",
+        "description": "View workspace connector activity."
+      },
+      "inventory": {
+        "name": "Inventory",
+        "description": "Inventory settings and item records."
+      },
+      "crm-entities": {
+        "name": "CRM & Entities",
+        "description": "Entity settings and entity records."
+      },
+      "projects": {
+        "name": "Projects",
+        "description": "Project settings and project records."
+      }
+    }
+  },
+  "explorer": {
+    "title": "Permissions by business area",
+    "summary": "Permissions are combined across every assigned group, then restricted by plan and authorization rules.",
+    "enabledCount": "{{enabled}} of {{total}} enabled",
+    "missingDependencies": "{{count}} missing dependenc{{suffix}}",
+    "unsaved": "Unsaved changes",
+    "searchPlaceholder": "Search modules, features, permissions or codes",
+    "disclosureHint": "Open a module, then a feature. Presets apply only to that feature and include its required read/page dependencies.",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "dismiss": "Dismiss",
+    "systemReadOnly": "This is a system group. Its permissions are maintained by the platform and cannot be edited here.",
+    "noMatches": "No permissions match the search and filter.",
+    "enabled": "enabled",
+    "quickAccess": "Quick access",
+    "showActions": "Show actions",
+    "hideActions": "Hide actions",
+    "noDescription": "No description available.",
+    "planUnavailableHint": "Your current plan does not make this permission available.",
+    "nonDelegableHint": "You cannot grant this permission because you do not hold it or it is not delegable.",
+    "missingActionDependencies": "This permission requires: {{codes}}.",
+    "footerMissing": "Resolve missing dependencies before saving: {{codes}}.",
+    "footerHint": "The backend remains authoritative. Plan and delegation limits are enforced on save.",
+    "systemFooter": "System groups are read-only. Duplicate the group if you need a customizable copy.",
+    "filters": {
+      "all": "All",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "sensitive": "Sensitive",
+      "administrative": "Administrative",
+      "planUnavailable": "Plan unavailable"
+    },
+    "states": {
+      "enabled": "Enabled",
+      "partial": "Partial",
+      "disabled": "Disabled",
+      "custom": "Custom"
+    },
+    "kinds": {
+      "page": "Access page",
+      "view": "View data",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "configure": "Configure",
+      "manage": "Manage access",
+      "legacy": "Legacy"
+    },
+    "badges": {
+      "sensitive": "Sensitive",
+      "administrative": "Administrative",
+      "legacy": "Legacy",
+      "planUnavailable": "Plan unavailable",
+      "nonDelegable": "Non-delegable",
+      "missingDependency": "Missing dependency"
+    }
+  },
+  "presets": {
+    "none": "No Access",
+    "read": "Read Only",
+    "edit": "Edit",
+    "full": "Full Access",
+    "custom": "Custom",
+    "blocked": "This preset includes permissions you cannot grant or that the plan does not include: {{codes}}."
+  },
+  "dependency": {
+    "blockedRemoval": "This permission is required by other enabled permissions: {{codes}}. Remove those first.",
+    "added": "Added required dependencies: {{codes}}.",
+    "required": "This change would remove required dependencies: {{codes}}. Use Custom to adjust them first.",
+    "blockedAddition": "This action needs permissions you cannot grant or that the plan does not include: {{codes}}."
   }
 }
