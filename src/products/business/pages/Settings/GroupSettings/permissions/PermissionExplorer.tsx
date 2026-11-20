@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
+import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import type { Permission } from "@/models/auth/rbac";
 import {
@@ -537,14 +538,15 @@ const PermissionExplorer: React.FC<Props> = ({
                                 (!selected && !delegable);
                               return (
                                 <div key={action.code} className={`flex items-start gap-3 px-3 py-2.5 ${actionDisabled ? "bg-gray-50/60" : ""}`}>
-                                  <input
-                                    type="checkbox"
-                                    className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-slate-900 accent-slate-900 disabled:opacity-50"
-                                    checked={selected}
-                                    disabled={actionDisabled}
-                                    onChange={(event) => handleToggle(action.code, event.target.checked)}
-                                    aria-label={actionLabel(action.code, catalogByCode, t)}
-                                  />
+                                  <span className="mt-0.5 shrink-0">
+                                    <Checkbox
+                                      checked={selected}
+                                      disabled={actionDisabled}
+                                      size="small"
+                                      onChange={(event) => handleToggle(action.code, event.target.checked)}
+                                      aria-label={actionLabel(action.code, catalogByCode, t)}
+                                    />
+                                  </span>
                                   <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-1.5">
                                       <span className="text-xs font-medium text-gray-900">

@@ -21,3 +21,8 @@
 - No API, route, permission-code or scope-payload changes.
 - Back on a clean editor returns immediately; Back with unsaved changes prompts before discarding.
 - Responsive behavior uses the existing settings content frame and design-system cards/buttons.
+
+## Checkbox follow-up
+
+- Permission and resource-scope checkboxes now use the shared `@/shared/ui/Checkbox` component (`size="small"`) instead of raw inputs.
+- Disabled, read-only and aria-label behavior is preserved.

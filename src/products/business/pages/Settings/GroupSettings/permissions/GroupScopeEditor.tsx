@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import type { GroupScope, Permission, ScopeMode, ScopeResource } from "@/models/auth/rbac";
 import { api } from "@/core/api/requests";
@@ -228,19 +229,19 @@ const GroupScopeEditor: React.FC<Props> = ({
                   )}
                   <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
                     {filtered.map((resource) => (
-                      <label
+                      <div
                         key={resource.id}
                         className="flex items-center gap-2 rounded px-1.5 py-1 text-xs text-gray-700 hover:bg-gray-50"
                       >
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 accent-slate-900"
+                        <Checkbox
                           checked={selectedIds.has(resource.id)}
                           disabled={disabled || readOnly}
+                          size="small"
                           onChange={() => toggleResource(code, resourceType, resource)}
+                          aria-label={resource.label}
                         />
                         <span className="min-w-0 truncate">{resource.label}</span>
-                      </label>
+                      </div>
                     ))}
                     {filtered.length === 0 && !loadingKey && (
                       <p className="px-1.5 py-1 text-[11px] text-gray-500">

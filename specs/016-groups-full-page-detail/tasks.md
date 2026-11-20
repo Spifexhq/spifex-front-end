@@ -8,3 +8,4 @@
 - [x] T006 Verify system-group read-only, permission locks and CRUD handlers are unchanged.
 - [x] T007 Run permission tests, TypeScript, scoped ESLint and production build.
 - [ ] T008 Write convergence notes.
+- [x] T009 Replace raw group/scope checkbox inputs with the shared Checkbox design-system component.
