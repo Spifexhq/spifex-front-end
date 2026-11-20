@@ -56,7 +56,7 @@ type Props = {
   onSave: () => void;
 };
 
-type Notice = { tone: "warning" | "info"; message: string } | null;
+type Notice = { message: string } | null;
 
 const FILTERS: PermissionFilter[] = [
   "all",
@@ -170,7 +170,6 @@ const PermissionExplorer: React.FC<Props> = ({
     const result = togglePermission(selectedCodes, code, enabled);
     if (result.blockedBy.length) {
       setNotice({
-        tone: "warning",
         message: t("dependency.blockedRemoval", {
           defaultValue:
             "This permission is required by other enabled permissions: {{codes}}. Remove those first.",
@@ -187,7 +186,6 @@ const PermissionExplorer: React.FC<Props> = ({
       });
       if (blockedAdditions.length) {
         setNotice({
-          tone: "warning",
           message: t("dependency.blockedAddition", {
             defaultValue:
               "This action needs permissions you cannot grant or that the plan does not include: {{codes}}.",
@@ -197,17 +195,7 @@ const PermissionExplorer: React.FC<Props> = ({
         return;
       }
     }
-    setNotice(
-      result.added.length
-        ? {
-            tone: "info",
-            message: t("dependency.added", {
-              defaultValue: "Added required dependencies: {{codes}}.",
-              codes: result.added.join(", "),
-            }),
-          }
-        : null,
-    );
+    setNotice(null);
     onSetCodes(result.next);
   };
 
@@ -226,7 +214,6 @@ const PermissionExplorer: React.FC<Props> = ({
     const missingAfter = missingDependencies(next);
     if (missingAfter.length) {
       setNotice({
-        tone: "warning",
         message: t("dependency.required", {
           defaultValue:
             "This change would remove required dependencies: {{codes}}. Use Custom to adjust them first.",
@@ -243,7 +230,6 @@ const PermissionExplorer: React.FC<Props> = ({
     });
     if (blockedAdditions.length) {
       setNotice({
-        tone: "warning",
         message: t("presets.blocked", {
           defaultValue:
             "This preset includes permissions you cannot grant or that the plan does not include: {{codes}}.",
@@ -363,11 +349,7 @@ const PermissionExplorer: React.FC<Props> = ({
         {notice && (
           <div
             role="status"
-            className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${
-              notice.tone === "warning"
-                ? "border-amber-200 bg-amber-50 text-amber-800"
-                : "border-sky-200 bg-sky-50 text-sky-800"
-            }`}
+            className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
           >
             <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
             <span className="flex-1">{notice.message}</span>

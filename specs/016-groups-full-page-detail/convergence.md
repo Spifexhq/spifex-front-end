@@ -33,6 +33,7 @@
 - The resource-scope area no longer renders one stacked block per scoped permission. It shows a single capability chip row for the selected scoped permissions plus one active scope panel (mode selector, resource search and checkboxes) for the chosen capability.
 - The active capability is kept in sync when permissions are toggled, and `none`/`all`/`selected` handling, `ALL_ONLY_SCOPE_CODES` restrictions and scope payload shape are unchanged.
 - Repaired corrupted accented characters in `de/fr/pt` `groupSettings.json` and `groupPermissionsTable.json` (pre-existing, they made `scripts/locale-encoding.test.mjs` fail on `main`) and removed the now-unused `explorer.footerHint` key.
+- Removed the transient "Added required dependencies: …" notice shown after toggling a permission. Dependency expansion still applies automatically; only blocking warnings are surfaced now. The unused `dependency.added` locale key and the now-unneeded `info` notice tone were removed.
 
 ## Verification (permission UX follow-up)
 

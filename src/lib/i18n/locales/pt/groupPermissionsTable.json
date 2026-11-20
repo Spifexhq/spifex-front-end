@@ -606,7 +606,6 @@
   },
   "dependency": {
     "blockedRemoval": "Esta permissão é necessária para outras permissões ativas: {{codes}}. Remova primeiro essas permissões.",
-    "added": "Dependências necessárias adicionadas: {{codes}}.",
     "required": "Esta alteração removeria dependências necessárias: {{codes}}. Use Personalizado para as ajustar primeiro.",
     "blockedAddition": "Esta ação requer permissões que não pode conceder ou que não estão incluídas no plano: {{codes}}."
   },

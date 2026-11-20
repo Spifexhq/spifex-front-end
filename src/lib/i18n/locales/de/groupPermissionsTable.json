@@ -606,7 +606,6 @@
   },
   "dependency": {
     "blockedRemoval": "Diese Berechtigung wird von anderen aktiven Berechtigungen benötigt: {{codes}}. Entfernen Sie diese zuerst.",
-    "added": "Erforderliche Abhängigkeiten hinzugefügt: {{codes}}.",
     "required": "Diese Änderung würde erforderliche Abhängigkeiten entfernen: {{codes}}. Passen Sie sie zuerst mit Benutzerdefiniert an.",
     "blockedAddition": "Diese Aktion benötigt Berechtigungen, die Sie nicht vergeben können oder die im Tarif nicht enthalten sind: {{codes}}."
   },

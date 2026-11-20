@@ -606,7 +606,6 @@
   },
   "dependency": {
     "blockedRemoval": "Cette permission est requise par d’autres permissions actives : {{codes}}. Retirez-les d’abord.",
-    "added": "Dépendances requises ajoutées : {{codes}}.",
     "required": "Cette modification supprimerait des dépendances requises : {{codes}}. Utilisez Personnalisé pour les ajuster d’abord.",
     "blockedAddition": "Cette action nécessite des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
   },

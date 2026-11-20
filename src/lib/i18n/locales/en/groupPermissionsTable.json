@@ -606,7 +606,6 @@
   },
   "dependency": {
     "blockedRemoval": "This permission is required by other enabled permissions: {{codes}}. Remove those first.",
-    "added": "Added required dependencies: {{codes}}.",
     "required": "This change would remove required dependencies: {{codes}}. Use Custom to adjust them first.",
     "blockedAddition": "This action needs permissions you cannot grant or that the plan does not include: {{codes}}."
   },
