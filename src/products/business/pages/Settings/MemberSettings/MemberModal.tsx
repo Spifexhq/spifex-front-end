@@ -36,6 +36,8 @@ const EFFECTIVE_ACCESS_WARNING_DEFAULTS: Record<string, string> = {
   missing_dependencies: "Some permissions are missing required read/page dependencies.",
   inactive_assigned_codes: "Some assigned permissions are inactive and do not grant access.",
   resource_scope_missing: "A resource-scoped permission has no configured resource scope and therefore grants no resource access.",
+  ledger_department_scope_not_enforceable:
+    "Ledger journals have no department field. Ledger access is broader than department-scoped financial visibility; use bank/project ledger scopes and separate accounting permissions.",
 };
 
 type FormState = {
