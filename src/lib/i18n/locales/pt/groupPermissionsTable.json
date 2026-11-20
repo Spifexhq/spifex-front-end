@@ -350,16 +350,16 @@
       "description": "Convidar, editar perfis e remover colaboradores comuns respeitando a hierarquia."
     },
     "manage_member_roles": {
-      "label": "Gerenciar fun??es",
-      "description": "Alterar fun??es eleg?veis que n?o sejam do propriet?rio; atribuir administrador continua sendo exclusivo do propriet?rio."
+      "label": "Gerenciar funções",
+      "description": "Alterar funções elegíveis que não sejam do proprietário; atribuir administrador continua sendo exclusivo do proprietário."
     },
     "manage_access": {
       "label": "Gerenciar acessos",
-      "description": "Administrar grupos, conjuntos de permiss?es e atribui??es de grupo."
+      "description": "Administrar grupos, conjuntos de permissões e atribuições de grupo."
     },
     "view_effective_access": {
       "label": "Ver acesso efetivo",
-      "description": "Inspecionar as permiss?es efetivas de outro colaborador e sua origem."
+      "description": "Inspecionar as permissões efetivas de outro colaborador e sua origem."
     },
     "change_organization_profile": {
       "label": "Organization profile",
@@ -562,7 +562,6 @@
     "nonDelegableHint": "Não pode conceder esta permissão porque não a possui ou não é delegável.",
     "missingActionDependencies": "Esta permissão requer: {{codes}}.",
     "footerMissing": "Resolva as dependências em falta antes de guardar: {{codes}}.",
-    "footerHint": "O backend continua a ser autoritativo. Os limites de plano e delegação são aplicados ao guardar.",
     "systemFooter": "Os grupos de sistema são só de leitura. Duplique o grupo se precisar de uma cópia personalizável.",
     "filters": {
       "all": "Todas",
@@ -603,13 +602,13 @@
     "edit": "Edição",
     "full": "Acesso total",
     "custom": "Personalizado",
-    "blocked": "Esta predefini??o inclui permiss?es que n?o pode conceder ou que n?o est?o inclu?das no plano: {{codes}}."
+    "blocked": "Esta predefinição inclui permissões que não pode conceder ou que não estão incluídas no plano: {{codes}}."
   },
   "dependency": {
     "blockedRemoval": "Esta permissão é necessária para outras permissões ativas: {{codes}}. Remova primeiro essas permissões.",
     "added": "Dependências necessárias adicionadas: {{codes}}.",
     "required": "Esta alteração removeria dependências necessárias: {{codes}}. Use Personalizado para as ajustar primeiro.",
-    "blockedAddition": "Esta a??o requer permiss?es que n?o pode conceder ou que n?o est?o inclu?das no plano: {{codes}}."
+    "blockedAddition": "Esta ação requer permissões que não pode conceder ou que não estão incluídas no plano: {{codes}}."
   },
   "scope": {
     "title": "Acesso a recursos",

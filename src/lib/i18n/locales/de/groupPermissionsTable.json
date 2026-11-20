@@ -347,19 +347,19 @@
     },
     "manage_members": {
       "label": "Mitglieder verwalten",
-      "description": "Normale Mitglieder gem?? Hierarchie einladen, bearbeiten und entfernen."
+      "description": "Normale Mitglieder gemäß Hierarchie einladen, bearbeiten und entfernen."
     },
     "manage_member_roles": {
       "label": "Mitgliederrollen verwalten",
-      "description": "Zul?ssige Nicht-Eigent?merrollen ?ndern; Administratorzuweisung bleibt dem Eigent?mer vorbehalten."
+      "description": "Zulässige Nicht-Eigentümerrollen ändern; Administratorzuweisung bleibt dem Eigentümer vorbehalten."
     },
     "manage_access": {
       "label": "Zugriff verwalten",
-      "description": "Gruppen, Berechtigungss?tze und Gruppenzuweisungen verwalten."
+      "description": "Gruppen, Berechtigungssätze und Gruppenzuweisungen verwalten."
     },
     "view_effective_access": {
       "label": "Effektiven Zugriff anzeigen",
-      "description": "Effektive Berechtigungen eines anderen Mitglieds und deren Quelle pr?fen."
+      "description": "Effektive Berechtigungen eines anderen Mitglieds und deren Quelle prüfen."
     },
     "change_organization_profile": {
       "label": "Organization profile",
@@ -562,7 +562,6 @@
     "nonDelegableHint": "Sie können diese Berechtigung nicht vergeben, da Sie sie nicht besitzen oder sie nicht delegierbar ist.",
     "missingActionDependencies": "Diese Berechtigung erfordert: {{codes}}.",
     "footerMissing": "Beheben Sie fehlende Abhängigkeiten vor dem Speichern: {{codes}}.",
-    "footerHint": "Das Backend bleibt maßgeblich. Tarif- und Delegationsgrenzen werden beim Speichern durchgesetzt.",
     "systemFooter": "Systemgruppen sind schreibgeschützt. Duplizieren Sie die Gruppe, wenn Sie eine anpassbare Kopie benötigen.",
     "filters": {
       "all": "Alle",
@@ -603,13 +602,13 @@
     "edit": "Bearbeiten",
     "full": "Vollzugriff",
     "custom": "Benutzerdefiniert",
-    "blocked": "Diese Vorgabe enth?lt Berechtigungen, die Sie nicht vergeben k?nnen oder die im Tarif nicht enthalten sind: {{codes}}."
+    "blocked": "Diese Vorgabe enthält Berechtigungen, die Sie nicht vergeben können oder die im Tarif nicht enthalten sind: {{codes}}."
   },
   "dependency": {
     "blockedRemoval": "Diese Berechtigung wird von anderen aktiven Berechtigungen benötigt: {{codes}}. Entfernen Sie diese zuerst.",
     "added": "Erforderliche Abhängigkeiten hinzugefügt: {{codes}}.",
     "required": "Diese Änderung würde erforderliche Abhängigkeiten entfernen: {{codes}}. Passen Sie sie zuerst mit Benutzerdefiniert an.",
-    "blockedAddition": "Diese Aktion ben?tigt Berechtigungen, die Sie nicht vergeben k?nnen oder die im Tarif nicht enthalten sind: {{codes}}."
+    "blockedAddition": "Diese Aktion benötigt Berechtigungen, die Sie nicht vergeben können oder die im Tarif nicht enthalten sind: {{codes}}."
   },
   "scope": {
     "title": "Ressourcenzugriff",

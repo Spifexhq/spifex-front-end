@@ -346,19 +346,19 @@
       "description": "Peut consulter la vue d’ensemble."
     },
     "manage_members": {
-      "label": "G?rer les membres",
-      "description": "Inviter, modifier et retirer des membres ordinaires selon la hi?rarchie."
+      "label": "Gérer les membres",
+      "description": "Inviter, modifier et retirer des membres ordinaires selon la hiérarchie."
     },
     "manage_member_roles": {
-      "label": "G?rer les r?les",
-      "description": "Modifier les r?les non-propri?taires ?ligibles ; l'attribution d'administrateur reste r?serv?e au propri?taire."
+      "label": "Gérer les rôles",
+      "description": "Modifier les rôles non-propriétaires éligibles ; l'attribution d'administrateur reste réservée au propriétaire."
     },
     "manage_access": {
-      "label": "G?rer les acc?s",
+      "label": "Gérer les accès",
       "description": "Administrer les groupes, les ensembles de permissions et les affectations."
     },
     "view_effective_access": {
-      "label": "Voir l'acc?s effectif",
+      "label": "Voir l'accès effectif",
       "description": "Inspecter les permissions effectives d'un autre membre et leur source."
     },
     "change_organization_profile": {
@@ -562,7 +562,6 @@
     "nonDelegableHint": "Vous ne pouvez pas accorder cette permission car vous ne la détenez pas ou elle n’est pas délégable.",
     "missingActionDependencies": "Cette permission nécessite : {{codes}}.",
     "footerMissing": "Résolvez les dépendances manquantes avant d’enregistrer : {{codes}}.",
-    "footerHint": "Le backend reste la source de vérité. Les limites de forfait et de délégation sont appliquées à l’enregistrement.",
     "systemFooter": "Les groupes système sont en lecture seule. Dupliquez le groupe si vous avez besoin d’une copie personnalisable.",
     "filters": {
       "all": "Toutes",
@@ -603,13 +602,13 @@
     "edit": "Modification",
     "full": "Accès complet",
     "custom": "Personnalisé",
-    "blocked": "Ce pr?r?glage contient des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
+    "blocked": "Ce préréglage contient des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
   },
   "dependency": {
     "blockedRemoval": "Cette permission est requise par d’autres permissions actives : {{codes}}. Retirez-les d’abord.",
     "added": "Dépendances requises ajoutées : {{codes}}.",
     "required": "Cette modification supprimerait des dépendances requises : {{codes}}. Utilisez Personnalisé pour les ajuster d’abord.",
-    "blockedAddition": "Cette action n?cessite des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
+    "blockedAddition": "Cette action nécessite des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
   },
   "scope": {
     "title": "Accès aux ressources",

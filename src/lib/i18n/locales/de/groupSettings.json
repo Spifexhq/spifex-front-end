@@ -15,13 +15,13 @@
     "empty": "Keine Gruppen gefunden."
   },
   "right": {
-    "selectPrompt": "W?hlen Sie eine Gruppe aus, um deren Berechtigungen zu verwalten.",
+    "selectPrompt": "Wählen Sie eine Gruppe aus, um deren Berechtigungen zu verwalten.",
     "nameLabel": "Gruppenname",
     "rename": "Umbenennen",
     "delete": "Löschen",
     "closePanel": "Panel schließen",
     "duplicate": "Duplizieren",
-    "backToGroups": "Zur?ck zu Gruppen",
+    "backToGroups": "Zurück zu Gruppen",
     "loading": "Gruppe wird geladen...",
     "permissions": "Berechtigungen",
     "system": "Systemgruppe"
@@ -38,7 +38,7 @@
     "nameLabelRename": "Neuer Gruppenname",
     "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern",
     "descriptionLabel": "Beschreibung",
-    "descriptionPlaceholder": "Erkl?ren Sie, wof?r die Gruppe gedacht ist und wer sie erhalten soll."
+    "descriptionPlaceholder": "Erklären Sie, wofür die Gruppe gedacht ist und wer sie erhalten soll."
   },
   "actions": {
     "ok": "OK",

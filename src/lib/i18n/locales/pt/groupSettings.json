@@ -15,7 +15,7 @@
     "empty": "Nenhum grupo encontrado."
   },
   "right": {
-    "selectPrompt": "Selecione um grupo para gerenciar as permiss?es.",
+    "selectPrompt": "Selecione um grupo para gerenciar as permissões.",
     "nameLabel": "Nome do grupo",
     "rename": "Renomear",
     "delete": "Excluir",
@@ -23,7 +23,7 @@
     "duplicate": "Duplicar",
     "backToGroups": "Voltar aos grupos",
     "loading": "Carregando grupo...",
-    "permissions": "permiss?es",
+    "permissions": "permissões",
     "system": "grupo do sistema"
   },
   "btn": {
@@ -37,7 +37,7 @@
     "nameLabelCreate": "Nome do grupo",
     "nameLabelRename": "Novo nome do grupo",
     "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar",
-    "descriptionLabel": "Descri??o",
+    "descriptionLabel": "Descrição",
     "descriptionPlaceholder": "Explique para que serve este grupo e quem o deve receber."
   },
   "actions": {
@@ -65,7 +65,7 @@
     "saveSuccess": "Permissões atualizadas para este grupo.",
     "saveError": "Não foi possível atualizar as permissões. Tente novamente.",
     "duplicateSuccess": "Grupo duplicado.",
-    "duplicateError": "N?o foi poss?vel duplicar o grupo."
+    "duplicateError": "Não foi possível duplicar o grupo."
   },
   "confirm": {
     "deleteText": "Tem certeza que deseja excluir o grupo \"{{name}}\"? Esta ação não pode ser desfeita.",

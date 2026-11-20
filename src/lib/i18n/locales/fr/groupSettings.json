@@ -15,7 +15,7 @@
     "empty": "Aucun groupe trouvé."
   },
   "right": {
-    "selectPrompt": "S?lectionnez un groupe pour g?rer ses autorisations.",
+    "selectPrompt": "Sélectionnez un groupe pour gérer ses autorisations.",
     "nameLabel": "Nom du groupe",
     "rename": "Renommer",
     "delete": "Supprimer",
@@ -24,7 +24,7 @@
     "backToGroups": "Retour aux groupes",
     "loading": "Chargement du groupe...",
     "permissions": "autorisations",
-    "system": "groupe syst?me"
+    "system": "groupe système"
   },
   "btn": {
     "cancel": "Annuler",
@@ -38,7 +38,7 @@
     "nameLabelRename": "Nouveau nom du groupe",
     "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer",
     "descriptionLabel": "Description",
-    "descriptionPlaceholder": "Expliquez ? quoi sert ce groupe et ? qui il doit ?tre attribu?."
+    "descriptionPlaceholder": "Expliquez à quoi sert ce groupe et à qui il doit être attribué."
   },
   "actions": {
     "ok": "OK",
