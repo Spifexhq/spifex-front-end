@@ -7,5 +7,8 @@
 - [x] T005 Add localized Back/discard copy in all supported locales.
 - [x] T006 Verify system-group read-only, permission locks and CRUD handlers are unchanged.
 - [x] T007 Run permission tests, TypeScript, scoped ESLint and production build.
-- [ ] T008 Write convergence notes.
+- [x] T008 Write convergence notes.
 - [x] T009 Replace raw group/scope checkbox inputs with the shared Checkbox design-system component.
+- [x] T010 Remove the internal backend-authority footer note from the permission explorer.
+- [x] T011 Replace the stacked per-permission scope blocks with one compact capability selector and a single active scope panel.
+- [x] T012 Repair corrupted accented characters in the de/fr/pt groups copy and run the locale-encoding test.

@@ -26,3 +26,18 @@
 
 - Permission and resource-scope checkboxes now use the shared `@/shared/ui/Checkbox` component (`size="small"`) instead of raw inputs.
 - Disabled, read-only and aria-label behavior is preserved.
+
+## Permission UX follow-up
+
+- Removed the internal implementation note "The backend remains authoritative. Plan and delegation limits are enforced on save." from the permission explorer footer; only the actionable missing-dependency warning remains.
+- The resource-scope area no longer renders one stacked block per scoped permission. It shows a single capability chip row for the selected scoped permissions plus one active scope panel (mode selector, resource search and checkboxes) for the chosen capability.
+- The active capability is kept in sync when permissions are toggled, and `none`/`all`/`selected` handling, `ALL_ONLY_SCOPE_CODES` restrictions and scope payload shape are unchanged.
+- Repaired corrupted accented characters in `de/fr/pt` `groupSettings.json` and `groupPermissionsTable.json` (pre-existing, they made `scripts/locale-encoding.test.mjs` fail on `main`) and removed the now-unused `explorer.footerHint` key.
+
+## Verification (permission UX follow-up)
+
+- `npx tsc -b`: pass.
+- Scoped ESLint on GroupSettings: pass.
+- `npm run test:permissions`: 12/12 pass.
+- `node --test scripts/locale-encoding.test.mjs`: pass.
+- `npm run build`: pass.

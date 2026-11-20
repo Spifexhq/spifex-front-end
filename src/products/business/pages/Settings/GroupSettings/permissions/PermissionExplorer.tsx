@@ -6,7 +6,6 @@ import {
   ChevronRight,
   LockKeyhole,
   Search,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 
@@ -631,29 +630,18 @@ const PermissionExplorer: React.FC<Props> = ({
 
       <div className="sticky bottom-0 border-t border-gray-200 bg-white px-4 py-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-2 text-[11px] text-gray-600">
-            {missing.length > 0 ? (
-              <>
-                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
-                <span>
-                  {t("explorer.footerMissing", {
-                    defaultValue: "Resolve missing dependencies before saving: {{codes}}.",
-                    codes: missing.join(", "),
-                  })}
-                </span>
-              </>
-            ) : (
-              <>
-                <ShieldCheck size={14} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
-                <span>
-                  {t("explorer.footerHint", {
-                    defaultValue: "The backend remains authoritative. Plan and delegation limits are enforced on save.",
-                  })}
-                </span>
-              </>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          {missing.length > 0 && (
+            <div className="flex items-start gap-2 text-[11px] text-gray-600">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
+              <span>
+                {t("explorer.footerMissing", {
+                  defaultValue: "Resolve missing dependencies before saving: {{codes}}.",
+                  codes: missing.join(", "),
+                })}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-end gap-2 md:ml-auto">
             <Button type="button" variant="cancel" onClick={onUndo} disabled={!dirty || disabled || readOnly}>
               {t("buttons.undo", { defaultValue: "Discard changes" })}
             </Button>

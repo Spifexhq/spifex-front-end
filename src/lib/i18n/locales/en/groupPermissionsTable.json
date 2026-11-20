@@ -562,7 +562,6 @@
     "nonDelegableHint": "You cannot grant this permission because you do not hold it or it is not delegable.",
     "missingActionDependencies": "This permission requires: {{codes}}.",
     "footerMissing": "Resolve missing dependencies before saving: {{codes}}.",
-    "footerHint": "The backend remains authoritative. Plan and delegation limits are enforced on save.",
     "systemFooter": "System groups are read-only. Duplicate the group if you need a customizable copy.",
     "filters": {
       "all": "All",
