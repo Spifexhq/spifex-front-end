@@ -15,12 +15,16 @@
     "empty": "Aucun groupe trouvé."
   },
   "right": {
-    "selectPrompt": "Sélectionnez un groupe à gauche pour gérer ses autorisations.",
+    "selectPrompt": "S?lectionnez un groupe pour g?rer ses autorisations.",
     "nameLabel": "Nom du groupe",
     "rename": "Renommer",
     "delete": "Supprimer",
     "closePanel": "Fermer le panneau",
-    "duplicate": "Dupliquer"
+    "duplicate": "Dupliquer",
+    "backToGroups": "Retour aux groupes",
+    "loading": "Chargement du groupe...",
+    "permissions": "autorisations",
+    "system": "groupe syst?me"
   },
   "btn": {
     "cancel": "Annuler",

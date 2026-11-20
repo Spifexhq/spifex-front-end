@@ -15,12 +15,16 @@
     "empty": "No groups found."
   },
   "right": {
-    "selectPrompt": "Select a group on the left to manage its permissions.",
+    "selectPrompt": "Select a group to manage its permissions.",
     "nameLabel": "Group name",
     "rename": "Rename",
     "delete": "Delete",
     "closePanel": "Close panel",
-    "duplicate": "Duplicate"
+    "duplicate": "Duplicate",
+    "backToGroups": "Back to groups",
+    "loading": "Loading group...",
+    "permissions": "permissions",
+    "system": "System group"
   },
   "btn": {
     "cancel": "Cancel",

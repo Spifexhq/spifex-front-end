@@ -15,12 +15,16 @@
     "empty": "Nenhum grupo encontrado."
   },
   "right": {
-    "selectPrompt": "Selecione um grupo à esquerda para gerenciar as permissões.",
+    "selectPrompt": "Selecione um grupo para gerenciar as permiss?es.",
     "nameLabel": "Nome do grupo",
     "rename": "Renomear",
     "delete": "Excluir",
     "closePanel": "Fechar painel",
-    "duplicate": "Duplicar"
+    "duplicate": "Duplicar",
+    "backToGroups": "Voltar aos grupos",
+    "loading": "Carregando grupo...",
+    "permissions": "permiss?es",
+    "system": "grupo do sistema"
   },
   "btn": {
     "cancel": "Cancelar",

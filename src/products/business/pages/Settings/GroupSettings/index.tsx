@@ -16,7 +16,7 @@ import Badge from "@/shared/ui/Badge";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import { EmptyState } from "@/shared/ui/State";
 import { AnimatePresence, motion } from "framer-motion";
-import { Pencil, ShieldCheck, Users, X, Copy } from "lucide-react";
+import { ArrowLeft, ArrowRight, Copy, Pencil, ShieldCheck, Users } from "lucide-react";
 
 import PermissionExplorer from "./permissions/PermissionExplorer";
 import GroupScopeEditor from "./permissions/GroupScopeEditor";
@@ -177,6 +177,7 @@ const GroupSettings: React.FC = () => {
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+  const [backConfirmOpen, setBackConfirmOpen] = useState(false);
 
   const busy = isSubmitting || isDetailLoading || isBackgroundSync || confirmBusy;
 
@@ -455,6 +456,21 @@ const GroupSettings: React.FC = () => {
     setScopes(originalScopes);
   };
 
+  const closeDetail = () => {
+    if (busy) return;
+    setBackConfirmOpen(false);
+    setSelectedGroupId(null);
+  };
+
+  const requestBack = () => {
+    if (busy) return;
+    if (dirty) {
+      setBackConfirmOpen(true);
+      return;
+    }
+    closeDetail();
+  };
+
   if (isInitialLoading) {
     return (
       <>
@@ -484,93 +500,235 @@ const GroupSettings: React.FC = () => {
           {headerBadge && <div className="flex flex-wrap items-center justify-end gap-3">{headerBadge}</div>}
 
           <PermissionMiddleware codeName={"view_group"} behavior="lock">
-            <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-              <Card as="aside" padding="none" radius="lg" className="overflow-hidden">
-                <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white p-3">
-                  <div>
-                    <h2 className="text-sm font-semibold text-gray-900">{t("left.groups")}</h2>
-                    <p className="text-[11px] text-gray-500">{filteredGroups.length} {t("left.results", "groups")}</p>
-                  </div>
-                  <PermissionMiddleware codeName={"manage_access"}>
-                    <Button className="!px-3 !py-1.5" onClick={openCreateModal} disabled={busy}>{t("left.create")}</Button>
-                  </PermissionMiddleware>
-                </div>
-                <div className="border-b border-gray-200 p-3">
-                  <Input kind="text" size="sm" placeholder={t("left.searchPlaceholder")} name="groupSearch" value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} disabled={busy} />
-                </div>
-                <div className="max-h-56 space-y-1 overflow-y-auto p-2 sm:max-h-[60dvh]">
-                  {filteredGroups.map((group) => <button key={group.id} type="button" aria-pressed={selectedGroupId === group.id} disabled={busy} onClick={() => !busy && setSelectedGroupId((prev) => (prev === group.id ? null : group.id))} className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors disabled:opacity-70 ${selectedGroupId === group.id ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-gray-50"}`}>
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${selectedGroupId === group.id ? "border-slate-300 bg-white text-slate-700" : "border-gray-200 bg-gray-50 text-gray-500"}`}><Users size={15} aria-hidden="true" /></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium">{group.name}</span>
-                      <span className="mt-0.5 block truncate text-[11px] text-gray-500">{t("left.meta", { perms: group.permissions_count, members: group.members_count })}</span>
-                    </span>
-                  </button>)}
-                  {filteredGroups.length === 0 && <EmptyState size="sm" title={t("left.empty")} />}
-                </div>
-              </Card>
-
-              <div className="min-w-0">
-                <AnimatePresence mode="wait" initial={false}>
-                  {!selectedGroupDetail ? <motion.div key="empty" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
-                    <Card padding="default" radius="lg"><EmptyState size="sm" icon={<ShieldCheck size={22} />} title={t("right.selectPrompt")} /></Card>
-                  </motion.div> : <motion.div key={selectedGroupDetail.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
-                    <Card padding="none" radius="lg" className="overflow-hidden">
-                      <div className="flex flex-col gap-3 border-b border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600"><ShieldCheck size={17} aria-hidden="true" /></span>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{t("right.nameLabel")}</p>
-                            <h2 className="truncate text-base font-semibold text-gray-900">{selectedGroupDetail.name}</h2>
-                            {selectedGroupDetail.description && <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{selectedGroupDetail.description}</p>}
-                            <p className="mt-0.5 text-xs text-gray-500">{selectedGroupDetail.permissions?.length ?? 0} {t("right.permissions", "permissions")}{selectedGroupDetail.is_system ? ` · ${t("right.system", "system group")}` : ""}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
-                            <Button variant="outline" className="inline-flex items-center gap-2" onClick={handleDuplicateGroup} disabled={busy}><Copy size={15} aria-hidden="true" />{t("right.duplicate", { defaultValue: "Duplicate" })}</Button>
-                          </PermissionMiddleware>}
-                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
-                            <Button variant="outline" className="inline-flex items-center gap-2" onClick={openRenameModal} disabled={busy}><Pencil size={15} aria-hidden="true" />{t("right.rename")}</Button>
-                          </PermissionMiddleware>}
-                          {!selectedGroupDetail.is_system && <PermissionMiddleware codeName={"manage_access"}>
-                            <Button variant="outline" onClick={requestDeleteGroup} disabled={busy} aria-busy={busy || undefined}>{t("right.delete")}</Button>
-                          </PermissionMiddleware>}
-                          <button type="button" aria-label={t("right.closePanel")} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50" onClick={() => setSelectedGroupId(null)} disabled={busy}><X size={16} aria-hidden="true" /></button>
-                        </div>
+            <AnimatePresence mode="wait" initial={false}>
+              {!selectedGroupId ? (
+                <motion.div
+                  key="groups-list"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Card padding="none" radius="lg" className="overflow-hidden">
+                    <div className="flex flex-col gap-3 border-b border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h2 className="text-sm font-semibold text-gray-900">{t("left.groups")}</h2>
+                        <p className="mt-0.5 text-[11px] text-gray-500">
+                          {filteredGroups.length} {t("left.results", "groups")}
+                        </p>
                       </div>
                       <PermissionMiddleware codeName={"manage_access"}>
-                        <GroupScopeEditor
-                          selectedCodes={selectedCodes}
-                          scopes={scopes}
-                          onChange={setScopes}
-                          disabled={busy}
-                          readOnly={!!selectedGroupDetail.is_system}
-                          catalog={catalog}
-                        />
+                        <Button className="!px-3 !py-1.5" onClick={openCreateModal} disabled={busy}>
+                          {t("left.create")}
+                        </Button>
                       </PermissionMiddleware>
-                      <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
-                        <PermissionExplorer
-                          key={selectedGroupDetail.id}
-                          selectedCodes={selectedCodes}
-                          disabled={busy}
-                          readOnly={!!selectedGroupDetail.is_system}
-                          dirty={dirty}
-                          catalog={catalog}
-                          planUnavailableCodes={planUnavailableCodes}
-                          actorCodes={actorCodes}
-                          isOwner={isOwner}
-                          onToggle={setPermissionChecked}
-                          onSetCodes={setSelectedCodes}
-                          onUndo={handleDiscard}
-                          onSave={handleSavePermissions}
-                        />
-                      </PermissionMiddleware>
-                    </Card>
-                  </motion.div>}
-                </AnimatePresence>
-              </div>
-            </div>
+                    </div>
+                    <div className="border-b border-gray-200 bg-white p-4">
+                      <Input
+                        kind="text"
+                        size="sm"
+                        placeholder={t("left.searchPlaceholder")}
+                        name="groupSearch"
+                        value={groupSearch}
+                        onChange={(event) => setGroupSearch(event.target.value)}
+                        disabled={busy}
+                      />
+                    </div>
+                    <div className="bg-gray-50/40 p-4">
+                      {filteredGroups.length > 0 ? (
+                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                          {filteredGroups.map((group) => (
+                            <button
+                              key={group.id}
+                              type="button"
+                              disabled={busy}
+                              onClick={() => !busy && setSelectedGroupId(group.id)}
+                              className="group flex min-h-[132px] flex-col justify-between rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:opacity-70"
+                            >
+                              <span className="flex min-w-0 items-start gap-3">
+                                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-500">
+                                  <Users size={16} aria-hidden="true" />
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="flex min-w-0 items-start justify-between gap-2">
+                                    <span className="block min-w-0 truncate text-[13px] font-semibold text-gray-900">
+                                      {group.name}
+                                    </span>
+                                    {group.is_system && (
+                                      <Badge tone="neutral" variant="outline" size="sm">
+                                        {t("right.system", "System")}
+                                      </Badge>
+                                    )}
+                                  </span>
+                                  {group.description && (
+                                    <span className="mt-1 line-clamp-2 block text-xs leading-5 text-gray-500">
+                                      {group.description}
+                                    </span>
+                                  )}
+                                </span>
+                              </span>
+                              <span className="mt-3 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                                <span className="text-[11px] text-gray-500">
+                                  {t("left.meta", {
+                                    perms: group.permissions_count,
+                                    members: group.members_count,
+                                  })}
+                                </span>
+                                <ArrowRight
+                                  size={15}
+                                  className="shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5"
+                                  aria-hidden="true"
+                                />
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <EmptyState size="sm" title={t("left.empty")} />
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="group-detail"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Card padding="none" radius="lg" className="overflow-hidden">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-gray-50/70 px-4 py-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="inline-flex items-center gap-2"
+                        onClick={requestBack}
+                        disabled={busy}
+                        aria-label={t("right.backToGroups", { defaultValue: "Back to groups" })}
+                      >
+                        <ArrowLeft size={16} aria-hidden="true" />
+                        <span>{t("right.backToGroups", { defaultValue: "Back to groups" })}</span>
+                      </Button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {selectedGroupDetail && !selectedGroupDetail.is_system && (
+                          <PermissionMiddleware codeName={"manage_access"}>
+                            <Button
+                              variant="outline"
+                              className="inline-flex items-center gap-2"
+                              onClick={handleDuplicateGroup}
+                              disabled={busy}
+                            >
+                              <Copy size={15} aria-hidden="true" />
+                              {t("right.duplicate", { defaultValue: "Duplicate" })}
+                            </Button>
+                          </PermissionMiddleware>
+                        )}
+                        {selectedGroupDetail && !selectedGroupDetail.is_system && (
+                          <PermissionMiddleware codeName={"manage_access"}>
+                            <Button
+                              variant="outline"
+                              className="inline-flex items-center gap-2"
+                              onClick={openRenameModal}
+                              disabled={busy}
+                            >
+                              <Pencil size={15} aria-hidden="true" />
+                              {t("right.rename")}
+                            </Button>
+                          </PermissionMiddleware>
+                        )}
+                        {selectedGroupDetail && !selectedGroupDetail.is_system && (
+                          <PermissionMiddleware codeName={"manage_access"}>
+                            <Button
+                              variant="outline"
+                              onClick={requestDeleteGroup}
+                              disabled={busy}
+                              aria-busy={busy || undefined}
+                            >
+                              {t("right.delete")}
+                            </Button>
+                          </PermissionMiddleware>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedGroupDetail ? (
+                      <>
+                        <div className="flex flex-col gap-3 border-b border-gray-200 bg-white p-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600">
+                              <ShieldCheck size={18} aria-hidden="true" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                                {t("right.nameLabel")}
+                              </p>
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <h1 className="truncate text-lg font-semibold text-gray-900">
+                                  {selectedGroupDetail.name}
+                                </h1>
+                                {selectedGroupDetail.is_system && (
+                                  <Badge tone="neutral" variant="outline" size="sm">
+                                    {t("right.system", "System")}
+                                  </Badge>
+                                )}
+                              </div>
+                              {selectedGroupDetail.description && (
+                                <p className="mt-1 max-w-3xl text-xs leading-5 text-gray-500">
+                                  {selectedGroupDetail.description}
+                                </p>
+                              )}
+                              <p className="mt-1 text-xs text-gray-500">
+                                {selectedGroupDetail.permissions?.length ?? 0}{" "}
+                                {t("right.permissions", "permissions")}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <PermissionMiddleware codeName={"manage_access"}>
+                          <GroupScopeEditor
+                            selectedCodes={selectedCodes}
+                            scopes={scopes}
+                            onChange={setScopes}
+                            disabled={busy}
+                            readOnly={!!selectedGroupDetail.is_system}
+                            catalog={catalog}
+                          />
+                        </PermissionMiddleware>
+                        <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
+                          <PermissionExplorer
+                            key={selectedGroupDetail.id}
+                            selectedCodes={selectedCodes}
+                            disabled={busy}
+                            readOnly={!!selectedGroupDetail.is_system}
+                            dirty={dirty}
+                            catalog={catalog}
+                            planUnavailableCodes={planUnavailableCodes}
+                            actorCodes={actorCodes}
+                            isOwner={isOwner}
+                            onToggle={setPermissionChecked}
+                            onSetCodes={setSelectedCodes}
+                            onUndo={handleDiscard}
+                            onSave={handleSavePermissions}
+                          />
+                        </PermissionMiddleware>
+                      </>
+                    ) : (
+                      <EmptyState
+                        size="sm"
+                        icon={<ShieldCheck size={22} />}
+                        title={
+                          isDetailLoading
+                            ? t("right.loading", { defaultValue: "Loading group..." })
+                            : t("right.selectPrompt")
+                        }
+                      />
+                    )}
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </PermissionMiddleware>
 
           <PermissionMiddleware codeName={"manage_access"}>
@@ -605,6 +763,23 @@ const GroupSettings: React.FC = () => {
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
+      />
+
+      <ConfirmToast
+        open={backConfirmOpen}
+        text={t("confirmDiscard.message")}
+        confirmLabel={t("actions.discard")}
+        cancelLabel={t("btn.cancel")}
+        onCancel={() => {
+          if (busy) return;
+          setBackConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (busy) return;
+          setBackConfirmOpen(false);
+          setSelectedGroupId(null);
+        }}
+        busy={busy}
       />
 
       <Snackbar

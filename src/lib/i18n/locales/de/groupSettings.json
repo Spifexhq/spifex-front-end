@@ -15,12 +15,16 @@
     "empty": "Keine Gruppen gefunden."
   },
   "right": {
-    "selectPrompt": "Wählen Sie links eine Gruppe aus, um deren Berechtigungen zu verwalten.",
+    "selectPrompt": "W?hlen Sie eine Gruppe aus, um deren Berechtigungen zu verwalten.",
     "nameLabel": "Gruppenname",
     "rename": "Umbenennen",
     "delete": "Löschen",
     "closePanel": "Panel schließen",
-    "duplicate": "Duplizieren"
+    "duplicate": "Duplizieren",
+    "backToGroups": "Zur?ck zu Gruppen",
+    "loading": "Gruppe wird geladen...",
+    "permissions": "Berechtigungen",
+    "system": "Systemgruppe"
   },
   "btn": {
     "cancel": "Abbrechen",
