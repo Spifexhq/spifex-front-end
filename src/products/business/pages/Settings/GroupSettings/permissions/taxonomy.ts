@@ -309,3 +309,41 @@ export const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
 export const ACCESS_CAPABILITIES = new Set(["manage_members", "manage_member_roles", "manage_access", "view_effective_access"]);
 
 export const LEGACY_CODES = new Set(["add_user", "change_user", "delete_user", "business_add_member", "business_change_member", "business_delete_member", "add_group", "change_group", "delete_group"]);
+
+export type ScopeResourceType = "bank_account" | "department" | "project";
+
+export const SCOPED_PERMISSION_RESOURCES: Record<string, ScopeResourceType[]> = {
+  view_bank: ["bank_account"],
+  add_bank: ["bank_account"],
+  change_bank: ["bank_account"],
+  delete_bank: ["bank_account"],
+  view_consolidated_balance: ["bank_account"],
+  view_statement: ["bank_account"],
+  add_statement: ["bank_account"],
+  change_statement: ["bank_account"],
+  delete_statement: ["bank_account"],
+  view_settled_entries: ["bank_account", "department", "project"],
+  add_settled_entries: ["bank_account", "department", "project"],
+  change_settled_entries: ["bank_account", "department", "project"],
+  delete_settled_entries: ["bank_account", "department", "project"],
+  view_settlement_amount: ["bank_account", "department", "project"],
+  view_settlement_kpis: ["bank_account", "department", "project"],
+  view_cash_flow_entries: ["bank_account", "department", "project"],
+  view_cash_flow_amount: ["bank_account", "department", "project"],
+  view_cash_flow_kpis: ["bank_account", "department", "project"],
+  add_cash_flow_entries: ["department", "project"],
+  change_cash_flow_entries: ["bank_account", "department", "project"],
+  delete_cash_flow_entries: ["bank_account", "department", "project"],
+  view_report_page: ["bank_account", "department", "project"],
+  view_overview_page: ["bank_account", "department", "project"],
+  view_ledger_account: ["bank_account", "project"],
+  change_ledger_account: ["bank_account", "project"],
+  view_department: ["department"],
+  add_department: ["department"],
+  change_department: ["department"],
+  delete_department: ["department"],
+  view_project: ["project"],
+  add_project: ["project"],
+  change_project: ["project"],
+  delete_project: ["project"],
+};

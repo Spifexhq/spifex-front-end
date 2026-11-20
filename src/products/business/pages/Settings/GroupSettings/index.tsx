@@ -19,13 +19,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Pencil, ShieldCheck, Users, X, Copy } from "lucide-react";
 
 import PermissionExplorer from "./permissions/PermissionExplorer";
+import GroupScopeEditor from "./permissions/GroupScopeEditor";
+import { SCOPED_PERMISSION_RESOURCES } from "./permissions/taxonomy";
 import GroupModal from "./GroupModal";
 
 import { api } from "@/core/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "src/middlewares";
 
-import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "@/models/auth/rbac";
+import type { AddGroupRequest, GroupDetail, GroupListItem, GroupScope, Permission } from "@/models/auth/rbac";
 
 /* ------------------------------ Snackbar type ----------------------------- */
 type Snack =
@@ -35,6 +37,26 @@ type Snack =
 type ModalState =
   | { open: false; mode: "create" | "rename"; initialName: string; initialDescription: string }
   | { open: true; mode: "create" | "rename"; initialName: string; initialDescription: string };
+
+function normalizeScopes(scopes: GroupScope[], selectedCodes: Set<string>): string {
+  return JSON.stringify(
+    scopes
+      .filter(
+        (scope) =>
+          selectedCodes.has(scope.permission_code) &&
+          SCOPED_PERMISSION_RESOURCES[scope.permission_code]?.includes(
+            scope.resource_type as never,
+          ),
+      )
+      .map((scope) => ({
+        permission_code: scope.permission_code,
+        resource_type: scope.resource_type,
+        scope_mode: scope.scope_mode,
+        resource_ids: [...scope.resources.map((resource) => resource.id)].sort(),
+      }))
+      .sort((left, right) => left.permission_code.localeCompare(right.permission_code)),
+  );
+}
 
 /* --------------------------- Page Component -------------------------------- */
 const GroupSettings: React.FC = () => {
@@ -49,6 +71,11 @@ const GroupSettings: React.FC = () => {
   const canViewPermissions = useMemo(() => {
     if (isOwner) return true;
     return permissions.includes("view_permission");
+  }, [isOwner, permissions]);
+
+  const canManageAccess = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("manage_access");
   }, [isOwner, permissions]);
 
   const [catalog, setCatalog] = useState<Permission[]>([]);
@@ -139,6 +166,8 @@ const GroupSettings: React.FC = () => {
   const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
   const [originalCodes, setOriginalCodes] = useState<Set<string>>(new Set<string>());
+  const [scopes, setScopes] = useState<GroupScope[]>([]);
+  const [originalScopes, setOriginalScopes] = useState<GroupScope[]>([]);
 
   const [groupSearch, setGroupSearch] = useState("");
 
@@ -161,6 +190,8 @@ const GroupSettings: React.FC = () => {
         setSelectedGroupDetail(null);
         setSelectedCodes(new Set<string>());
         setOriginalCodes(new Set<string>());
+        setScopes([]);
+        setOriginalScopes([]);
 
         if (opts.background) setIsBackgroundSync(false);
         else setIsInitialLoading(false);
@@ -199,6 +230,8 @@ const GroupSettings: React.FC = () => {
       setSelectedGroupDetail(null);
       setSelectedCodes(new Set<string>());
       setOriginalCodes(new Set<string>());
+      setScopes([]);
+      setOriginalScopes([]);
       return;
     }
 
@@ -220,6 +253,16 @@ const GroupSettings: React.FC = () => {
           setSelectedCodes(new Set<string>());
           setOriginalCodes(new Set<string>());
         }
+
+        if (canManageAccess) {
+          const scopeRes = await api.getGroupScopes(selectedGroupId);
+          const rows = scopeRes.data.scopes || [];
+          setScopes(rows);
+          setOriginalScopes(rows);
+        } else {
+          setScopes([]);
+          setOriginalScopes([]);
+        }
       } catch (error) {
         console.error(error);
         setSnack({ message: apiErrorMessage(error, t("toast.detailError")), severity: "error" });
@@ -229,7 +272,7 @@ const GroupSettings: React.FC = () => {
     };
 
     void load();
-  }, [selectedGroupId, t, canViewGroups, canViewPermissions]);
+  }, [selectedGroupId, t, canViewGroups, canViewPermissions, canManageAccess]);
 
   const filteredGroups = useMemo(() => {
     if (!groupSearch.trim()) return groups;
@@ -242,8 +285,8 @@ const GroupSettings: React.FC = () => {
     for (const code of selectedCodes) {
       if (!originalCodes.has(code)) return true;
     }
-    return false;
-  }, [originalCodes, selectedCodes]);
+    return normalizeScopes(originalScopes, selectedCodes) !== normalizeScopes(scopes, selectedCodes);
+  }, [originalCodes, selectedCodes, originalScopes, scopes]);
 
   const setPermissionChecked = (code: string, enabled: boolean) => {
     setSelectedCodes((prev) => {
@@ -365,13 +408,38 @@ const GroupSettings: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await api.updateGroupPermissions(selectedGroupDetail.id, Array.from(selectedCodes));
+      const scopePayload = scopes
+        .filter(
+          (scope) =>
+            selectedCodes.has(scope.permission_code) &&
+            SCOPED_PERMISSION_RESOURCES[scope.permission_code]?.includes(
+              scope.resource_type as never,
+            ),
+        )
+        .map((scope) => ({
+          permission_code: scope.permission_code,
+          resource_type: scope.resource_type,
+          scope_mode: scope.scope_mode,
+          resource_ids: scope.resources.map((resource) => resource.id),
+        }));
+
+      const response = await api.updateGroupPermissions(
+        selectedGroupDetail.id,
+        Array.from(selectedCodes),
+        scopePayload,
+      );
 
       setOriginalCodes(new Set<string>(selectedCodes));
+      const savedScopes = response.data.scopes || scopePayload.map((scope) => ({
+        ...scope,
+        resources: scopes.find((row) => row.permission_code === scope.permission_code)?.resources || [],
+      }));
+      setScopes(savedScopes);
+      setOriginalScopes(savedScopes);
 
       await fetchAll({ background: true });
-      const response = await api.getGroup(selectedGroupDetail.id);
-      setSelectedGroupDetail(response.data);
+      const detailResponse = await api.getGroup(selectedGroupDetail.id);
+      setSelectedGroupDetail(detailResponse.data);
 
       setSnack({ message: t("toast.saveSuccess"), severity: "success" });
     } catch (error) {
@@ -384,6 +452,7 @@ const GroupSettings: React.FC = () => {
 
   const handleDiscard = () => {
     setSelectedCodes(new Set<string>(originalCodes));
+    setScopes(originalScopes);
   };
 
   if (isInitialLoading) {
@@ -470,6 +539,16 @@ const GroupSettings: React.FC = () => {
                           <button type="button" aria-label={t("right.closePanel")} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50" onClick={() => setSelectedGroupId(null)} disabled={busy}><X size={16} aria-hidden="true" /></button>
                         </div>
                       </div>
+                      <PermissionMiddleware codeName={"manage_access"}>
+                        <GroupScopeEditor
+                          selectedCodes={selectedCodes}
+                          scopes={scopes}
+                          onChange={setScopes}
+                          disabled={busy}
+                          readOnly={!!selectedGroupDetail.is_system}
+                          catalog={catalog}
+                        />
+                      </PermissionMiddleware>
                       <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
                         <PermissionExplorer
                           key={selectedGroupDetail.id}

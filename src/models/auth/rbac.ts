@@ -85,9 +85,40 @@ export interface GetGroupPermissionsResponse {
 
 export interface UpdateGroupPermissionsRequest {
   permission_codes: string[];
+  scopes?: GroupScopeInput[];
 }
 
 export interface UpdateGroupPermissionsResponse {
   message: string;
   permissions: string[];
+  scopes?: GroupScope[];
+}
+
+export type ScopeMode = "all" | "selected" | "none";
+
+export interface ScopeResource {
+  id: string;
+  label: string;
+}
+
+export interface GroupScope {
+  permission_code: string;
+  resource_type: string;
+  scope_mode: ScopeMode;
+  resources: ScopeResource[];
+}
+
+export interface GroupScopeInput {
+  permission_code: string;
+  resource_type: string;
+  scope_mode: ScopeMode;
+  resource_ids: string[];
+}
+
+export interface GetGroupScopesResponse {
+  scopes: GroupScope[];
+}
+
+export interface GetScopeResourcesResponse {
+  resources: ScopeResource[];
 }

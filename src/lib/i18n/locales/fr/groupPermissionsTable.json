@@ -610,5 +610,27 @@
     "added": "Dépendances requises ajoutées : {{codes}}.",
     "required": "Cette modification supprimerait des dépendances requises : {{codes}}. Utilisez Personnalisé pour les ajuster d’abord.",
     "blockedAddition": "Cette action n?cessite des permissions que vous ne pouvez pas accorder ou qui ne sont pas incluses dans le forfait : {{codes}}."
+  },
+  "scope": {
+    "title": "Accès aux ressources",
+    "description": "Limitez chaque capacité à toutes les ressources, aux ressources sélectionnées ou à aucune ressource. Les portées sont combinées entre groupes ; TOUTES gagne.",
+    "empty": "Aucune permission liée aux ressources n’est sélectionnée. Sélectionnez des actions bancaires, de département ou de projet pour configurer leurs ressources.",
+    "modeLabel": "Accès",
+    "modes": {
+      "none": "Aucun accès",
+      "all": "Toutes",
+      "selected": "Sélectionnées"
+    },
+    "resourceTypes": {
+      "bank_account": "Compte bancaire",
+      "department": "Département",
+      "project": "Projet"
+    },
+    "searchPlaceholder": "Rechercher des ressources",
+    "selectedCount": "{{count}} sélectionnées",
+    "loading": "Chargement des ressources…",
+    "noResources": "Aucune ressource correspondante.",
+    "allHint": "Cette capacité s’applique à toutes les ressources de l’organisation.",
+    "noneHint": "Cette capacité ne donne aucun accès aux ressources."
   }
 }

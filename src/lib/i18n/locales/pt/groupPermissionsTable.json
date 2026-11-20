@@ -610,5 +610,27 @@
     "added": "Dependências necessárias adicionadas: {{codes}}.",
     "required": "Esta alteração removeria dependências necessárias: {{codes}}. Use Personalizado para as ajustar primeiro.",
     "blockedAddition": "Esta a??o requer permiss?es que n?o pode conceder ou que n?o est?o inclu?das no plano: {{codes}}."
+  },
+  "scope": {
+    "title": "Acesso a recursos",
+    "description": "Restrinja cada capacidade a todos os recursos, recursos selecionados ou nenhum recurso. Os escopos são combinados entre grupos; TODOS prevalece.",
+    "empty": "Nenhuma permissão com âmbito de recurso está selecionada. Selecione ações de bancos, departamentos ou projetos para configurar os respetivos recursos.",
+    "modeLabel": "Acesso",
+    "modes": {
+      "none": "Sem acesso",
+      "all": "Todos",
+      "selected": "Selecionados"
+    },
+    "resourceTypes": {
+      "bank_account": "Conta bancária",
+      "department": "Departamento",
+      "project": "Projeto"
+    },
+    "searchPlaceholder": "Pesquisar recursos",
+    "selectedCount": "{{count}} selecionados",
+    "loading": "A carregar recursos…",
+    "noResources": "Nenhum recurso correspondente.",
+    "allHint": "Esta capacidade aplica-se a todos os recursos da organização.",
+    "noneHint": "Esta capacidade não concede acesso a recursos."
   }
 }

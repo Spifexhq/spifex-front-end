@@ -610,5 +610,27 @@
     "added": "Added required dependencies: {{codes}}.",
     "required": "This change would remove required dependencies: {{codes}}. Use Custom to adjust them first.",
     "blockedAddition": "This action needs permissions you cannot grant or that the plan does not include: {{codes}}."
+  },
+  "scope": {
+    "title": "Resource access",
+    "description": "Restrict each scoped capability to all resources, selected resources or no resources. Scopes are combined across assigned groups; ALL wins.",
+    "empty": "No resource-scoped permissions are selected. Select banking, department or project actions to configure their resources.",
+    "modeLabel": "Access",
+    "modes": {
+      "none": "No access",
+      "all": "All",
+      "selected": "Selected"
+    },
+    "resourceTypes": {
+      "bank_account": "Bank account",
+      "department": "Department",
+      "project": "Project"
+    },
+    "searchPlaceholder": "Search resources",
+    "selectedCount": "{{count}} selected",
+    "loading": "Loading resources…",
+    "noResources": "No matching resources.",
+    "allHint": "This capability applies to every resource in the organization.",
+    "noneHint": "This capability grants no resource access."
   }
 }

@@ -32,7 +32,8 @@ import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, Creat
 import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesRequest,
   UpdateNotificationPreferencesResponse } from '@/models/auth/notifications';
 import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse,
-  GetGroupsResponse, GetPermissionsResponse, UpdateGroupPermissionsResponse } from '@/models/auth/rbac';
+  GetGroupsResponse, GetPermissionsResponse, UpdateGroupPermissionsResponse, GetGroupScopesResponse,
+  GetScopeResourcesResponse, GroupScopeInput } from '@/models/auth/rbac';
 import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse, EffectiveAccess } from '@/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from '@/models/components/cardKpis';
 import type { OverviewData, OverviewQuery } from "@/models/finance/overview";
@@ -298,10 +299,20 @@ export const api = {
   getGroupPermissions: (groupId: string) =>
     request<GetGroupPermissionsResponse>(`rbac/groups/${groupId}/permissions/`, "GET"),
 
-  updateGroupPermissions: (groupId: string, permission_codes: string[]) =>
+  updateGroupPermissions: (groupId: string, permission_codes: string[], scopes?: GroupScopeInput[]) =>
     request<UpdateGroupPermissionsResponse>(`rbac/groups/${groupId}/permissions/`, "POST", {
-      permission_codes
+      permission_codes,
+      ...(scopes !== undefined ? { scopes } : {}),
     }),
+
+  getGroupScopes: (groupId: string) =>
+    request<GetGroupScopesResponse>(`rbac/groups/${groupId}/scopes/`, "GET"),
+
+  getScopeResources: (permissionCode: string, resourceType: string, search = "") =>
+    request<GetScopeResourcesResponse>(
+      `rbac/groups/scope-resources/?permission_code=${encodeURIComponent(permissionCode)}&resource_type=${encodeURIComponent(resourceType)}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
+      "GET",
+    ),
   
   /* --- Groups --- */
   getGroups: () =>

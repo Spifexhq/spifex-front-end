@@ -22,6 +22,7 @@ import {
   LEGACY_CODES,
   PERMISSION_DEPENDENCIES,
   PERMISSION_TAXONOMY,
+  SCOPED_PERMISSION_RESOURCES,
 } from "../src/products/business/pages/Settings/GroupSettings/permissions/taxonomy";
 
 const translate = (key: string, options?: Record<string, unknown>) =>
@@ -209,6 +210,23 @@ test("legacy codes remain classified but are not granted by presets", () => {
   for (const legacy of LEGACY_CODES) {
     assert.equal(allPresetCodes.includes(legacy), false, legacy);
   }
+});
+
+test("scope-capable permissions map to known taxonomy resources", () => {
+  const allowed = new Set(["bank_account", "department", "project"]);
+  for (const [code, resourceTypes] of Object.entries(SCOPED_PERMISSION_RESOURCES)) {
+    assert.ok(BUSINESS_PERMISSION_CODES.includes(code), code);
+    assert.ok(resourceTypes.length > 0, code);
+    for (const resourceType of resourceTypes) assert.ok(allowed.has(resourceType), resourceType);
+  }
+  assert.ok(SCOPED_PERMISSION_RESOURCES.view_bank.includes("bank_account"));
+  assert.ok(SCOPED_PERMISSION_RESOURCES.view_department.includes("department"));
+  assert.ok(SCOPED_PERMISSION_RESOURCES.view_project.includes("project"));
+  assert.deepEqual(SCOPED_PERMISSION_RESOURCES.view_cash_flow_entries, [
+    "bank_account",
+    "department",
+    "project",
+  ]);
 });
 
 test("dependency removal reports dependents", () => {

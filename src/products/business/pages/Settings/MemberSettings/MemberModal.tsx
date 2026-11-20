@@ -35,6 +35,7 @@ const EFFECTIVE_ACCESS_WARNING_DEFAULTS: Record<string, string> = {
   plan_unavailable_codes: "Some assigned permissions are not available under the current plan.",
   missing_dependencies: "Some permissions are missing required read/page dependencies.",
   inactive_assigned_codes: "Some assigned permissions are inactive and do not grant access.",
+  resource_scope_missing: "A resource-scoped permission has no configured resource scope and therefore grants no resource access.",
 };
 
 type FormState = {
@@ -728,6 +729,27 @@ const MemberModal: React.FC<MemberModalProps> = ({
                               </li>
                             ))}
                             {effectiveAccess.groups.length === 0 && <li className="text-gray-500">—</li>}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {t("effectiveAccess.resourceScopes", { defaultValue: "Resource scopes" })}
+                          </p>
+                          <ul className="mt-1 space-y-1">
+                            {Object.entries(effectiveAccess.effective_scopes).map(([code, scope]) => (
+                              <li key={code} className="text-[11px] text-gray-600">
+                                <span className="font-mono">{code}</span>
+                                {": "}
+                                {scope.scope_mode === "all"
+                                  ? t("effectiveAccess.scopeAll", { defaultValue: "All resources" })
+                                  : scope.scope_mode === "selected"
+                                    ? scope.resources.map((resource) => resource.label).join(", ")
+                                    : t("effectiveAccess.scopeNone", { defaultValue: "No resources" })}
+                              </li>
+                            ))}
+                            {Object.keys(effectiveAccess.effective_scopes).length === 0 && (
+                              <li className="text-[11px] text-gray-500">—</li>
+                            )}
                           </ul>
                         </div>
                         <div>

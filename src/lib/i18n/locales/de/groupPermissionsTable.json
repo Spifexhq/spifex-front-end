@@ -610,5 +610,27 @@
     "added": "Erforderliche Abhängigkeiten hinzugefügt: {{codes}}.",
     "required": "Diese Änderung würde erforderliche Abhängigkeiten entfernen: {{codes}}. Passen Sie sie zuerst mit Benutzerdefiniert an.",
     "blockedAddition": "Diese Aktion ben?tigt Berechtigungen, die Sie nicht vergeben k?nnen oder die im Tarif nicht enthalten sind: {{codes}}."
+  },
+  "scope": {
+    "title": "Ressourcenzugriff",
+    "description": "Beschränken Sie jede Fähigkeit auf alle Ressourcen, ausgewählte Ressourcen oder keine Ressourcen. Bereiche werden über Gruppen kombiniert; ALLE gewinnt.",
+    "empty": "Keine ressourcenbezogenen Berechtigungen ausgewählt. Wählen Sie Bank-, Abteilungs- oder Projektaktionen, um Ressourcen zu konfigurieren.",
+    "modeLabel": "Zugriff",
+    "modes": {
+      "none": "Kein Zugriff",
+      "all": "Alle",
+      "selected": "Ausgewählt"
+    },
+    "resourceTypes": {
+      "bank_account": "Bankkonto",
+      "department": "Abteilung",
+      "project": "Projekt"
+    },
+    "searchPlaceholder": "Ressourcen suchen",
+    "selectedCount": "{{count}} ausgewählt",
+    "loading": "Ressourcen werden geladen…",
+    "noResources": "Keine passenden Ressourcen.",
+    "allHint": "Diese Fähigkeit gilt für alle Ressourcen der Organisation.",
+    "noneHint": "Diese Fähigkeit gewährt keinen Ressourcenzugriff."
   }
 }
