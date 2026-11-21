@@ -167,3 +167,22 @@ As a Business user, the card shows one headline number, what it means, and a smo
 - Projected mode shows the fourth chip; unselecting it drops the `#4F46E5` path from the DOM and restores it when re-selected.
 - 1Y fixture (53 weekly points) renders with 9 ticks: `21 de nov.`, `9 de jan.`, … `20 de nov.`.
 - `tsc -b`, eslint and `npm run build` (45.9 s) pass.
+
+---
+
+# Revision 6 — 2026-11-21
+
+**Input**: apply the same chart and logic to Personal.
+
+## Changes
+
+- The chart moved to `src/shared/financial/components/CashFlowTrend/` (view, geometry, ranges, fetch lifecycle) and now takes a `load` function plus optional filters, so each product supplies its own data access without duplicating the visual layer.
+- **Business** keeps `loadBusinessForecast` (`cashflow/overview` + `banking/table`), now in `products/business/pages/Overview/useBusinessForecast.ts`.
+- **Personal** adds `loadPersonalForecast` (`personal/dashboard` with `basis=planned`, `group_by`, category and description), using `available_balance` as the projection start and disabling Projected when balances mix currencies or the balance is not permitted.
+- `FinancialCharts` (the previous Personal trend card) is deleted; Personal Overview now composes `CashFlowTrend` + `SpendingByCategory` in the same two-column grid.
+- The Personal page keeps its own date/basis filters for the metrics and activity cards; the chart has its own forward window as in Business.
+
+## Verification
+
+- Shared view re-rendered in the fixture harness after the move: identical output.
+- `tsc -b`, eslint and `npm run build` (20.8 s) pass; no unused imports left behind.

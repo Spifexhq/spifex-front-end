@@ -7,7 +7,7 @@ import SegmentedControl from "@/shared/ui/SegmentedControl";
 import AnimatedNumber from "@/shared/ui/AnimatedNumber";
 import Button from "@/shared/ui/Button";
 import { formatCurrency, formatDateFromISO } from "@/lib";
-import type { OverviewQuery, PeriodPoint } from "@/models/finance/overview";
+import type { PeriodPoint } from "@/models/finance/overview";
 import {
   cumulative,
   indexFromRatio,
@@ -17,7 +17,8 @@ import {
   tickIndices,
   valueAt,
 } from "./geometry";
-import { FORECAST_RANGES, useCashFlowForecast, type RangeKey } from "./useCashFlowForecast";
+import { FORECAST_RANGES, type ForecastFilters, type ForecastLoader, type RangeKey } from "./types";
+import { useForecast } from "./useForecast";
 
 type Mode = "due" | "projected";
 type SeriesKey = "receivables" | "paid" | "net" | "balance";
@@ -567,23 +568,25 @@ function SeriesChip({ label, color, pressed, dashed, onClick }: {
   );
 }
 
-export default function CashFlowTrend({ query }: { query: OverviewQuery }) {
+export default function CashFlowTrend({ load, filters }: {
+  load: ForecastLoader;
+  filters?: ForecastFilters;
+}) {
   const [rangeKey, setRangeKey] = useState<RangeKey>("30d");
-  const range = FORECAST_RANGES.find((item) => item.key === rangeKey) ?? FORECAST_RANGES[1];
-  const { data, opening, loading, failed, start, end, reload } = useCashFlowForecast(range, query);
+  const { data, window, loading, failed, reload } = useForecast(rangeKey, filters ?? {}, load);
 
   return (
     <CashFlowTrendView
-      buckets={data?.series ?? []}
-      opening={opening}
+      buckets={data?.buckets ?? []}
+      opening={data?.opening ?? null}
       currency={data?.currency}
       loading={loading}
       failed={failed}
       onRetry={reload}
       rangeKey={rangeKey}
       onRangeChange={setRangeKey}
-      start={start}
-      end={end}
+      start={window.start}
+      end={window.end}
     />
   );
 }

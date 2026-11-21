@@ -26,7 +26,8 @@ import Button from "@/shared/ui/Button";
 import OverviewMetrics from "./OverviewMetrics";
 import OverviewSkeleton from "./OverviewSkeleton";
 import OverviewFilters from "./OverviewFilters";
-import CashFlowTrend from "./CashFlowTrend";
+import CashFlowTrend from "@/shared/financial/components/CashFlowTrend";
+import { loadBusinessForecast } from "./useBusinessForecast";
 import SpendingByCategory from "@/shared/financial/components/SpendingByCategory";
 import OverviewActivity from "./OverviewActivity";
 import { exportSeries } from "@/shared/financial/overviewCsv";
@@ -290,7 +291,7 @@ export default function Overview() {
                 <OverviewMetrics data={data} />
 
                 <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-                  <CashFlowTrend query={query} />
+                  <CashFlowTrend load={loadBusinessForecast} filters={query} />
                   <SpendingByCategory data={data} />
                 </div>
               </>

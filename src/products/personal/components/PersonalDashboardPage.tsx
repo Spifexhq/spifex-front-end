@@ -12,7 +12,9 @@ import Button from "@/shared/ui/Button";
 import SegmentedControl from "@/shared/ui/SegmentedControl";
 import { Select } from "@/shared/ui/Select";
 import { Download } from "lucide-react";
-import FinancialCharts from "@/shared/financial/components/FinancialCharts";
+import CashFlowTrend from "@/shared/financial/components/CashFlowTrend";
+import SpendingByCategory from "@/shared/financial/components/SpendingByCategory";
+import { loadPersonalForecast } from "./usePersonalForecast";
 import Card from "@/shared/ui/Card";
 import OverviewFilterPanel from "@/shared/financial/components/Overview/OverviewFilterPanel";
 import { exportSeries } from "@/shared/financial/overviewCsv";
@@ -48,7 +50,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const initialQuery = useMemo<DashboardQuery>(() => ({ ...initialRange, basis: "planned" }), [initialRange]);
   const [draft, setDraft] = useState<DashboardQuery>(initialQuery);
   const [query, setQuery] = useState<DashboardQuery>(initialQuery);
-  const [group, setGroup] = useState<"day" | "week" | "month">("day");
+  const [group] = useState<"day" | "week" | "month">("day");
   const [snapshot, setSnapshot] = useState<{ workspace: string; access: string; data: PersonalDashboard } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -187,7 +189,10 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
       </div>
       <OverviewMetricCards items={metricCards} locale={i18n.language} />
       {data.balances_by_currency.length > 1 && <div className="flex flex-wrap gap-4 text-xs text-slate-500">{data.balances_by_currency.map(item => <span key={item.currency}>{item.currency}: {formatCurrency(item.balance, item.currency)}</span>)}</div>}
-      <FinancialCharts data={data} group={group} onGroup={setGroup} />
+      <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <CashFlowTrend load={loadPersonalForecast} filters={query} />
+        <SpendingByCategory data={data} />
+      </div>
       {!reports && <>
         <div className="grid gap-3 lg:grid-cols-2">{([['budgets', data.budgets], ['goals', data.goals]] as const).map(([kind, items]) => <Card as="section" key={kind} radius="xl" tone="slate" padding="compact">
           <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold text-slate-900">{t(kind)}</h2><Link to={`/p/${kind}`} className="text-xs font-medium text-slate-500 hover:text-slate-900">{t("viewAll")}</Link></div>

@@ -163,3 +163,36 @@ specs/019-business-cashflow-forecast/{spec,plan,tasks,convergence}.md
 
 - Hiding the projected balance does not change the headline number; the chip only controls the line.
 - Tick fitting is an estimate based on character count; extreme locales may still need a manual cap.
+
+---
+
+# Revision 6 convergence — 2026-11-21
+
+| Check | Result |
+| --- | --- |
+| `npx tsc -b --pretty false` | Pass |
+| `npx eslint` on shared chart, business overview, personal page | Pass, 0 warnings |
+| `npm run build` | Pass, exit 0, 20.8 s |
+| Shared view render (fixture harness) | Identical to the Business version |
+
+## What changed structurally
+
+```
+src/shared/financial/components/CashFlowTrend/
+  index.tsx        view + container (load, filters)
+  geometry.ts      resample / monotone path / ticks / domain
+  types.ts         RangeKey, FORECAST_RANGES, ForecastLoader, ForecastPayload
+  useForecast.ts   window calculation, stale-request guard, retry
+```
+
+- Business keeps only `useBusinessForecast.ts`; Personal only `usePersonalForecast.ts`. Both are module-level functions, so the shared hook's effect is stable.
+- `FinancialCharts` was removed after the Personal migration.
+
+## Not verified
+
+- Personal Overview against a live workspace. The dashboard endpoint accepts the same query params (`basis`, `group_by`, dates, category, description) and returns `series` plus `available_balance`; the projection disables when `capabilities.banks` is false or `balances_by_currency` has more than one entry.
+
+## Risks
+
+- Personal chart copy comes from the `overview` i18n namespace (shared wording), not `personal`.
+- `PriceChart` (specs 017/018) no longer has a consumer after this migration.
