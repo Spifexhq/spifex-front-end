@@ -3,23 +3,9 @@ import { format } from "date-fns";
 import type { Locale } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 import i18n from "@/lib/i18n";
+import { DateFormatCookie } from "@/lib/cookies";
 
 export type DateFormatPreference = "AUTO" | "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
-
-export const DATE_COOKIE_NAME = "app_date_format";
-
-/* ------------------------------ Cookies ------------------------------ */
-
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const parts = document.cookie.split("; ").filter((c) => c.startsWith(`${name}=`));
-  if (!parts.length) return null;
-  try {
-    return decodeURIComponent(parts[0].split("=")[1]);
-  } catch {
-    return null;
-  }
-}
 
 /* ------------------------------ Helpers ------------------------------ */
 
@@ -50,13 +36,9 @@ export function inferSystemDateFormatCode(
   return "YMD_ISO";
 }
 
-/** Reads the cookie; if not set or invalid, returns AUTO */
+/** Reads the stored preference; if not set or invalid, returns AUTO */
 export function getCurrentDateFormatPreference(): DateFormatPreference {
-  const cookie = getCookie(DATE_COOKIE_NAME);
-  if (cookie === "DMY_SLASH" || cookie === "MDY_SLASH" || cookie === "YMD_ISO") {
-    return cookie;
-  }
-  return "AUTO";
+  return DateFormatCookie.get() ?? "AUTO";
 }
 
 /** Effective format = cookie (if NOT AUTO) or inferred by language */

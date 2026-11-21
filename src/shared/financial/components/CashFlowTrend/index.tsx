@@ -310,11 +310,21 @@ export function CashFlowTrendView({
 
       <div
         ref={plotRef}
-        className="relative mt-4"
+        className="relative mt-4 touch-none"
         style={{ height: HEIGHT }}
+        onPointerDown={(event) => {
+          // Claim the gesture: a vertical drag scrubs the chart instead of
+          // scrolling the page and cancelling the interaction.
+          event.currentTarget.setPointerCapture(event.pointerId);
+          onPointerMove(event);
+        }}
         onPointerMove={onPointerMove}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+        }}
         onPointerLeave={() => setHover(null)}
-        onPointerCancel={() => setHover(null)}
       >
         {failed ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">

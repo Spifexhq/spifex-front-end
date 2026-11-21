@@ -247,3 +247,45 @@ export function formatMajorNumber(amount: string): string {
   if (!Number.isFinite(n)) return "";
   return getNumberFormatter(getNumberLocale()).format(n);
 }
+
+const COMPACT_STEPS = [
+  { divisor: 1_000_000_000, min: 1_000_000_000, suffix: "B", digits: 1 },
+  { divisor: 1_000_000, min: 1_000_000, suffix: "M", digits: 1 },
+  { divisor: 1_000, min: 10_000, suffix: "k", digits: 2 },
+] as const;
+
+/**
+ * Compact currency for small cards: exact below 10k, then 333.99k / 14.4M /
+ * 1.2B with the symbol kept in its locale position.
+ */
+export function formatCompactCurrency(amount: number, currency?: string): string {
+  if (!Number.isFinite(amount)) return "—";
+
+  const abs = Math.abs(amount);
+  let step = abs >= COMPACT_STEPS[0].min ? COMPACT_STEPS[0]
+    : abs >= COMPACT_STEPS[1].min ? COMPACT_STEPS[1]
+    : abs >= COMPACT_STEPS[2].min ? COMPACT_STEPS[2]
+    : null;
+  if (!step) return formatCurrency(amount, currency);
+
+  let scaled = abs / step.divisor;
+  // 999,999 must read 1.0M, not 1000.00k.
+  if (Number(scaled.toFixed(step.digits)) >= 1000) {
+    const next = COMPACT_STEPS[COMPACT_STEPS.indexOf(step) - 1];
+    if (next) {
+      step = next;
+      scaled = abs / step.divisor;
+    }
+  }
+
+  const locale = getNumberLocale();
+  const exact = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(scaled);
+  const short = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: step.digits,
+    maximumFractionDigits: step.digits,
+  }).format(scaled);
+
+  const base = formatCurrency(scaled, currency).replace(exact, short);
+  const withSuffix = base.includes(short) ? base.replace(short, `${short}${step.suffix}`) : `${base}${step.suffix}`;
+  return amount < 0 ? `-${withSuffix}` : withSuffix;
+}

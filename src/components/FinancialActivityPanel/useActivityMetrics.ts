@@ -5,7 +5,7 @@ import { getOrgExternalIdStored } from "@/lib/tokens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/core/api/requests";
-import { formatCurrency } from "@/lib/currency/formatCurrency";
+import { formatCompactCurrency } from "@/lib/currency/formatCurrency";
 import type { CashflowKpis, SettledKpis } from "@/models/components/cardKpis";
 import type { EntryFilters } from "@/models/components/filterBar";
 import { personalApi } from "@/products/personal/services/api";
@@ -30,14 +30,14 @@ const parseMoney = (v: unknown): number | null => {
 
 const currencyFromDecimal = (v: unknown) => {
   const n = parseMoney(v);
-  return n === null ? "—" : formatCurrency(n);
+  return n === null ? "—" : formatCompactCurrency(n);
 };
 
 const signedCurrencyFromDecimal = (v: unknown) => {
   const n = parseMoney(v);
   if (n === null) return "—";
   const sign = n > 0 ? "+" : "";
-  return `${sign}${formatCurrency(n)}`;
+  return `${sign}${formatCompactCurrency(n)}`;
 };
 
 export function useActivityMetrics({ filters, contextSettlement, refreshToken = 0, enabled = true, personal = false }: {

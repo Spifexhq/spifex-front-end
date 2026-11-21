@@ -17,6 +17,8 @@ import { SettingsPageSkeleton } from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
+import { DateFormatCookie, NumberFormatCookie } from "@/lib/cookies";
+import { FORMATS_CHANGED_EVENT } from "@/lib/formatEvents";
 
 
 
@@ -29,32 +31,8 @@ type DateFormatCode = "AUTO" | "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
 type NumberFormatCode = "AUTO" | "EU" | "US";
 
 /* ------------------------------ Cookies ---------------------------------- */
-const DATE_COOKIE_NAME = "app_date_format";
-const NUMBER_COOKIE_NAME = "app_number_format";
-const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
-
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const parts = document.cookie.split("; ").filter((c) => c.startsWith(`${name}=`));
-  if (!parts.length) return null;
-  try {
-    return decodeURIComponent(parts[0].split("=")[1]);
-  } catch {
-    return null;
-  }
-}
-
-function setCookie(name: string, value: string, maxAgeSeconds: number) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )}; path=/; max-age=${maxAgeSeconds}; secure; samesite=lax`;
-}
-
-function clearCookie(name: string) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
-}
+// Preferences live in localStorage through the shared cookie helpers; the old
+// hand-rolled cookie was `Secure`, which browsers drop over http://dev.
 
 /* -------------------------------- Helpers -------------------------------- */
 
@@ -165,19 +143,8 @@ const FormatSettings: React.FC = () => {
 
   /* ------------------------------ Bootstrap -------------------------------- */
   useEffect(() => {
-    const cookieDate = getCookie(DATE_COOKIE_NAME);
-    const cookieNumber = getCookie(NUMBER_COOKIE_NAME);
-
-    let d: DateFormatCode = "AUTO";
-    let n: NumberFormatCode = "AUTO";
-
-    if (cookieDate === "DMY_SLASH" || cookieDate === "MDY_SLASH" || cookieDate === "YMD_ISO") {
-      d = cookieDate;
-    }
-
-    if (cookieNumber === "EU" || cookieNumber === "US") {
-      n = cookieNumber;
-    }
+    const d: DateFormatCode = DateFormatCookie.get() ?? "AUTO";
+    const n: NumberFormatCode = NumberFormatCookie.get() ?? "AUTO";
 
     setDateFormat(d);
     setNumberFormat(n);
@@ -239,22 +206,18 @@ const FormatSettings: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Date format
-      if (dateFormat === "AUTO") {
-        clearCookie(DATE_COOKIE_NAME);
-      } else {
-        setCookie(DATE_COOKIE_NAME, dateFormat, COOKIE_MAX_AGE);
-      }
+      // Number and date preferences share the app-wide storage used by the
+      // formatters, so every screen picks them up on the next render.
+      if (dateFormat === "AUTO") DateFormatCookie.remove();
+      else DateFormatCookie.set(dateFormat);
 
-      // Number format
-      if (numberFormat === "AUTO") {
-        clearCookie(NUMBER_COOKIE_NAME);
-      } else {
-        setCookie(NUMBER_COOKIE_NAME, numberFormat, COOKIE_MAX_AGE);
-      }
+      if (numberFormat === "AUTO") NumberFormatCookie.remove();
+      else NumberFormatCookie.set(numberFormat);
 
       setInitialDateFormat(dateFormat);
       setInitialNumberFormat(numberFormat);
+
+      window.dispatchEvent(new Event(FORMATS_CHANGED_EVENT));
 
       setSnack({
         message: t("toast.saved"),

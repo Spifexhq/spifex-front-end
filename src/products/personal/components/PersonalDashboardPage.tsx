@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { personalApi } from "@/products/personal/services/api";
 import { useAuthContext } from "@/hooks/useAuth";
-import { formatCurrency, formatDateFromISO } from "@/lib";
+import { formatCompactCurrency, formatCurrency, formatDateFromISO } from "@/lib";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import type { PersonalDashboard } from "@/products/personal/types";
 import Input from "@/shared/ui/Input";
@@ -92,7 +92,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const money = (value: string | number) => formatCurrency(value, data?.currency || undefined);
   const metricCards = useMemo<OverviewMetricCard[]>(() => {
     if (!data) return [];
-    const formatMoney = (value: string | number) => formatCurrency(value, data.currency || undefined);
+    const formatMoney = (value: string | number) => formatCompactCurrency(Number(value), data.currency || undefined);
     const metric = (key: string, field: "in" | "out" | "net", color: string): OverviewMetricCard => {
       const value = Number(data.metrics?.[field] || 0);
       const previous = Number(data.previous?.[field] || 0);

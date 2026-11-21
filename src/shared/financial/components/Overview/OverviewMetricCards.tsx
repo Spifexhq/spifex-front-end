@@ -31,11 +31,11 @@ export default function OverviewMetricCards({ items, columns = 4, locale }: {
       return <section key={item.key} className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60 p-1.5">
         <div className="rounded-lg border border-slate-200/80 bg-white px-4 py-4">
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{item.label}</p>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[25px] font-semibold leading-8 tracking-tight tabular-nums text-slate-950">
+          <div className="mt-3 flex flex-nowrap items-center justify-between gap-3">
+            <p className="min-w-0 truncate text-[25px] font-semibold leading-8 tracking-tight tabular-nums text-slate-950">
               <AnimatedNumber value={item.value} format={item.format} finalValue={item.finalValue} />
             </p>
-            {item.trend?.length ? <Sparkline values={item.trend} color={item.color} label={item.label} /> : <span aria-hidden="true" className="h-8 w-20" />}
+            {item.trend?.length ? <Sparkline values={item.trend} color={item.color} label={item.label} /> : <span aria-hidden="true" className="h-8 w-20 shrink-0" />}
           </div>
         </div>
         <div className="flex min-h-8 flex-wrap items-center gap-2 px-2 pt-1 text-[10px]">

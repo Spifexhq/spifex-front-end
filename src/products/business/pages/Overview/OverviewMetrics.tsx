@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { formatCurrency } from "@/lib";
+import { formatCompactCurrency } from "@/lib";
 import type { OverviewData } from "@/models/finance/overview";
 import OverviewMetricCards, { type OverviewMetricCard } from "@/shared/financial/components/Overview/OverviewMetricCards";
 import { cumulativeValues, percentageChange } from "./overviewUtils";
@@ -8,7 +8,7 @@ import { cumulativeValues, percentageChange } from "./overviewUtils";
 export default function OverviewMetrics({ data }: { data: OverviewData }) {
   const { t, i18n } = useTranslation("overview");
   const items = useMemo<OverviewMetricCard[]>(() => {
-    const money = (value: string | number) => formatCurrency(value, data.currency || undefined);
+    const money = (value: string | number) => formatCompactCurrency(Number(value), data.currency || undefined);
     return (["in", "out", "net"] as const).map((field, index) => {
       const value = Number(data.metrics?.[field] || 0);
       const previous = Number(data.previous?.[field] || 0);
