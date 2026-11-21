@@ -13,7 +13,6 @@
   "links": {
     "cashflow": "Cashflow",
     "settled": "Abgerechnet",
-    "reports": "Berichte",
     "cta": "Einrichtung abschließen"
   },
   "header": "Seitenkopf",
@@ -28,7 +27,6 @@
     "home": "Übersicht",
     "cashflow": "Cashflow",
     "settled": "Abgewickelte Einträge",
-    "reports": "Berichte",
     "settings": "Einstellungen",
     "currency": "Währung",
     "formats": "Formate und regionale Einstellungen",

@@ -4,12 +4,11 @@ import ProductPrefixGuard from "@/app/routing/ProductPrefixGuard";
 const SettingsLayout = lazy(() => import("../layouts/SettingsLayout").then(module => ({ default: module.SettingsLayout })));
 const AccountingLayout = lazy(() => import("../layouts/AccountingLayout").then(module => ({ default: module.AccountingLayout })));
 const InventoryLayout = lazy(() => import("../layouts/InventoryLayout"));
-import { PermissionMiddleware, SubscriptionMiddleware } from "@/middlewares";
+import { PermissionMiddleware } from "@/middlewares";
 const Help = lazy(() => import("@/pages/Help"));
 const Overview = lazy(() => import("@/products/business/pages/Overview"));
 const CashFlow = lazy(() => import("@/products/business/pages/Finance/CashFlow"));
 const SettledEntries = lazy(() => import("@/products/business/pages/Finance/SettledEntries"));
-const Reports = lazy(() => import("@/products/business/pages/Reporting/Reports"));
 const OnboardingPage = lazy(() => import("@/products/business/pages/Onboarding"));
 const Personal = lazy(() => import("@/features/account-settings/pages/PersonalSettings"));
 const Billing = lazy(() => import("@/products/business/pages/Settings/Billing"));
@@ -61,17 +60,6 @@ const businessChildren: RouteObject[] = [
                     <PermissionMiddleware codeName="view_settlement_page" redirectTo={'/b/settings'}>
                         <SettledEntries />
                     </PermissionMiddleware>
-                )
-            },
-            // Reports
-            {
-                path: 'reports',
-                element: (
-                    <SubscriptionMiddleware redirectTo="/b/settings">
-                        <PermissionMiddleware codeName="view_report_page" requireSubscription behavior="lock" redirectTo={'/b/settings'}>
-                            <Reports />
-                        </PermissionMiddleware>
-                    </SubscriptionMiddleware>
                 )
             },
             {

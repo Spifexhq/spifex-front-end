@@ -13,7 +13,6 @@
   "links": {
     "cashflow": "Cash Flow",
     "settled": "Settled",
-    "reports": "Reports",
     "cta": "Complete setup"
   },
   "header": "Page header",
@@ -28,7 +27,6 @@
     "home": "Overview",
     "cashflow": "Cash flow",
     "settled": "Settled entries",
-    "reports": "Reports",
     "settings": "Settings",
     "currency": "Currency",
     "formats": "Formats and regional preferences",

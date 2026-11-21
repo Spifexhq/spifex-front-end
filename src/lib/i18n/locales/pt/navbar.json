@@ -13,7 +13,6 @@
   "links": {
     "cashflow": "Fluxo de Caixa",
     "settled": "Realizado",
-    "reports": "Relatórios",
     "cta": "Concluir configuração"
   },
   "header": "Cabeçalho da página",
@@ -28,7 +27,6 @@
     "home": "Visão geral",
     "cashflow": "Fluxo de caixa",
     "settled": "Lançamentos realizados",
-    "reports": "Relatórios",
     "settings": "Configurações",
     "currency": "Moeda",
     "formats": "Formatos e preferências regionais",

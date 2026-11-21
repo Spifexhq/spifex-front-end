@@ -37,7 +37,6 @@ import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, Ge
 import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse, EffectiveAccess } from '@/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from '@/models/components/cardKpis';
 import type { OverviewData, OverviewQuery } from "@/models/finance/overview";
-import type { ReportsSummaryParams, ReportsSummary } from '@/models/components/reports';
 import type { AddViewPresetRequest, AddViewPresetResponse, EditViewPresetRequest, EditViewPresetResponse,
   GetViewPresetsResponse } from '@/models/components/viewPresets';
 import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest, GetEntriesBulkResponse,
@@ -362,10 +361,6 @@ export const api = {
   /* --- Overview --- */
   getOverview: (params: OverviewQuery) =>
     request<OverviewData>("cashflow/overview/", "GET", params),
-
-  /* --- Reports --- */
-  getReportsSummary: (params: ReportsSummaryParams) =>
-    request<ReportsSummary>("cashflow/reports/summary/", "GET", params),
 
   /* --- View Presets --- */
   getViewPresets: (settlementStatus: boolean) =>

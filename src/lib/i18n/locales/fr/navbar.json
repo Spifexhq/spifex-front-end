@@ -13,7 +13,6 @@
   "links": {
     "cashflow": "Flux de trésorerie",
     "settled": "Réglé",
-    "reports": "Rapports",
     "cta": "Terminer la configuration"
   },
   "header": "En-tête de page",
@@ -28,7 +27,6 @@
     "home": "Vue d’ensemble",
     "cashflow": "Trésorerie",
     "settled": "Écritures réglées",
-    "reports": "Rapports",
     "settings": "Paramètres",
     "currency": "Devise",
     "formats": "Formats et préférences régionales",

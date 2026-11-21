@@ -51,6 +51,34 @@
     "settled": "Erhaltenes und gezahltes Geld je Zeitraum.",
     "planned": "Offene Eingänge und Zahlungen nach Fälligkeit."
   },
+  "trendCard": {
+    "due": "Fällig",
+    "projected": "Prognose",
+    "modeLabel": "Diagrammansicht",
+    "rangeLabel": "Prognosezeitraum",
+    "ranges": {
+      "7d": "7T",
+      "30d": "30T",
+      "90d": "90T",
+      "365d": "1J"
+    },
+    "seriesLabel": "Sichtbare Reihen",
+    "receivables": "Forderungen",
+    "paid": "Bezahlt",
+    "net": "Nettoergebnis",
+    "balance": "Prognostizierter Saldo",
+    "dueCaption": "Netto fällig",
+    "projectedCaption": "Prognostizierter Saldo",
+    "dueHint": "Was im gewählten Zeitraum mit den aktuellen Filtern fällig ist.",
+    "projectedHint": "Heutiger Saldo plus die Fälligkeiten in diesem Zeitraum.",
+    "help": "„Fällig“ nutzt offene Einträge nach Fälligkeitsdatum. „Prognose“ addiert diese Bewegungen zum aktuellen konsolidierten Saldo, ohne Einträge zu erstellen.",
+    "vsToday": "vs. heute",
+    "window": "{{start}} – {{end}}",
+    "empty": "Keine fälligen Einträge in diesem Zeitraum.",
+    "error": "Prognose konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "chartLabel": "Fälliger und prognostizierter Cashflow für den gewählten Zeitraum"
+  },
   "groupBy": "Verlauf gruppieren nach",
   "groups": {
     "day": "Täglich",

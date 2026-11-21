@@ -51,6 +51,34 @@
     "settled": "Argent reçu et payé par période.",
     "planned": "Encaissements et paiements restants, par échéance."
   },
+  "trendCard": {
+    "due": "À échéance",
+    "projected": "Projeté",
+    "modeLabel": "Vue du graphique",
+    "rangeLabel": "Fenêtre de prévision",
+    "ranges": {
+      "7d": "7J",
+      "30d": "30J",
+      "90d": "90J",
+      "365d": "1A"
+    },
+    "seriesLabel": "Séries visibles",
+    "receivables": "À recevoir",
+    "paid": "Payé",
+    "net": "Résultat net",
+    "balance": "Solde projeté",
+    "dueCaption": "Net à échéance",
+    "projectedCaption": "Solde projeté",
+    "dueHint": "Ce qui est dû dans la fenêtre sélectionnée, avec les filtres actuels.",
+    "projectedHint": "Le solde d'aujourd'hui plus les échéances de cette fenêtre.",
+    "help": "« À échéance » utilise les écritures ouvertes par date d'échéance. « Projeté » ajoute ces mouvements au solde consolidé actuel, sans créer d'écriture.",
+    "vsToday": "vs aujourd'hui",
+    "window": "{{start}} – {{end}}",
+    "empty": "Aucune échéance dans cette fenêtre.",
+    "error": "Impossible de charger la prévision.",
+    "retry": "Réessayer",
+    "chartLabel": "Flux de trésorerie à échéance et projeté pour la fenêtre sélectionnée"
+  },
   "groupBy": "Regrouper par",
   "groups": {
     "day": "Jour",

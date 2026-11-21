@@ -15,10 +15,8 @@ import {
   LayoutDashboard,
   Wallet,
   CircleCheck,
-  ChartNoAxesCombined,
   Boxes,
 } from "lucide-react";
-import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
 
 import type { ModalType } from "@/products/business/pages/Finance/components/EntryForm/types";
@@ -44,8 +42,6 @@ export default function SidebarNavigation({
   mobile = false,
 }: SidebarNavigationProps) {
   const { t } = useTranslation(["sidebar", "navbar"]);
-  const { organization, isSubscribed, isSuperUser } = useAuthContext();
-  const retainedHistory = ["legacy", "deletion_pending"].includes(organization?.organization?.lifecycle || "");
   const collapsed = !mobile && !isOpen;
 
   const run = (action: () => void) => {
@@ -125,16 +121,6 @@ export default function SidebarNavigation({
                 Icon: CircleCheck,
                 permission: "view_settlement_page",
               },
-              ...((isSubscribed || isSuperUser || retainedHistory)
-                ? [
-                    {
-                      to: "/b/reports",
-                      label: t("navbar:links.reports"),
-                      Icon: ChartNoAxesCombined,
-                      permission: "view_report_page",
-                    },
-                  ]
-                : []),
               {
                 to: "/b/bank-imports",
                 label: t("navbar:pages.bankImports"),

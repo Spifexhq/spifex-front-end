@@ -51,6 +51,34 @@
     "settled": "Dinheiro recebido e pago em cada período.",
     "planned": "Recebimentos e pagamentos em aberto, por vencimento."
   },
+  "trendCard": {
+    "due": "A vencer",
+    "projected": "Projetado",
+    "modeLabel": "Vista do gráfico",
+    "rangeLabel": "Janela de previsão",
+    "ranges": {
+      "7d": "7D",
+      "30d": "30D",
+      "90d": "90D",
+      "365d": "1A"
+    },
+    "seriesLabel": "Séries visíveis",
+    "receivables": "A receber",
+    "paid": "Pago",
+    "net": "Resultado líquido",
+    "balance": "Saldo projetado",
+    "dueCaption": "Líquido a vencer",
+    "projectedCaption": "Saldo projetado",
+    "dueHint": "O que vence na janela selecionada, com os filtros atuais.",
+    "projectedHint": "O saldo de hoje mais os vencimentos desta janela.",
+    "help": "A vencer usa as entradas em aberto pela data de vencimento. O projetado soma esses movimentos ao saldo consolidado atual e não cria lançamentos.",
+    "vsToday": "vs. hoje",
+    "window": "{{start}} – {{end}}",
+    "empty": "Nenhum lançamento a vencer nesta janela.",
+    "error": "Não foi possível carregar a previsão.",
+    "retry": "Tentar novamente",
+    "chartLabel": "Fluxo de caixa a vencer e projetado para a janela selecionada"
+  },
   "groupBy": "Agrupar evolução por",
   "groups": {
     "day": "Diário",

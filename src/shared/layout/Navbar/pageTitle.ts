@@ -29,7 +29,7 @@ export function getPageTitleKey(pathname: string): string {
     if (page === "subscription") return "settingsSidebar:items.billing";
     return "navbar:pages.settings";
   }
-  const keys: Record<string, string> = { "bank-imports": "bankImports", overview: "overview", help: "help", home: "overview", cashflow: "cashflow", settled: "settled", reports: "reports", onboarding: "onboarding", "locale-setup": "locale", status: "status" };
+  const keys: Record<string, string> = { "bank-imports": "bankImports", overview: "overview", help: "help", home: "overview", cashflow: "cashflow", settled: "settled", onboarding: "onboarding", "locale-setup": "locale", status: "status" };
   return `navbar:pages.${keys[root] || "overview"}`;
 }
 export type PageCrumb = { titleKey: string; to?: string };

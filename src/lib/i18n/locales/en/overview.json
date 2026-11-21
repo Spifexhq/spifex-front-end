@@ -51,6 +51,34 @@
     "settled": "Money received and paid in each period.",
     "planned": "Remaining receipts and payments, by due date."
   },
+  "trendCard": {
+    "due": "Due",
+    "projected": "Projected",
+    "modeLabel": "Chart view",
+    "rangeLabel": "Forecast window",
+    "ranges": {
+      "7d": "7D",
+      "30d": "30D",
+      "90d": "90D",
+      "365d": "1Y"
+    },
+    "seriesLabel": "Visible series",
+    "receivables": "Receivables",
+    "paid": "Paid",
+    "net": "Net result",
+    "balance": "Projected balance",
+    "dueCaption": "Net due",
+    "projectedCaption": "Projected balance",
+    "dueHint": "What is due in the selected window, using the current filters.",
+    "projectedHint": "Today's balance plus the dues in this window.",
+    "help": "Due uses open entries by due date. Projected adds those movements to the current consolidated balance and does not create entries.",
+    "vsToday": "vs today",
+    "window": "{{start}} – {{end}}",
+    "empty": "No due entries in this window.",
+    "error": "Could not load the forecast.",
+    "retry": "Retry",
+    "chartLabel": "Due and projected cash flow for the selected window"
+  },
   "groupBy": "Group trend by",
   "groups": {
     "day": "Daily",

@@ -123,11 +123,6 @@ import enSettled from "./locales/en/settled.json";
 import frSettled from "./locales/fr/settled.json";
 import deSettled from "./locales/de/settled.json";
 
-import ptReports from "./locales/pt/reports.json";
-import enReports from "./locales/en/reports.json";
-import frReports from "./locales/fr/reports.json";
-import deReports from "./locales/de/reports.json";
-
 /* -------------------------------------------------------------------------- */
 /* Generic UI                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -381,7 +376,6 @@ const NAMESPACES = [
 
   "cashFlow",
   "settled",
-  "reports",
 
   "select",
 
@@ -457,7 +451,6 @@ const resources: Resource = {
 
     cashFlow: ptCashFlow,
     settled: ptSettled,
-    reports: ptReports,
 
     financeEntries: ptFinanceEntries,
     select: ptSelect,
@@ -529,7 +522,6 @@ const resources: Resource = {
 
     cashFlow: enCashFlow,
     settled: enSettled,
-    reports: enReports,
 
     financeEntries: enFinanceEntries,
     select: enSelect,
@@ -601,7 +593,6 @@ const resources: Resource = {
 
     cashFlow: frCashFlow,
     settled: frSettled,
-    reports: frReports,
 
     financeEntries: frFinanceEntries,
     select: frSelect,
@@ -673,7 +664,6 @@ const resources: Resource = {
 
     cashFlow: deCashFlow,
     settled: deSettled,
-    reports: deReports,
 
     financeEntries: deFinanceEntries,
     select: deSelect,
