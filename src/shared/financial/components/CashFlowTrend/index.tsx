@@ -23,8 +23,10 @@ import {
 import { FORECAST_RANGES, type ForecastFilters, type ForecastLoader, type RangeKey } from "./types";
 import { useForecast } from "./useForecast";
 
-type Mode = "due" | "projected";
+type Mode = "projected" | "overdue";
+type ViewMode = "daily" | "cumulative";
 type SeriesKey = "receivables" | "paid" | "balance";
+export type { Mode as CashFlowTrendMode };
 
 const COLORS: Record<SeriesKey, string> = {
   receivables: CHART_COLORS.positive,
@@ -67,6 +69,8 @@ export type CashFlowTrendViewProps = {
   loading?: boolean;
   failed?: boolean;
   onRetry?(): void;
+  mode: Mode;
+  onModeChange(mode: Mode): void;
   rangeKey: RangeKey;
   onRangeChange(key: RangeKey): void;
   start: string;
@@ -80,13 +84,15 @@ export function CashFlowTrendView({
   loading = false,
   failed = false,
   onRetry,
+  mode,
+  onModeChange,
   rangeKey,
   onRangeChange,
   start,
   end,
 }: CashFlowTrendViewProps) {
   const { t, i18n } = useTranslation("overview");
-  const [mode, setMode] = useState<Mode>("due");
+  const [view, setView] = useState<ViewMode>("cumulative");
   const [visible, setVisible] = useState({ receivables: true, paid: true, balance: true });
   const [hover, setHover] = useState<number | null>(null);
   const [plotRef, width] = useElementWidth<HTMLDivElement>();
@@ -105,11 +111,11 @@ export function CashFlowTrendView({
 
   const money = (value: number) => formatCurrency(value, currency || undefined);
 
-  const projectedAvailable = opening !== null;
-  const effectiveMode: Mode = mode === "projected" && projectedAvailable ? "projected" : "due";
-  const dueMode = effectiveMode === "due";
+  const overdue = mode === "overdue";
+  const cumulativeView = view === "cumulative";
+  const showBalance = !overdue && cumulativeView && visible.balance && opening !== null;
 
-  useEffect(() => setHover(null), [effectiveMode, rangeKey]);
+  useEffect(() => setHover(null), [mode, rangeKey, view]);
 
   const inValues = useMemo(() => buckets.map((point) => Number(point.in) || 0), [buckets]);
   const outValues = useMemo(() => buckets.map((point) => Number(point.out) || 0), [buckets]);
@@ -125,15 +131,15 @@ export function CashFlowTrendView({
   /** Every mode keeps the same semantics per key so paths can morph instead of swap. */
   const series = useMemo(() => {
     const rows: { key: SeriesKey; values: number[] }[] = [];
-    if (visible.receivables) rows.push({ key: "receivables", values: dueMode ? inValues : cumIn });
-    if (visible.paid) rows.push({ key: "paid", values: dueMode ? outValues : cumOut });
+    if (visible.receivables) rows.push({ key: "receivables", values: cumulativeView ? cumIn : inValues });
+    if (visible.paid) rows.push({ key: "paid", values: cumulativeView ? cumOut : outValues });
     return rows;
-  }, [cumIn, cumOut, dueMode, inValues, outValues, visible]);
+  }, [cumIn, cumOut, cumulativeView, inValues, outValues, visible]);
 
   const [min, max] = useMemo(() => {
     let low = Infinity;
     let high = -Infinity;
-    const rows = dueMode || !visible.balance ? series : [...series, { values: balance }];
+    const rows = showBalance ? [...series, { values: balance }] : series;
     for (const row of rows) {
       for (const value of row.values) {
         if (value < low) low = value;
@@ -142,7 +148,7 @@ export function CashFlowTrendView({
     }
     if (!Number.isFinite(low) || !Number.isFinite(high)) return [0, 1] as const;
     return paddedDomain(low, high);
-  }, [balance, dueMode, series, visible.balance]);
+  }, [balance, series, showBalance]);
 
   const paths = useMemo(
     () =>
@@ -156,10 +162,10 @@ export function CashFlowTrendView({
 
   const yTicks = useMemo(() => niceTicks(min, max, 4), [min, max]);
 
-  /** The projected balance line exists only in Projected mode and can be hidden. */
+  /** The projected balance is a cumulative position: only Projected + Cumulative. */
   const balancePath = useMemo(
-    () => (dueMode || !visible.balance ? "" : linePath(balance, innerWidth, HEIGHT, min, max)),
-    [balance, dueMode, innerWidth, max, min, visible.balance]
+    () => (showBalance ? linePath(balance, innerWidth, HEIGHT, min, max) : ""),
+    [balance, innerWidth, max, min, showBalance]
   );
 
   const totalIn = inValues.reduce((sum, value) => sum + value, 0);
@@ -174,9 +180,13 @@ export function CashFlowTrendView({
 
   const shownIn = hoveredBucket ? Number(hoveredBucket.in) || 0 : totalIn;
   const shownOut = hoveredBucket ? Number(hoveredBucket.out) || 0 : totalOut;
-  // Projected mode plots cumulative flows, so the header follows the same curve.
-  const shownReceivables = dueMode ? shownIn : hover !== null ? cumIn[hover] ?? 0 : totalIn;
-  const shownPaid = dueMode ? shownOut : hover !== null ? cumOut[hover] ?? 0 : totalOut;
+  // Cumulative view plots running totals, so the header follows the same curve.
+  const shownReceivables = cumulativeView
+    ? hover !== null ? cumIn[hover] ?? 0 : totalIn
+    : shownIn;
+  const shownPaid = cumulativeView
+    ? hover !== null ? cumOut[hover] ?? 0 : totalOut
+    : shownOut;
   const shownNet = hoveredBucket ? Number(hoveredBucket.net) || 0 : netDue;
   const shownBalance = hover !== null ? balance[hover] ?? opening ?? 0 : closing;
   const shownMovement = shownBalance - (opening ?? 0);
@@ -234,27 +244,27 @@ export function CashFlowTrendView({
             <InfoTooltip label={t("calculation")}>{t("trendCard.help")}</InfoTooltip>
           </h2>
           <p className="mt-1 text-xs text-slate-500">
-            {dueMode ? t("trendCard.dueHint") : t("trendCard.projectedHint")}
+            {overdue ? t("trendCard.overdueHint") : t("trendCard.projectedHint")}
           </p>
         </div>
         <SegmentedControl<Mode>
-          value={effectiveMode}
+          value={mode}
           label={t("trendCard.modeLabel")}
-          onChange={setMode}
+          onChange={onModeChange}
           items={[
-            { value: "due", label: t("trendCard.due") },
-            { value: "projected", label: t("trendCard.projected"), disabled: !projectedAvailable },
+            { value: "projected", label: t("trendCard.projected") },
+            { value: "overdue", label: t("trendCard.overdue") },
           ]}
         />
       </div>
 
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
-          {t(dueMode ? "trendCard.dueCaption" : "trendCard.projectedCaption")}
+          {t(overdue ? "trendCard.overdueCaption" : "trendCard.projectedCaption")}
         </p>
         <p className="mt-1 text-[32px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
           <AnimatedNumber
-            value={dueMode ? shownNet : shownBalance}
+            value={overdue ? shownNet : shownBalance}
             format={money}
             duration={numberDuration}
           />
@@ -263,14 +273,14 @@ export function CashFlowTrendView({
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={effectiveMode}
+              key={mode}
               initial={{ opacity: 0, y: 3 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -3 }}
               transition={{ duration: 0.14, ease: "easeOut" }}
               className="flex flex-wrap items-center gap-x-3 gap-y-1"
             >
-              {!dueMode ? (
+              {!overdue ? (
                 <span
                   className="inline-flex items-center gap-1 font-medium"
                   style={{ color: shownMovement >= 0 ? "#059669" : "#DC2626" }}
@@ -341,7 +351,7 @@ export function CashFlowTrendView({
           </div>
         ) : showEmpty ? (
           <div className="flex h-full items-center justify-center px-6 text-center">
-            <p className="text-xs text-slate-500">{t("trendCard.empty")}</p>
+            <p className="text-xs text-slate-500">{t(overdue ? "trendCard.emptyOverdue" : "trendCard.empty")}</p>
           </div>
         ) : (
           <>
@@ -545,7 +555,7 @@ export function CashFlowTrendView({
             pressed={visible.paid}
             onClick={() => toggle("paid")}
           />
-          {!dueMode ? (
+          {!overdue && cumulativeView ? (
             <SeriesChip
               label={t("trendCard.balance")}
               color={COLORS.balance}
@@ -555,18 +565,34 @@ export function CashFlowTrendView({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1" role="group" aria-label={t("trendCard.rangeLabel")}>
-          {FORECAST_RANGES.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              aria-pressed={item.key === rangeKey}
-              onClick={() => onRangeChange(item.key)}
-              className="h-7 rounded-full px-2.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 aria-pressed:bg-slate-900 aria-pressed:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 motion-reduce:transition-none"
-            >
-              {t(`trendCard.ranges.${item.key}`)}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1" role="group" aria-label={t("trendCard.viewLabel")}>
+            {(["daily", "cumulative"] as const).map((item) => (
+              <button
+                key={item}
+                type="button"
+                aria-pressed={view === item}
+                onClick={() => setView(item)}
+                className="h-7 rounded-full border border-transparent px-2.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 aria-pressed:border-slate-200 aria-pressed:bg-slate-100 aria-pressed:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 motion-reduce:transition-none"
+              >
+                {t(`trendCard.views.${item}`)}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1" role="group" aria-label={t("trendCard.rangeLabel")}>
+            {FORECAST_RANGES.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={item.key === rangeKey}
+                onClick={() => onRangeChange(item.key)}
+                className="h-7 rounded-full px-2.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 aria-pressed:bg-slate-900 aria-pressed:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 motion-reduce:transition-none"
+              >
+                {t(`trendCard.ranges.${item.key}`)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </Card>
@@ -600,8 +626,10 @@ export default function CashFlowTrend({ load, filters }: {
   load: ForecastLoader;
   filters?: ForecastFilters;
 }) {
+  const [mode, setMode] = useState<Mode>("projected");
   const [rangeKey, setRangeKey] = useState<RangeKey>("30d");
-  const { data, window, loading, failed, reload } = useForecast(rangeKey, filters ?? {}, load);
+  const direction = mode === "overdue" ? "backward" : "forward";
+  const { data, window, loading, failed, reload } = useForecast(rangeKey, direction, filters ?? {}, load);
 
   return (
     <CashFlowTrendView
@@ -611,6 +639,8 @@ export default function CashFlowTrend({ load, filters }: {
       loading={loading}
       failed={failed}
       onRetry={reload}
+      mode={mode}
+      onModeChange={setMode}
       rangeKey={rangeKey}
       onRangeChange={setRangeKey}
       start={window.start}

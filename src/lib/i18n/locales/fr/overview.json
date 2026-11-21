@@ -77,7 +77,16 @@
     "empty": "Aucune échéance dans cette fenêtre.",
     "error": "Impossible de charger la prévision.",
     "retry": "Réessayer",
-    "chartLabel": "Flux de trésorerie à échéance et projeté pour la fenêtre sélectionnée"
+    "chartLabel": "Flux de trésorerie à échéance et projeté pour la fenêtre sélectionnée",
+    "overdue": "En retard",
+    "overdueCaption": "Net en retard",
+    "overdueHint": "Écritures ouvertes déjà échues, dans la fenêtre sélectionnée.",
+    "emptyOverdue": "Aucune échéance en retard dans cette fenêtre.",
+    "viewLabel": "Valeurs",
+    "views": {
+      "daily": "Jour par jour",
+      "cumulative": "Cumulé"
+    }
   },
   "groupBy": "Regrouper par",
   "groups": {

@@ -77,7 +77,16 @@
     "empty": "Nenhum lançamento a vencer nesta janela.",
     "error": "Não foi possível carregar a previsão.",
     "retry": "Tentar novamente",
-    "chartLabel": "Fluxo de caixa a vencer e projetado para a janela selecionada"
+    "chartLabel": "Fluxo de caixa a vencer e projetado para a janela selecionada",
+    "overdue": "Em atraso",
+    "overdueCaption": "Líquido em atraso",
+    "overdueHint": "Entradas em aberto já vencidas, na janela selecionada.",
+    "emptyOverdue": "Nenhuma entrada em atraso nesta janela.",
+    "viewLabel": "Valores",
+    "views": {
+      "daily": "Dia a dia",
+      "cumulative": "Acumulado"
+    }
   },
   "groupBy": "Agrupar evolução por",
   "groups": {

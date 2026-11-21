@@ -77,7 +77,16 @@
     "empty": "No due entries in this window.",
     "error": "Could not load the forecast.",
     "retry": "Retry",
-    "chartLabel": "Due and projected cash flow for the selected window"
+    "chartLabel": "Due and projected cash flow for the selected window",
+    "overdue": "Overdue",
+    "overdueCaption": "Net overdue",
+    "overdueHint": "Open entries already past their due date, in the selected window.",
+    "emptyOverdue": "No overdue entries in this window.",
+    "viewLabel": "Values",
+    "views": {
+      "daily": "Day by day",
+      "cumulative": "Cumulative"
+    }
   },
   "groupBy": "Group trend by",
   "groups": {

@@ -77,7 +77,16 @@
     "empty": "Keine fälligen Einträge in diesem Zeitraum.",
     "error": "Prognose konnte nicht geladen werden.",
     "retry": "Erneut versuchen",
-    "chartLabel": "Fälliger und prognostizierter Cashflow für den gewählten Zeitraum"
+    "chartLabel": "Fälliger und prognostizierter Cashflow für den gewählten Zeitraum",
+    "overdue": "Überfällig",
+    "overdueCaption": "Netto überfällig",
+    "overdueHint": "Offene, bereits überfällige Einträge im gewählten Zeitraum.",
+    "emptyOverdue": "Keine überfälligen Einträge in diesem Zeitraum.",
+    "viewLabel": "Werte",
+    "views": {
+      "daily": "Täglich",
+      "cumulative": "Kumuliert"
+    }
   },
   "groupBy": "Verlauf gruppieren nach",
   "groups": {

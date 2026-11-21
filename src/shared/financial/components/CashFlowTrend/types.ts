@@ -9,6 +9,9 @@ export type ForecastWindow = {
   groupBy: "day" | "week";
 };
 
+/** Forward = what is due next; backward = what is already overdue. */
+export type ForecastDirection = "forward" | "backward";
+
 export type ForecastFilters = {
   cashflow_category_id?: string;
   description?: string;
