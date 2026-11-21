@@ -38,7 +38,10 @@
     "showPassword": "Mostrar senha",
     "openDatePicker": "Abrir calendário",
     "previousMonth": "Mês anterior",
-    "nextMonth": "Próximo mês"
+    "nextMonth": "Próximo mês",
+    "previousYear": "Ano anterior",
+    "nextYear": "Próximo ano",
+    "chooseMonthYear": "Escolher mês e ano"
   },
   "settings": {
     "filters": "Filtros",

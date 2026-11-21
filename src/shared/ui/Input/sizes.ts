@@ -36,6 +36,8 @@ type DateSizeShape = {
   title: string;
   weekday: string;
   dayCell: string;
+  /** Fixed height that fits six week rows, so the popover never resizes. */
+  dayArea: string;
 
   chip: string;
 };
@@ -140,6 +142,7 @@ export const DATE_SIZE: Record<InputSize, DateSizeShape> = {
     title: "text-[11px]",
     weekday: "h-4 text-[9px]",
     dayCell: "h-6 w-6 text-[11px]",
+    dayArea: "164px",
     chip: "h-5 px-1.5 text-[10px]",
   },
   sm: {
@@ -155,6 +158,7 @@ export const DATE_SIZE: Record<InputSize, DateSizeShape> = {
     title: "text-xs",
     weekday: "h-5 text-[10px]",
     dayCell: "h-7 w-7 text-xs",
+    dayArea: "188px",
     chip: "h-5.5 px-2 text-[10px]",
   },
   md: {
@@ -170,6 +174,7 @@ export const DATE_SIZE: Record<InputSize, DateSizeShape> = {
     title: "text-xs",
     weekday: "h-5 text-[10px]",
     dayCell: "h-7 w-7 text-xs",
+    dayArea: "188px",
     chip: "h-5.5 px-2 text-[10px]",
   },
   lg: {
@@ -185,6 +190,7 @@ export const DATE_SIZE: Record<InputSize, DateSizeShape> = {
     title: "text-[13px]",
     weekday: "h-6 text-[11px]",
     dayCell: "h-8 w-8 text-[13px]",
+    dayArea: "212px",
     chip: "h-6 px-2 text-[11px]",
   },
   xl: {
@@ -200,6 +206,7 @@ export const DATE_SIZE: Record<InputSize, DateSizeShape> = {
     title: "text-base",
     weekday: "h-7 text-xs",
     dayCell: "h-9 w-9 text-base",
+    dayArea: "236px",
     chip: "h-6 px-2.5 text-[11px]",
   },
 };

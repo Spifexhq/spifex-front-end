@@ -156,6 +156,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       }
       return new Date();
     });
+    const [calendarView, setCalendarView] = useState<"days" | "months">("days");
 
     useEffect(() => {
       if (!value) return;
@@ -403,6 +404,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       if (disabled) return;
 
       if (!isCalendarRendered || !isCalendarOpen) {
+        setCalendarView("days");
         if (selectedDate) {
           setCalendarMonth(selectedDate);
         } else if (value) {
@@ -480,8 +482,8 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
     };
 
     const renderCalendar = () => {
-      const start = startOfWeek(startOfMonth(calendarMonth), { weekStartsOn: 1 });
-      const end = endOfWeek(endOfMonth(calendarMonth), { weekStartsOn: 1 });
+      const start = startOfWeek(startOfMonth(calendarMonth), { weekStartsOn: 0 });
+      const end = endOfWeek(endOfMonth(calendarMonth), { weekStartsOn: 0 });
 
       const days: JSX.Element[] = [];
       let curr = start;
@@ -498,7 +500,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             onMouseDown={(ev) => ev.preventDefault()}
             onClick={() => handleDateSelect(current)}
             className={classNames(
-              "rounded-full flex items-center justify-center",
+              "rounded-full flex items-center justify-center self-center",
               sz.dayCell,
               !isCurrentMonth && "text-gray-400",
               isSelected && "bg-gray-900 text-white",
@@ -513,7 +515,17 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         curr = addDays(curr, 1);
       }
 
-      const weekdayLabels = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(language, { weekday: "short" }).format(new Date(2024, 0, 1 + index)));
+      // Labels follow the same week start as the grid, so the header and the
+      // first column always agree.
+      const weekStart = startOfWeek(new Date(2024, 0, 7), { weekStartsOn: 0 });
+      const weekdayLabels = Array.from({ length: 7 }, (_, index) =>
+        new Intl.DateTimeFormat(language, { weekday: "short" }).format(addDays(weekStart, index))
+      );
+
+      const dayRows = Math.max(1, Math.ceil(days.length / 7));
+      const monthLabels = Array.from({ length: 12 }, (_, index) =>
+        new Intl.DateTimeFormat(language, { month: "short" }).format(new Date(2024, index, 1))
+      );
 
       return (
         <div
@@ -536,8 +548,14 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             <button
               type="button"
               onMouseDown={(ev) => ev.preventDefault()}
-              onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
-              aria-label={t("input.previousMonth", "Previous month")}
+              onClick={() =>
+                setCalendarMonth((m) => (calendarView === "days" ? subMonths(m, 1) : subMonths(m, 12)))
+              }
+              aria-label={
+                calendarView === "days"
+                  ? t("input.previousMonth", "Previous month")
+                  : t("input.previousYear", "Previous year")
+              }
               className={classNames(
                 "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
                 sz.navBtn
@@ -547,15 +565,37 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
               ‹
             </button>
 
-            <span className={classNames("font-medium text-gray-800", sz.title)}>
-              {new Intl.DateTimeFormat(language, { month: "short", year: "numeric" }).format(calendarMonth)}
-            </span>
+            <button
+              type="button"
+              onMouseDown={(ev) => ev.preventDefault()}
+              onClick={() => setCalendarView((view) => (view === "days" ? "months" : "days"))}
+              aria-label={t("input.chooseMonthYear", "Choose month and year")}
+              aria-expanded={calendarView === "months"}
+              className={classNames(
+                "flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-gray-800 hover:bg-gray-100",
+                sz.title
+              )}
+              tabIndex={isCalendarOpen ? 0 : -1}
+            >
+              {calendarView === "days"
+                ? new Intl.DateTimeFormat(language, { month: "short", year: "numeric" }).format(calendarMonth)
+                : calendarMonth.getFullYear()}
+              <span aria-hidden="true" className="text-[0.7em] text-gray-500">
+                {calendarView === "months" ? "▴" : "▾"}
+              </span>
+            </button>
 
             <button
               type="button"
               onMouseDown={(ev) => ev.preventDefault()}
-              onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
-              aria-label={t("input.nextMonth", "Next month")}
+              onClick={() =>
+                setCalendarMonth((m) => (calendarView === "days" ? addMonths(m, 1) : addMonths(m, 12)))
+              }
+              aria-label={
+                calendarView === "days"
+                  ? t("input.nextMonth", "Next month")
+                  : t("input.nextYear", "Next year")
+              }
               className={classNames(
                 "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
                 sz.navBtn
@@ -566,7 +606,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             </button>
           </div>
 
-          <div className="mb-1 grid grid-cols-7 gap-1">
+          <div className={classNames("mb-1 grid grid-cols-7 gap-1", calendarView === "months" && "invisible")}>
             {weekdayLabels.map((w) => (
               <div
                 key={w}
@@ -577,7 +617,43 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1">{days}</div>
+          {calendarView === "days" ? (
+            <div
+              className="grid grid-cols-7 gap-1"
+              style={{ height: sz.dayArea, gridTemplateRows: `repeat(${dayRows}, minmax(0, 1fr))` }}
+            >
+              {days}
+            </div>
+          ) : (
+            <div
+              className="grid grid-cols-3 gap-1"
+              style={{ height: sz.dayArea, gridTemplateRows: "repeat(4, minmax(0, 1fr))" }}
+            >
+              {monthLabels.map((label, index) => {
+                const isActive = calendarMonth.getMonth() === index;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onMouseDown={(ev) => ev.preventDefault()}
+                    onClick={() => {
+                      setCalendarMonth(new Date(calendarMonth.getFullYear(), index, 1));
+                      setCalendarView("days");
+                    }}
+                    aria-pressed={isActive}
+                    tabIndex={isCalendarOpen ? 0 : -1}
+                    className={classNames(
+                      "flex items-center justify-center rounded-md hover:bg-gray-100",
+                      sz.title,
+                      isActive && "bg-gray-900 text-white hover:bg-gray-900"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       );
     };
