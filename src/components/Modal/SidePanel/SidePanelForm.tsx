@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Children, isValidElement, type ReactNode, type HTMLAttributes, type FormHTMLAttributes } from "react";
+import SidePanelFooterClose from "./SidePanelFooterClose";
 function splitActions(children: ReactNode) {
   const parts = Children.toArray(children);
   const last = parts[parts.length - 1];
@@ -9,7 +10,8 @@ function splitActions(children: ReactNode) {
 type RecordHintProps = { recordLabel?: ReactNode; recordName?: string };
 export function SidePanelHint({ recordLabel, recordName, editable = false }: RecordHintProps & { editable?: boolean }) {
   const { t } = useTranslation("common");
-  return <p className="settings-modal-hint">{recordLabel && <span>{recordLabel}: <b>{recordName?.trim() || "—"}</b></span>}<span>{t(editable ? "modalHints.editShortcuts" : "modalHints.previewShortcuts")}</span></p>;
+  const name = recordName?.trim();
+  return <p className="settings-modal-hint">{recordLabel && name ? <span>{recordLabel}: <b>{name}</b></span> : null}<span>{t(editable ? "modalHints.editShortcuts" : "modalHints.previewShortcuts")}</span></p>;
 }
 export function SidePanelForm({ children, className = "", recordLabel, recordName, onKeyDown, ...props }: FormHTMLAttributes<HTMLFormElement> & RecordHintProps) {
   const { body, actions } = splitActions(children);
@@ -21,7 +23,7 @@ export function SidePanelForm({ children, className = "", recordLabel, recordNam
     event.preventDefault();
     const submitter = event.currentTarget.querySelector<HTMLButtonElement>('button[type="submit"]:not(:disabled)');
     if (submitter) event.currentTarget.requestSubmit(submitter);
-  }} className="settings-modal-form"><div className={`settings-modal-scroll ${className}`}>{body}</div>{actions && <SidePanelFooter><div className="settings-modal-footer-layout"><SidePanelHint recordLabel={recordLabel} recordName={recordName} editable /><div className="settings-modal-action-buttons">{actions}</div></div></SidePanelFooter>}</form>;
+  }} className="settings-modal-form"><div className={`settings-modal-scroll ${className}`}>{body}</div>{actions && <SidePanelFooter><div className="settings-modal-footer-layout"><SidePanelHint recordLabel={recordLabel} recordName={recordName} editable /><div className="settings-modal-action-buttons">{actions}</div><SidePanelFooterClose /></div></SidePanelFooter>}</form>;
 }
 /** Layout only: each feature owns its action labels and button variants. */
 export function SidePanelFooter({ children, ...props }: Omit<HTMLAttributes<HTMLElement>, "className" | "style">) {

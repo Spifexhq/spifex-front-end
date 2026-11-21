@@ -6,7 +6,7 @@ import { AccountingReviewGuideContext } from "./AccountingReviewGuideState";
 
 function Panel({ open, close }: { open: boolean; close(): void }) {
   const { t } = useTranslation("accountingSettings");
-  return <SidePanel isOpen={open} mode="edit" onClose={close} title={t("nav.reconciliation")} subtitle={t("redesign.guide.description")} eyebrow={t("section.operations")}>
+  return <SidePanel isOpen={open} mode="edit" onClose={close} title={t("nav.reconciliation")} eyebrow={t("section.operations")}>
     <div className="settings-modal-scroll p-4 sm:p-5">{open ? <AccountingReviewGuideContent onNavigate={close}/> : null}</div>
   </SidePanel>;
 }

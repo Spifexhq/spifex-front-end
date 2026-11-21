@@ -154,7 +154,7 @@ export default function StockMovementPanel({
   const submitLabel = mode === "receipt" ? t("stock.adjust.submitReceipt") : mode === "issue" ? t("stock.adjust.submitIssue") : t("stock.adjust.submitAdjustment");
 
   return (
-    <SidePanel mode="edit" isOpen={isOpen} title={title} subtitle={t("stock.adjust.subtitle")} onClose={onClose} busy={saving}>
+    <SidePanel mode="edit" isOpen={isOpen} title={title} onClose={onClose} busy={saving}>
       <SidePanelForm onSubmit={submit} className="space-y-4 pb-4 md:pb-6">
         {error ? <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
 

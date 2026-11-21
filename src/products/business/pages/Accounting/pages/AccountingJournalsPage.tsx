@@ -482,8 +482,7 @@ const AccountingJournalsPage: React.FC = () => {
 
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={t("journalsPage.modal.title", "Manual journal")}
-        subtitle={t("journalsPage.modal.subtitle", "Create a controlled accounting entry with balanced debit and credit lines.")}
+        title={t("journalsPage.modal.title", "Manual journal")}
       >
         {lookupsLoading ? (
           <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={5} /></div>
@@ -704,8 +703,7 @@ const AccountingJournalsPage: React.FC = () => {
         isOpen={previewStack.length > 0}
         onClose={closePreview}
         stackDepth={Math.max(0, previewStack.length - 1)}
-        title={activeJournal ? t("redesign.journalDetails", "Journal details") : relatedData?.description || financeT("entryDetails")}
-        subtitle={activeJournal ? journalDisplayId(activeJournal) : topPreview?.kind !== "journal" ? topPreview?.id : undefined}
+        title={activeJournal ? t("redesign.journalDetails", "Journal details") : relatedData?.description || financeT("entryDetails")}
         recordLabel={activeJournal ? t("footer.journal", "Journal") : undefined}
         recordName={activeJournal ? journalDisplayId(activeJournal) : undefined}
         footer={!activeJournal ? <Button type="button" variant="secondary" onClick={closePreview}>{t("journalsPage.backToJournal", "Back")}</Button> : undefined}
@@ -779,8 +777,7 @@ const AccountingJournalsPage: React.FC = () => {
       <SidePanel
         isOpen={!!historyPreview}
         onClose={() => setHistoryPreview(null)}
-        title={t("journalsPage.history.previewTitle", "Deleted journal")}
-        subtitle={historyPreview ? journalDisplayId({ id: historyPreview.journal_entry_id, entry_number: historyPreview.entry_number, posting_date: historyPreview.posting_date }) : undefined}
+        title={t("journalsPage.history.previewTitle", "Deleted journal")}
       >
         {historyPreview ? <div className="space-y-6">
           <SidePanelDetails fields={[

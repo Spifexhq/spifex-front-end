@@ -239,7 +239,6 @@ const AccountingBankMappingsPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={t("bankMappingsPage.modal.title", "Bank mapping")}
-        subtitle={t("bankMappingsPage.modal.subtitle", "Choose the operational bank account, accounting book, and bank-control ledger account.")}
       >
         {lookupsLoading ? (
           <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={4} /></div>

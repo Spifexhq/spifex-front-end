@@ -60,7 +60,6 @@ export default function InventoryLocationPreviewPanel({
       skeletonVariant="detail"
       skeletonRows={5}
       title={t("locations.previewTitle")}
-      subtitle={location ? `${location.code} · ${location.name}` : undefined}
       onClose={onClose}
       footer={location && canEdit ? <Button type="button" variant="secondary" onClick={() => onEdit(location)}>{t("common.edit")}</Button> : undefined}
     >

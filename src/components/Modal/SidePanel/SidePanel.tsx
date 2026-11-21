@@ -1,8 +1,8 @@
 import { Suspense, Children, isValidElement, useId, type ReactNode, type RefObject } from "react";
-import { useTranslation } from "react-i18next";
-import Button from "@/shared/ui/Button";
 import { SidePanelFrame, SidePanelHeader } from "./SidePanelFrame";
-import { SidePanelForm, SidePanelHint } from "./SidePanelForm";
+import { SidePanelForm, SidePanelFooter, SidePanelHint } from "./SidePanelForm";
+import { SidePanelContext } from "./SidePanelContext";
+import SidePanelFooterClose from "./SidePanelFooterClose";
 
 import PreviewSkeleton from "./PreviewSkeleton";
 
@@ -12,7 +12,6 @@ type Props = {
   skeletonRows?: number;
   isOpen: boolean;
   title: ReactNode;
-  subtitle?: ReactNode;
   eyebrow?: ReactNode;
   mode?: "preview" | "edit";
   busy?: boolean;
@@ -29,8 +28,15 @@ type Props = {
   stackDepth?: number;
   /** Optional preview actions. Rendered in the pinned footer. */
   footer?: ReactNode;
-  showFooterHint?: boolean;
 };
+
+/** Mirrors the real footer buttons so nothing appears once data resolves. */
+function FooterActionsSkeleton() {
+  return <div className="settings-modal-footer-skeleton" aria-hidden="true">
+    <span className="h-[34px] w-[88px] rounded-md bg-gray-100 motion-safe:animate-pulse" />
+    <span className="h-[34px] w-[132px] rounded-md bg-gray-100 motion-safe:animate-pulse" />
+  </div>;
+}
 
 /**
  * A sliding dialog with a fixed header, scrollable body, and pinned actions.
@@ -44,7 +50,6 @@ export default function SidePanel({
   skeletonVariant = "list",
   skeletonRows = 7,
   title,
-  subtitle,
   eyebrow,
   onClose,
   children,
@@ -53,10 +58,8 @@ export default function SidePanel({
   contentClassName = "",
   className,
   footer,
-  showFooterHint = false,
   mode, busy = false, tabs, dialogRef, overlay, stackDepth = 0,
 }: Props) {
-  const { t } = useTranslation("common");
   const generatedId = useId();
   const titleId = `side-panel-${generatedId.replace(/:/g, "")}`;
 
@@ -65,43 +68,44 @@ export default function SidePanel({
   const editing = mode === "edit" || isForm;
 
   return (
-    <SidePanelFrame
-      isOpen={isOpen}
-      labelledBy={titleId}
-      className={className}
-      dialogRef={dialogRef}
-      stackDepth={stackDepth}
-      onClose={onClose}
-      closeOnBackdrop={!editing && !busy}
-      busy={busy}
-      overlay={overlay}
-      header={
-        <SidePanelHeader
-          titleId={titleId}
-          title={title}
-          subtitle={subtitle}
-          eyebrow={eyebrow}
-          onClose={onClose}
-          disabled={busy}
-        >{tabs}</SidePanelHeader>
-      }
-    >
-      {editing ? children : (
-        <div className="settings-modal-form flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>{loading ? <PreviewSkeleton variant={skeletonVariant} rows={skeletonRows} /> : <Suspense fallback={<PreviewSkeleton variant={skeletonVariant} rows={skeletonRows} />}>{children}</Suspense>}</div>
-          </div>
-          <footer className={`settings-modal-footer ${!footer ? "md:hidden!" : ""}`}>
-            <div className="settings-modal-footer-layout" style={!showFooterHint ? { justifyContent: "flex-end" } : undefined}>
-              {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? (typeof subtitle === "string" ? subtitle : undefined)} />}
-              <div className="settings-modal-action-buttons">
-                <span className="md:hidden!"><Button variant="secondary" disabled={busy} onClick={onClose}>{t("modal.close")}</Button></span>
-                {footer}
-              </div>
+    <SidePanelContext.Provider value={{ onClose, busy }}>
+      <SidePanelFrame
+        isOpen={isOpen}
+        labelledBy={titleId}
+        className={className}
+        dialogRef={dialogRef}
+        stackDepth={stackDepth}
+        onClose={onClose}
+        closeOnBackdrop={!editing && !busy}
+        busy={busy}
+        overlay={overlay}
+        header={
+          <SidePanelHeader
+            titleId={titleId}
+            title={title}
+            eyebrow={eyebrow}
+            onClose={onClose}
+            disabled={busy}
+          >{tabs}</SidePanelHeader>
+        }
+      >
+        {editing ? children : (
+          <div className="settings-modal-form flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>{loading ? <PreviewSkeleton variant={skeletonVariant} rows={skeletonRows} /> : <Suspense fallback={<PreviewSkeleton variant={skeletonVariant} rows={skeletonRows} />}>{children}</Suspense>}</div>
             </div>
-          </footer>
-        </div>
-      )}
-    </SidePanelFrame>
+            <SidePanelFooter>
+              <div className="settings-modal-footer-layout">
+                <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName} />
+                <div className="settings-modal-action-buttons">
+                  {loading ? <FooterActionsSkeleton /> : footer}
+                </div>
+                <SidePanelFooterClose />
+              </div>
+            </SidePanelFooter>
+          </div>
+        )}
+      </SidePanelFrame>
+    </SidePanelContext.Provider>
   );
 }

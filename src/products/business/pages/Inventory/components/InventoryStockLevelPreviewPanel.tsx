@@ -66,7 +66,6 @@ export default function InventoryStockLevelPreviewPanel({
       skeletonVariant="detail"
       skeletonRows={6}
       title={t("stock.levelPreviewTitle")}
-      subtitle={level ? `${level.sku} · ${level.location_name}` : undefined}
       onClose={onClose}
       footer={level && canEdit ? <Button type="button" onClick={() => onAdjust(level)}>{t("stock.addMovement")}</Button> : undefined}
     >

@@ -61,7 +61,6 @@ export default function PersonalCategorySidePanel({ record, onClose, onSaved }: 
     onClose={onClose}
     busy={busy}
     title={record ? t("edit") : t("create")}
-    subtitle={t("categories")}
     contentClassName="pb-4 md:pb-6"
   >
     <SidePanelForm onSubmit={submit} className="space-y-5">

@@ -43,7 +43,6 @@ function Panel({ open, source, closeSetup, confirming, finishClose, continueEdit
     onClose={closeSetup}
     busy={busy}
     title={t("guidedSetup.title")}
-    subtitle={t("guidedSetup.description")}
     eyebrow={t("guidedSetup.eyebrow")}
   >
     <div className="settings-modal-scroll p-4 sm:p-5">

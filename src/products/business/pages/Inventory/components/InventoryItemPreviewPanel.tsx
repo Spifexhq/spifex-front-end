@@ -59,7 +59,6 @@ export default function InventoryItemPreviewPanel({
       isOpen={!!top}
       stackDepth={stackDepth}
       title={top?.kind === "prices" ? t("prices.historyTitle") : t("items.columns.item")}
-      subtitle={item ? `${item.sku} · ${item.name}` : undefined}
       onClose={onClose}
       footer={footer}
     >

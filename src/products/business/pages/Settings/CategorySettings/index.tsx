@@ -416,7 +416,6 @@ const CategorySettingsPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={form.id ? t("modal.editTitle") : t("modal.createTitle")}
-        subtitle={t("modal.subtitle")}
         contentClassName="pb-4 md:pb-6"
       >
         <SidePanelForm onSubmit={submit} className="space-y-4">

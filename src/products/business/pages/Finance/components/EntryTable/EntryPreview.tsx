@@ -74,7 +74,7 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
     const editable = shown && !isSettlement(shown) ? shown : null;
     const canSettle = !!editable && isOutstandingEntry(editable);
     const revertable = !!shown && isSettlement(shown) && !!onRevert;
-    return <SidePanel skeletonVariant="detail" loading={loading || (!!entry && !currentDetails && !error)} eyebrow={t("entryDetails")} isOpen={!!entry} title={entry?.description || t("entryDetails")} subtitle={t(entry && isSettlement(entry) ? "settledEntry" : "plannedEntry")} onClose={onClose} footer={editable && (onEdit || (onSettle && canSettle)) ? <>
+    return <SidePanel skeletonVariant="detail" loading={loading || (!!entry && !currentDetails && !error)} eyebrow={t("entryDetails")} isOpen={!!entry} title={entry?.description || t("entryDetails")} onClose={onClose} footer={editable && (onEdit || (onSettle && canSettle)) ? <>
       {onEdit && <Button variant="secondary" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onEdit(editable); }}>{t("edit")}</Button>}
       {onSettle && canSettle && <Button variant="primary" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onSettle(editable); }}>{t("settle")}</Button>}
     </> : revertable ? <Button variant="secondary" isLoading={reverting} disabled={reverting || loading || !currentDetails} onClick={() => {

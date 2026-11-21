@@ -183,7 +183,6 @@ const AccountingBooksPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={form.id ? t("booksPage.modal.editTitle", "Edit accounting book") : t("booksPage.modal.newTitle", "New accounting book")}
-        subtitle={t("booksPage.modal.subtitle", "Create or update the accounting basis and posting currency.")}
       >
         <SidePanelForm recordLabel={t("footer.book", "Book")} recordName={form.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">

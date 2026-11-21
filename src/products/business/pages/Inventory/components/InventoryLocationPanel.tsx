@@ -169,7 +169,6 @@ export default function InventoryLocationPanel({
       mode="edit"
       isOpen={isOpen}
       title={mode === "create" ? t("locations.panel.createTitle") : t("locations.panel.editTitle")}
-      subtitle={t("locations.panel.subtitle")}
       onClose={attemptClose}
       busy={busy}
     >

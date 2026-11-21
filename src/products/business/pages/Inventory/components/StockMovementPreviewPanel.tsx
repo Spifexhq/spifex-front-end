@@ -17,7 +17,6 @@ export default function StockMovementPreviewPanel({
     <SidePanel
       isOpen={!!movement}
       title={t("stock.movementPreviewTitle")}
-      subtitle={movement ? `${movement.sku} · ${formatDateFromISO(movement.occurred_at)}` : undefined}
       onClose={onClose}
     >
       {movement ? (

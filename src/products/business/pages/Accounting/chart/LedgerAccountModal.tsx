@@ -254,15 +254,7 @@ const LedgerAccountModal: React.FC<Props> = ({
   return (
     <SidePanel mode="edit" isOpen={isOpen}  title={<>{mode === "create"
                   ? t("modal.createTitle", "Create ledger account")
-                  : t("modal.editTitle", "Edit ledger account")}</>} subtitle={<>{mode === "create"
-                  ? t(
-                      "modal.createSubtitle",
-                      "Create a ledger account with structure, classification, and posting controls."
-                    )
-                  : t(
-                      "modal.editSubtitle",
-                      "Update the ledger account structure, classification, and posting controls."
-                    )}</>} onClose={onClose} busy={busy}>
+                  : t("modal.editTitle", "Edit ledger account")}</>} onClose={onClose} busy={busy}>
 
 
         {/* Ctrl/Cmd+S submit shortcut; form semantics stay with the native element. */}

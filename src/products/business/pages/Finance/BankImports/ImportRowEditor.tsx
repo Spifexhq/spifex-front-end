@@ -71,7 +71,7 @@ export default function ImportRowEditor({ isOpen, row, sessionId, lookups, perso
   };
   const matched = row.candidate_payload?.category_source !== "ai" ? row.candidate_payload?.row_candidates?.[0] : undefined;
   const suggested = lookups.cashflow_categories.find(item => item.id === row.candidate_payload?.suggested_category_id);
-  if (readOnly) return <SidePanel isOpen={isOpen} title={t("workspace.transaction")} subtitle={row.source_description} eyebrow={t("workspace.reviewTitle")} onClose={onClose}><SidePanelDetails fields={[
+  if (readOnly) return <SidePanel isOpen={isOpen} title={t("workspace.transaction")} eyebrow={t("workspace.reviewTitle")} onClose={onClose}><SidePanelDetails fields={[
     { label: t("workspace.description"), value: draft.description }, { label: t("workspace.date"), value: draft.due_date },
     { label: t("workspace.amount"), value: draft.amount ? formatCurrency(draft.amount, currency) : "-" }, { label: t("workspace.direction"), value: t(draft.tx_type === "-1" ? "workspace.paid" : "workspace.received") },
     { label: t("workspace.category"), value: row.cashflow_category?.label },
@@ -81,7 +81,7 @@ export default function ImportRowEditor({ isOpen, row, sessionId, lookups, perso
     ]),
     { label: t("workspace.observation"), value: draft.observation }, { label: t("workspace.notes"), value: draft.notes },
   ]} /></SidePanel>;
-  return <SidePanel isOpen={isOpen} title={t("workspace.transaction")} subtitle={row.source_description} eyebrow={t("workspace.reviewTitle")} mode="edit" busy={busy} onClose={close} overlay={discard ? <ConfirmToast open text={t("workspace.discard")} confirmLabel={t("workspace.discardAction")} cancelLabel={t("workspace.cancel")} onConfirm={onClose} onCancel={() => setDiscard(false)} /> : undefined}>
+  return <SidePanel isOpen={isOpen} title={t("workspace.transaction")} eyebrow={t("workspace.reviewTitle")} mode="edit" busy={busy} onClose={close} overlay={discard ? <ConfirmToast open text={t("workspace.discard")} confirmLabel={t("workspace.discardAction")} cancelLabel={t("workspace.cancel")} onConfirm={onClose} onCancel={() => setDiscard(false)} /> : undefined}>
     <form className="flex min-h-0 flex-1 flex-col" onSubmit={event => { event.preventDefault(); if (!readOnly && !busy) void save(); }}>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-6">
         {row.duplicate_confidence >= .8 && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-800">{t("workspace.duplicateWarning")}</p>}

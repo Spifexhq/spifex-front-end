@@ -42,10 +42,12 @@ export function SidePanelFrame({ isOpen, labelledBy, header, children, onClose, 
   );
 }
 
-export function SidePanelHeader({ title, titleId, subtitle, eyebrow, onClose, disabled = false, children }: { title: ReactNode; titleId: string; subtitle?: ReactNode; eyebrow?: ReactNode; onClose(): void; disabled?: boolean; children?: ReactNode }) {
+export function SidePanelHeader({ title, titleId, eyebrow, onClose, disabled = false, children }: { title: ReactNode; titleId: string; eyebrow?: ReactNode; onClose(): void; disabled?: boolean; children?: ReactNode }) {
   const { t } = useTranslation("common");
+  // Two rows only: kicker and title. Context that used to sit in a subtitle
+  // belongs in the body, so every drawer header keeps the same height.
   return <header className={children ? "settings-modal-standard-header settings-modal-header-with-tabs" : "settings-modal-standard-header"}>
-    <div className="settings-modal-heading-row"><div className="min-w-0"><p className="settings-modal-kicker">{eyebrow ?? t("header.settings")}</p><h2 id={titleId} className="settings-modal-title">{title}</h2>{subtitle && <p className="settings-modal-subtitle">{subtitle}</p>}</div>
+    <div className="settings-modal-heading-row"><div className="min-w-0"><p className="settings-modal-kicker">{eyebrow ?? t("header.settings")}</p><h2 id={titleId} className="settings-modal-title">{title}</h2></div>
       <button type="button" className="settings-modal-close" onClick={onClose} disabled={disabled} aria-label={t("modal.close")}><X size={18} aria-hidden="true" /></button>
     </div>{children}
   </header>;

@@ -31,7 +31,6 @@
 .settings-modal-standard-header .settings-modal-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
 .settings-modal-kicker { margin: 0 0 3px; font-size: 11px; line-height: 16px; font-weight: 500; text-transform: uppercase; letter-spacing: .025em; color: #687385; }
 .settings-modal-title { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: normal; color: #202936; }
-.settings-modal-subtitle { margin: 5px 0 0; font-size: 12px; line-height: 18px; color: #687385; }
 .settings-modal-scroll { font-size: 13px; color: #202936; }
 .settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 34px; height: 34px; padding: 6px 14px; font-size: 12px; line-height: 20px; font-weight: 500; }
 @media(max-width:767px) { .settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 40px; height: 40px; }}
@@ -40,8 +39,16 @@
 .settings-modal-hint b { color: #465164; font-weight: 600; overflow-wrap: anywhere; }
 .settings-modal-hint > span:last-child { color: #99a1ad; }
 .settings-modal-action-buttons { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
+.settings-modal-footer .settings-modal-action-buttons { margin-left: auto; }
 .settings-modal-action-buttons > div { display: flex; align-items: center; gap: 8px; padding: 0; border: 0; position: static; }
-@media(max-width:767px) { .settings-modal-hint { display: none; } .settings-modal-footer-layout { justify-content: flex-end !important; }}
+.settings-modal-footer-skeleton { display: flex; align-items: center; gap: 8px; }
+.settings-modal-footer-close { display: inline-flex; }
+@media(max-width:767px) {
+  .settings-modal-hint { display: none; }
+  .settings-modal-footer .settings-modal-footer-layout { justify-content: space-between; }
+  .settings-modal-footer .settings-modal-action-buttons { margin-left: 0; }
+  .settings-modal-footer-close { margin-left: auto; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .settings-modal-tab { transition: none; }

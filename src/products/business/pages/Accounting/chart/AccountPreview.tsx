@@ -9,7 +9,7 @@ export default function AccountPreview({ selected, items, onClose, onEdit, onDel
   const { t: accounting } = useTranslation("accountingSettings");
   const sectionLabel = (value: string) => accounting(`common.sections.${value === "off_balance" ? "offBalance" : value}`);
   return (
-    <SidePanel  showFooterHint={false} isOpen={!!selected} title={selected?.name || ""} subtitle={selected?.code} onClose={() => onClose()}
+    <SidePanel isOpen={!!selected} title={selected?.name || ""} onClose={() => onClose()}
       footer={selected && (onEdit || onDelete) ? <>
         {onDelete && !selected.is_system ? <Button type="button" variant="secondary" className="w-full md:w-auto" onClick={() => { onClose(); onDelete(selected); }}>{t("workspace.delete")}</Button> : <span />}
         {onEdit && <Button type="button" variant="secondary" className="w-full md:w-auto" onClick={() => { onClose(); onEdit(selected); }}>{t("workspace.edit")}</Button>}

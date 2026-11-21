@@ -295,7 +295,6 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={t("postingPoliciesPage.modal.title", "Posting policy")}
-        subtitle={t("postingPoliciesPage.modal.subtitle", "Define how one operational category maps into settlement, accrual, and clearing accounts.")}
       >
         {lookupsLoading ? (
           <div className="settings-modal-scroll"><PageSkeleton variant="panel" rows={5} /></div>
