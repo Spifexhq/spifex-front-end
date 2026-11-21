@@ -362,28 +362,28 @@
       "description": "Inspecter les permissions effectives d'un autre membre et leur source."
     },
     "change_organization_profile": {
-      "label": "Organization profile",
-      "description": "Can change the organization name, address, country and timezone."
+      "label": "Profil de l’organisation",
+      "description": "Peut modifier le nom, l’adresse, le pays et le fuseau horaire de l’organisation."
     },
     "change_organization_currency": {
-      "label": "Organization currency",
-      "description": "Can change the organization currency."
+      "label": "Devise de l’organisation",
+      "description": "Peut modifier la devise de l’organisation."
     },
     "change_organization_ledger_profile": {
-      "label": "Accounting preferences",
-      "description": "Can change organization accounting preferences."
+      "label": "Préférences comptables",
+      "description": "Peut modifier les préférences comptables de l’organisation."
     },
     "manage_billing_subscription": {
-      "label": "Subscription management",
-      "description": "Can start, change or cancel the workspace subscription."
+      "label": "Gestion de l’abonnement",
+      "description": "Peut démarrer, modifier ou annuler l’abonnement de l’espace de travail."
     },
     "manage_billing_payment_methods": {
-      "label": "Payment methods",
-      "description": "Can manage payment methods and billing portal actions."
+      "label": "Moyens de paiement",
+      "description": "Peut gérer les moyens de paiement et les actions du portail de facturation."
     },
     "view_integrations": {
-      "label": "Integration activity",
-      "description": "Can view workspace integration activity."
+      "label": "Activité des intégrations",
+      "description": "Peut consulter l’activité des intégrations de l’espace de travail."
     },
     "view_ai_connections": {
       "label": "Connexions IA",
@@ -589,7 +589,7 @@
     },
     "badges": {
       "sensitive": "Sensible",
-      "administrative": "Administrative",
+      "administrative": "Administratif",
       "legacy": "Hérité",
       "planUnavailable": "Indisponible dans le forfait",
       "nonDelegable": "Non délégable",

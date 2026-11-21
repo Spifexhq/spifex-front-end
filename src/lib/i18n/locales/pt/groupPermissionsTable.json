@@ -362,28 +362,28 @@
       "description": "Inspecionar as permissões efetivas de outro colaborador e sua origem."
     },
     "change_organization_profile": {
-      "label": "Organization profile",
-      "description": "Can change the organization name, address, country and timezone."
+      "label": "Perfil da organização",
+      "description": "Permite alterar o nome, o endereço, o país e o fuso horário da organização."
     },
     "change_organization_currency": {
-      "label": "Organization currency",
-      "description": "Can change the organization currency."
+      "label": "Moeda da organização",
+      "description": "Permite alterar a moeda da organização."
     },
     "change_organization_ledger_profile": {
-      "label": "Accounting preferences",
-      "description": "Can change organization accounting preferences."
+      "label": "Preferências de contabilidade",
+      "description": "Permite alterar as preferências de contabilidade da organização."
     },
     "manage_billing_subscription": {
-      "label": "Subscription management",
-      "description": "Can start, change or cancel the workspace subscription."
+      "label": "Gestão da assinatura",
+      "description": "Permite iniciar, alterar ou cancelar a assinatura do espaço de trabalho."
     },
     "manage_billing_payment_methods": {
-      "label": "Payment methods",
-      "description": "Can manage payment methods and billing portal actions."
+      "label": "Métodos de pagamento",
+      "description": "Permite gerenciar métodos de pagamento e ações do portal de faturamento."
     },
     "view_integrations": {
-      "label": "Integration activity",
-      "description": "Can view workspace integration activity."
+      "label": "Atividade de integrações",
+      "description": "Permite ver a atividade de integrações do espaço de trabalho."
     },
     "view_ai_connections": {
       "label": "Ligações de IA",

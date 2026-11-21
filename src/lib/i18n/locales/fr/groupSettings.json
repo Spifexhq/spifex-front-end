@@ -9,6 +9,7 @@
   },
   "left": {
     "groups": "Groupes",
+    "results": "groupes",
     "create": "Ajouter un groupe",
     "searchPlaceholder": "Rechercher des groupes…",
     "meta": "{{perms}} autorisations • {{members}} membres",

@@ -37,17 +37,26 @@
     "edit": "Edit",
     "delete": "Delete",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "useAdminTemplate": "Use Administrator template"
   },
 
-  "btnLabel": { "groups": "Select groups" },
+  "btnLabel": { "groups": "Select groups", "role": "Select role" },
 
   "field": {
     "name": "Name",
     "email": "Email",
     "tempPassword": "Temporary password",
     "confirmPassword": "Confirm password",
-    "groups": "Groups"
+    "groups": "Groups",
+    "role": "Role",
+    "roleHint": "Only the owner can assign administrators. Administrator access comes from the selected groups.",
+    "memberRole": "Member",
+    "adminRole": "Administrator",
+    "adminTemplateHint": "Use the full Administrator template only when broad administrative access is intended.",
+    "adminNoGroups": "This administrator has no access until at least one permission group is assigned.",
+    "adminTemplateSelected": "The full Administrator system bundle is selected. The owner can still remove it later.",
+    "systemGroup": "system"
   },
 
   "modal": {
@@ -84,6 +93,36 @@
     "saveOk": "Member saved.",
     "deleteOk": "Member deleted."
   },
+  "effectiveAccess": {
+    "title": "Effective access",
+    "savedHint": "Preview reflects saved assignments. Save changes, then refresh.",
+    "selectedGroupsHint": "Preview the permissions in the selected groups before saving. Plan restrictions still apply.",
+    "previewGroups": "Preview selected groups",
+    "preview": "Preview",
+    "loading": "Loading…",
+    "loadError": "Failed to load effective access.",
+    "groupsLoadError": "Failed to load selected group permissions.",
+    "assignedCodes": "Assigned codes",
+    "effectiveCodes": "Effective codes",
+    "planUnavailable": "Unavailable under the current plan",
+    "missingDependencies": "Missing read/page dependencies",
+    "groupSources": "Group sources",
+    "resourceScopes": "Resource scopes",
+    "scopeAll": "All resources",
+    "scopeNone": "No resources",
+    "ownerOnly": "Protected owner-only operations",
+    "warnings": {
+      "owner_protected_authority": "Owner authority is protected and is not granted through groups.",
+      "administrator_has_no_groups": "This administrator has no permission groups and therefore no access.",
+      "member_has_no_groups": "This member has no permission groups and therefore no access.",
+      "plan_unavailable_codes": "Some assigned permissions are not available under the current plan.",
+      "missing_dependencies": "Some permissions are missing required read/page dependencies.",
+      "inactive_assigned_codes": "Some assigned permissions are inactive and do not grant access.",
+      "resource_scope_missing": "A resource-scoped permission has no configured resource scope and therefore grants no resource access.",
+      "ledger_department_scope_not_enforceable": "Ledger journals have no department field. Ledger access is broader than department-scoped financial visibility; use bank/project ledger scopes and separate accounting permissions."
+    }
+  },
+
   "preview": {
   "fields": {
     "name": "Name",

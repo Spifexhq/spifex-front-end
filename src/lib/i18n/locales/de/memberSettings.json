@@ -37,17 +37,26 @@
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "save": "Speichern",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "useAdminTemplate": "Administrator-Vorlage verwenden"
   },
 
-  "btnLabel": { "groups": "Gruppen auswählen" },
+  "btnLabel": { "groups": "Gruppen auswählen", "role": "Rolle auswählen" },
 
   "field": {
     "name": "Name",
     "email": "E-Mail",
     "tempPassword": "Temporäres Passwort",
     "confirmPassword": "Passwort bestätigen",
-    "groups": "Gruppen"
+    "groups": "Gruppen",
+    "role": "Rolle",
+    "roleHint": "Nur der Eigentümer kann Administratoren zuweisen. Der Administratorzugriff ergibt sich aus den ausgewählten Gruppen.",
+    "memberRole": "Mitglied",
+    "adminRole": "Administrator",
+    "adminTemplateHint": "Verwenden Sie die vollständige Administrator-Vorlage nur, wenn ein umfassender administrativer Zugriff beabsichtigt ist.",
+    "adminNoGroups": "Dieser Administrator hat keinen Zugriff, bis mindestens eine Berechtigungsgruppe zugewiesen ist.",
+    "adminTemplateSelected": "Das vollständige Administrator-Systempaket ist ausgewählt. Der Eigentümer kann es später weiterhin entfernen.",
+    "systemGroup": "System"
   },
 
   "modal": {
@@ -84,6 +93,36 @@
     "saveOk": "Mitglied gespeichert.",
     "deleteOk": "Mitglied gelöscht."
   },
+  "effectiveAccess": {
+    "title": "Effektiver Zugriff",
+    "savedHint": "Die Vorschau zeigt gespeicherte Zuweisungen. Speichern Sie die Änderungen und aktualisieren Sie anschließend.",
+    "selectedGroupsHint": "Zeigen Sie die Berechtigungen der ausgewählten Gruppen vor dem Speichern in der Vorschau an. Tarifbeschränkungen gelten weiterhin.",
+    "previewGroups": "Ausgewählte Gruppen in der Vorschau",
+    "preview": "Vorschau",
+    "loading": "Wird geladen…",
+    "loadError": "Effektiver Zugriff konnte nicht geladen werden.",
+    "groupsLoadError": "Berechtigungen der ausgewählten Gruppen konnten nicht geladen werden.",
+    "assignedCodes": "Zugewiesene Codes",
+    "effectiveCodes": "Effektive Codes",
+    "planUnavailable": "Im aktuellen Tarif nicht verfügbar",
+    "missingDependencies": "Fehlende Lese-/Seitenabhängigkeiten",
+    "groupSources": "Gruppenquellen",
+    "resourceScopes": "Ressourcenbereiche",
+    "scopeAll": "Alle Ressourcen",
+    "scopeNone": "Keine Ressourcen",
+    "ownerOnly": "Geschützte eigentümer-exklusive Vorgänge",
+    "warnings": {
+      "owner_protected_authority": "Die Eigentümerbefugnis ist geschützt und wird nicht über Gruppen vergeben.",
+      "administrator_has_no_groups": "Dieser Administrator hat keine Berechtigungsgruppen und daher keinen Zugriff.",
+      "member_has_no_groups": "Dieses Mitglied hat keine Berechtigungsgruppen und daher keinen Zugriff.",
+      "plan_unavailable_codes": "Einige zugewiesene Berechtigungen sind im aktuellen Tarif nicht verfügbar.",
+      "missing_dependencies": "Bei einigen Berechtigungen fehlen erforderliche Lese-/Seitenabhängigkeiten.",
+      "inactive_assigned_codes": "Einige zugewiesene Berechtigungen sind inaktiv und gewähren keinen Zugriff.",
+      "resource_scope_missing": "Eine ressourcenbezogene Berechtigung hat keinen konfigurierten Ressourcenbereich und gewährt daher keinen Ressourcenzugriff.",
+      "ledger_department_scope_not_enforceable": "Hauptbuchjournale haben kein Abteilungsfeld. Der Hauptbuchzugriff ist breiter als die abteilungsbezogene finanzielle Sichtbarkeit; verwenden Sie Bank-/Projektbereiche im Hauptbuch und separate Buchhaltungsberechtigungen."
+    }
+  },
+
   "preview": {
   "fields": {
     "name": "Name",

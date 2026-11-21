@@ -37,17 +37,26 @@
     "edit": "Modifier",
     "delete": "Supprimer",
     "save": "Enregistrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "useAdminTemplate": "Utiliser le modèle Administrateur"
   },
 
-  "btnLabel": { "groups": "Sélectionner des groupes" },
+  "btnLabel": { "groups": "Sélectionner des groupes", "role": "Sélectionner un rôle" },
 
   "field": {
     "name": "Nom",
     "email": "E-mail",
     "tempPassword": "Mot de passe temporaire",
     "confirmPassword": "Confirmer le mot de passe",
-    "groups": "Groupes"
+    "groups": "Groupes",
+    "role": "Rôle",
+    "roleHint": "Seul le propriétaire peut attribuer des administrateurs. L’accès administrateur provient des groupes sélectionnés.",
+    "memberRole": "Membre",
+    "adminRole": "Administrateur",
+    "adminTemplateHint": "N’utilisez le modèle Administrateur complet que si un accès administratif étendu est souhaité.",
+    "adminNoGroups": "Cet administrateur n’a aucun accès tant qu’au moins un groupe de permissions n’est pas attribué.",
+    "adminTemplateSelected": "L’ensemble système Administrateur complet est sélectionné. Le propriétaire peut toujours le retirer plus tard.",
+    "systemGroup": "système"
   },
 
   "modal": {
@@ -84,6 +93,36 @@
     "saveOk": "Membre enregistré.",
     "deleteOk": "Membre supprimé."
   },
+  "effectiveAccess": {
+    "title": "Accès effectif",
+    "savedHint": "L’aperçu reflète les attributions enregistrées. Enregistrez les modifications, puis actualisez.",
+    "selectedGroupsHint": "Prévisualisez les permissions des groupes sélectionnés avant d’enregistrer. Les restrictions du forfait s’appliquent toujours.",
+    "previewGroups": "Prévisualiser les groupes sélectionnés",
+    "preview": "Aperçu",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger l’accès effectif.",
+    "groupsLoadError": "Impossible de charger les permissions des groupes sélectionnés.",
+    "assignedCodes": "Codes attribués",
+    "effectiveCodes": "Codes effectifs",
+    "planUnavailable": "Indisponible avec le forfait actuel",
+    "missingDependencies": "Dépendances de lecture/page manquantes",
+    "groupSources": "Sources des groupes",
+    "resourceScopes": "Portées des ressources",
+    "scopeAll": "Toutes les ressources",
+    "scopeNone": "Aucune ressource",
+    "ownerOnly": "Opérations protégées réservées au propriétaire",
+    "warnings": {
+      "owner_protected_authority": "L’autorité du propriétaire est protégée et n’est pas accordée via les groupes.",
+      "administrator_has_no_groups": "Cet administrateur n’a aucun groupe de permissions et donc aucun accès.",
+      "member_has_no_groups": "Ce membre n’a aucun groupe de permissions et donc aucun accès.",
+      "plan_unavailable_codes": "Certaines permissions attribuées ne sont pas disponibles avec le forfait actuel.",
+      "missing_dependencies": "Certaines permissions n’ont pas les dépendances de lecture/page requises.",
+      "inactive_assigned_codes": "Certaines permissions attribuées sont inactives et n’accordent aucun accès.",
+      "resource_scope_missing": "Une permission liée aux ressources n’a aucune portée configurée et n’accorde donc aucun accès aux ressources.",
+      "ledger_department_scope_not_enforceable": "Les journaux du grand livre n’ont pas de champ département. L’accès au grand livre est plus large que la visibilité financière par département ; utilisez les portées banque/projet du grand livre et des permissions comptables distinctes."
+    }
+  },
+
   "preview": {
   "fields": {
     "name": "Nom",

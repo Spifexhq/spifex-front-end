@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "lint:a11y": "eslint src",
     "check:accounting-i18n": "node scripts/check-accounting-translations.mjs",
-    "test:permissions": "esbuild scripts/permission-ux.test.ts --bundle --platform=node --format=esm --outfile=.tmp/permission-ux.test.mjs && node --test .tmp/permission-ux.test.mjs"
+    "test:permissions": "esbuild scripts/permission-ux.test.ts --bundle --platform=node --format=esm --outfile=.tmp/permission-ux.test.mjs && node --test .tmp/permission-ux.test.mjs",
+    "test:i18n": "node --test scripts/locale-coverage.test.mjs scripts/locale-encoding.test.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.1",

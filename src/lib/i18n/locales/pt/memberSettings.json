@@ -37,17 +37,26 @@
     "edit": "Editar",
     "delete": "Excluir",
     "save": "Salvar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "useAdminTemplate": "Usar modelo Administrador"
   },
 
-  "btnLabel": { "groups": "Selecionar grupos" },
+  "btnLabel": { "groups": "Selecionar grupos", "role": "Selecionar função" },
 
   "field": {
     "name": "Nome",
     "email": "E-mail",
     "tempPassword": "Senha temporária",
     "confirmPassword": "Confirmar senha",
-    "groups": "Grupos"
+    "groups": "Grupos",
+    "role": "Função",
+    "roleHint": "Apenas o proprietário pode atribuir administradores. O acesso de administrador vem dos grupos selecionados.",
+    "memberRole": "Membro",
+    "adminRole": "Administrador",
+    "adminTemplateHint": "Use o modelo Administrador completo apenas quando pretender um acesso administrativo amplo.",
+    "adminNoGroups": "Este administrador não tem acesso até que pelo menos um grupo de permissões seja atribuído.",
+    "adminTemplateSelected": "O pacote de sistema Administrador completo está selecionado. O proprietário ainda pode removê-lo mais tarde.",
+    "systemGroup": "sistema"
   },
 
   "modal": {
@@ -84,6 +93,36 @@
     "saveOk": "Membro salvo.",
     "deleteOk": "Membro excluído."
   },
+  "effectiveAccess": {
+    "title": "Acesso efetivo",
+    "savedHint": "A pré-visualização reflete as atribuições salvas. Salve as alterações e atualize.",
+    "selectedGroupsHint": "Pré-visualize as permissões dos grupos selecionados antes de salvar. As restrições do plano continuam a aplicar-se.",
+    "previewGroups": "Pré-visualizar grupos selecionados",
+    "preview": "Pré-visualizar",
+    "loading": "Carregando…",
+    "loadError": "Falha ao carregar o acesso efetivo.",
+    "groupsLoadError": "Falha ao carregar as permissões dos grupos selecionados.",
+    "assignedCodes": "Códigos atribuídos",
+    "effectiveCodes": "Códigos efetivos",
+    "planUnavailable": "Indisponível no plano atual",
+    "missingDependencies": "Dependências de leitura/página ausentes",
+    "groupSources": "Origens dos grupos",
+    "resourceScopes": "Escopos de recursos",
+    "scopeAll": "Todos os recursos",
+    "scopeNone": "Nenhum recurso",
+    "ownerOnly": "Operações protegidas exclusivas do proprietário",
+    "warnings": {
+      "owner_protected_authority": "A autoridade do proprietário é protegida e não é concedida por meio de grupos.",
+      "administrator_has_no_groups": "Este administrador não tem grupos de permissões e, portanto, não tem acesso.",
+      "member_has_no_groups": "Este membro não tem grupos de permissões e, portanto, não tem acesso.",
+      "plan_unavailable_codes": "Algumas permissões atribuídas não estão disponíveis no plano atual.",
+      "missing_dependencies": "Algumas permissões não têm as dependências de leitura/página necessárias.",
+      "inactive_assigned_codes": "Algumas permissões atribuídas estão inativas e não concedem acesso.",
+      "resource_scope_missing": "Uma permissão com escopo de recurso não tem escopo configurado e, portanto, não concede acesso a recursos.",
+      "ledger_department_scope_not_enforceable": "Os diários do razão não têm campo de departamento. O acesso ao razão é mais amplo que a visibilidade financeira por departamento; use escopos de banco/projeto no razão e permissões de contabilidade separadas."
+    }
+  },
+
   "preview": {
   "fields": {
     "name": "Nome",

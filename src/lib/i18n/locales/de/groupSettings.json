@@ -9,6 +9,7 @@
   },
   "left": {
     "groups": "Gruppen",
+    "results": "Gruppen",
     "create": "Gruppe hinzufügen",
     "searchPlaceholder": "Gruppen suchen…",
     "meta": "{{perms}} Berechtigungen • {{members}} Mitglieder",
