@@ -101,7 +101,7 @@ export default function InventoryStockPage() {
     },
     canEdit ? (
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" className="gap-2" onClick={() => setTransferPanel({ open: true, locationId: pickers.locations.find(location => location.is_default)?.id })}>
+        <Button type="button" variant="secondary" className="gap-2" onClick={() => setTransferPanel({ open: true, locationId: pickers.locations.find(location => location.is_default)?.id })}>
           <ArrowLeftRight size={15} aria-hidden="true" />{t("stock.transfer")}
         </Button>
         <Button type="button" className="gap-2" onClick={() => setMovementPanel({ open: true, locationId: pickers.locations.find(location => location.is_default)?.id })}>
@@ -178,7 +178,7 @@ export default function InventoryStockPage() {
 
   if (loading) return <PageSkeleton variant="accounting" rows={6} />;
   if (error && !active.rows.length) {
-    return <ErrorState title={t("stock.tabs.balances")} message={error} action={<Button variant="outline" size="sm" onClick={() => void active.pager.refresh()}>{t("common.retry")}</Button>} />;
+    return <ErrorState title={t("stock.tabs.balances")} message={error} action={<Button variant="secondary" size="sm" onClick={() => void active.pager.refresh()}>{t("common.retry")}</Button>} />;
   }
 
   return (
@@ -223,7 +223,7 @@ export default function InventoryStockPage() {
               { key: "status", label: t("stock.balanceColumns.status"), render: level => <InventoryStatusBadge status={level.status} label={t(`status.${level.status}`)} /> },
             ]}
             actions={canEdit ? level => (
-              <Button type="button" size="sm" variant="outline" onClick={() => setMovementPanel({ open: true, itemId: level.item_id, locationId: level.location_id })}>
+              <Button type="button" size="sm" variant="secondary" onClick={() => setMovementPanel({ open: true, itemId: level.item_id, locationId: level.location_id })}>
                 {t("stock.addMovement")}
               </Button>
             ) : undefined}

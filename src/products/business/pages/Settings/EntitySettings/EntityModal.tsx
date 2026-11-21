@@ -764,7 +764,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
               </p>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
-                <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy} className="w-full md:w-auto">
+                <Button variant="secondary" type="button" onClick={attemptClose} disabled={effectiveBusy} className="w-full md:w-auto">
                   {t("btn.cancel")}
                 </Button>
                 <Button type="submit" disabled={isSaveDisabled} className="w-full md:w-auto">
@@ -787,7 +787,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
               >
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowCloseConfirm(false)}
                 >

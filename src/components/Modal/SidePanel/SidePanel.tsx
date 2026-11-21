@@ -95,7 +95,7 @@ export default function SidePanel({
             <div className="settings-modal-footer-layout" style={!showFooterHint ? { justifyContent: "flex-end" } : undefined}>
               {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? (typeof subtitle === "string" ? subtitle : undefined)} />}
               <div className="settings-modal-action-buttons">
-                <span className="md:hidden!"><Button variant="cancel" disabled={busy} onClick={onClose}>{t("modal.close")}</Button></span>
+                <span className="md:hidden!"><Button variant="secondary" disabled={busy} onClick={onClose}>{t("modal.close")}</Button></span>
                 {footer}
               </div>
             </div>

@@ -6,7 +6,7 @@ export const TxTypeEditor: React.FC<FilterEditorProps> = ({ t, setLocalFilters, 
   <>
     <div className="grid grid-cols-2 gap-2">
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         className="bg-white hover:bg-gray-50"
         onClick={() => setLocalFilters((prev) => ({ ...prev, tx_type: "credit" }))}
@@ -14,7 +14,7 @@ export const TxTypeEditor: React.FC<FilterEditorProps> = ({ t, setLocalFilters, 
         {t("filterBar:editors.txType.credit")}
       </Button>
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         className="bg-white hover:bg-gray-50"
         onClick={() => setLocalFilters((prev) => ({ ...prev, tx_type: "debit" }))}
@@ -24,10 +24,10 @@ export const TxTypeEditor: React.FC<FilterEditorProps> = ({ t, setLocalFilters, 
     </div>
 
     <div className="flex justify-end gap-2 mt-3">
-      <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={onRemove}>
+      <Button variant="secondary" size="sm" className="bg-white hover:bg-gray-50" onClick={onRemove}>
         {t("filterBar:buttons.remove")}
       </Button>
-      <Button variant="outlineBlack" size="sm" onClick={onApply}>
+      <Button variant="primary" size="sm" onClick={onApply}>
         {t("filterBar:buttons.apply")}
       </Button>
     </div>

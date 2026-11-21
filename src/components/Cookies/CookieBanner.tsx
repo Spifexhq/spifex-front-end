@@ -113,7 +113,7 @@ export const CookieBanner = () => {
 
             <Button
               onClick={confirm}
-              variant="outlineBlack"
+              variant="primary"
               className="sm:col-span-2"
             >
               {t("modal.confirm")}
@@ -124,13 +124,13 @@ export const CookieBanner = () => {
         <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs text-slate-500 underline underline-offset-4">{t("privacyLink")}</a>
         {!expanded && (
           <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <Button onClick={acceptAll} variant="outline" className="w-full">
+            <Button onClick={acceptAll} variant="secondary" className="w-full">
               {t("banner.acceptAll")}
             </Button>
-            <Button onClick={rejectAll} variant="outline" className="w-full">
+            <Button onClick={rejectAll} variant="secondary" className="w-full">
               {t("banner.rejectAll")}
             </Button>
-            <Button onClick={() => { setLocalState(consent); setExpanded(true); }} variant="outline" className="w-full">
+            <Button onClick={() => { setLocalState(consent); setExpanded(true); }} variant="secondary" className="w-full">
               {t("banner.moreOptions")}
             </Button>
           </div>

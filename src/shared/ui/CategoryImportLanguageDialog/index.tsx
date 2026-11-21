@@ -66,7 +66,7 @@ export default function CategoryImportLanguageDialog({
       hideCheckboxes
     />
     <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4">
-      <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+      <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
         {t("categoryImport.cancel")}
       </Button>
       <Button type="button" onClick={() => onConfirm(language)} isLoading={busy} disabled={busy}>

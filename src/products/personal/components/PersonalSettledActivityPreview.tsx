@@ -32,7 +32,7 @@ export default function PersonalSettledActivityPreview({ item, currency, onClose
     ]),
     { label: t("status"), value: t("settled") },
   ];
-  return <SidePanel isOpen title={item.description || t("untitledTransaction")} eyebrow={t(transfer ? "transfer" : "settlement")} onClose={onClose} footer={onReverse ? <Button variant="outline" isLoading={busy} disabled={busy} onClick={() => { setBusy(true); setError(""); void onReverse(item).then(onClose).catch(cause => setError(apiErrorMessage(cause, t("error")))).finally(() => setBusy(false)); }}>{t("reverseActivity")}</Button> : undefined}>
+  return <SidePanel isOpen title={item.description || t("untitledTransaction")} eyebrow={t(transfer ? "transfer" : "settlement")} onClose={onClose} footer={onReverse ? <Button variant="secondary" isLoading={busy} disabled={busy} onClick={() => { setBusy(true); setError(""); void onReverse(item).then(onClose).catch(cause => setError(apiErrorMessage(cause, t("error")))).finally(() => setBusy(false)); }}>{t("reverseActivity")}</Button> : undefined}>
     <SidePanelDetails fields={fields}/>
     {error && <p role="alert" className="mt-4 text-xs text-red-700">{error}</p>}
     {!transfer && item.notes && <section className="mt-6"><h3 className="mb-2 text-xs font-semibold text-gray-800">{t("notes")}</h3><p className="whitespace-pre-wrap text-sm leading-6 text-gray-600">{item.notes}</p></section>}

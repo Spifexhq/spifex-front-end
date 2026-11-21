@@ -129,7 +129,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   };
   const quickRanges = <div className="flex flex-wrap items-center gap-2">
     {[7, 30, 90].map(days => <Button key={days} variant="ghost" size="sm" onClick={() => setRange(rangeForDays(days))}>{t("lastDays", { count: days, ns: "overview" })}</Button>)}
-    <Button variant="outline" size="sm" className="inline-flex items-center gap-2" onClick={exportCsv} disabled={!data || loading}><Download size={15} aria-hidden="true" />{t("export", { ns: "overview" })}</Button>
+    <Button variant="secondary" size="sm" className="inline-flex items-center gap-2" onClick={exportCsv} disabled={!data || loading}><Download size={15} aria-hidden="true" />{t("export", { ns: "overview" })}</Button>
   </div>;
   const categoryOptions = (data?.filter_options.categories || []);
   const hasFilters = !!(query.cashflow_category_id || query.description);
@@ -175,11 +175,11 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
       <div className="min-w-36 flex-1"><Input size="sm" kind="date" label={t("end_date")} value={draft.end_date} min={draft.start_date} onValueChange={value => setDraft(previous => ({ ...previous, end_date: value }))} required /></div>
       <div className="min-w-40 flex-1"><Select size="sm" label={t("category", { ns: "overview" })} buttonLabel={t("category", { ns: "overview" })} items={categoryOptions} selected={categoryOptions.filter(item => item.id === draft.cashflow_category_id)} onChange={selected => setDraft(previous => ({ ...previous, cashflow_category_id: selected[0]?.id }))} getItemKey={item => item.id} getItemLabel={item => item.label} singleSelect hideCheckboxes /></div>
       <div className="min-w-40 flex-[1.5]"><Input size="sm" label={t("description")} placeholder={t("searchPlaceholder", { ns: "overview" })} value={draft.description || ""} onChange={event => setDraft(previous => ({ ...previous, description: event.target.value }))} /></div>
-      <Button type="submit" variant="primary" size="sm" disabled={!draft.start_date || !draft.end_date || draft.end_date < draft.start_date || loading}>{t("apply")}</Button>
+      <Button type="submit" variant="primary" size="sm" disabled={!draft.start_date || !draft.end_date || draft.end_date < draft.start_date || loading} quietDisabled={loading}>{t("apply")}</Button>
       {hasFilters && <Button type="button" variant="ghost" size="sm" onClick={() => { setDraft(previous => ({ ...previous, cashflow_category_id: undefined, description: undefined })); setQuery(previous => ({ ...previous, cashflow_category_id: undefined, description: undefined })); }}>{t("clear", { ns: "overview" })}</Button>}
     </OverviewFilterPanel>
 
-    {error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}<Button variant="outline" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div>}
+    {error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}<Button variant="secondary" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div>}
 
     {data && <>
       <div className="flex min-h-5 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">

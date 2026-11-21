@@ -157,7 +157,7 @@ export default function StockTransferPanel({
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="cancel" type="button" onClick={onClose} disabled={saving}>{t("common.cancel")}</Button>
+          <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>{t("common.cancel")}</Button>
           <Button type="submit" disabled={saving}>{saving ? t("common.saving") : t("stock.transferPanel.submit")}</Button>
         </div>
       </SidePanelForm>

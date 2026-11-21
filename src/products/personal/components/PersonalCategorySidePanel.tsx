@@ -93,7 +93,7 @@ export default function PersonalCategorySidePanel({ record, onClose, onSaved }: 
         <span>{t("active")}</span>
       </label>
       <div className="flex justify-end gap-2 pt-1">
-        <Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t("cancel")}</Button>
+        <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>{t("cancel")}</Button>
         <Button type="submit" isLoading={busy} disabled={busy || !name.trim()}>{t("save")}</Button>
       </div>
     </SidePanelForm>

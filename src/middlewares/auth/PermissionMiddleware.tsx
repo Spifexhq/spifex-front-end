@@ -143,13 +143,13 @@ export const PermissionMiddleware = ({
               <p className="mb-4 text-[13px] text-gray-700">{message}</p>
 
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => navigate(0)}>
+                <Button variant="secondary" onClick={() => navigate(0)}>
                   {t("btn.refresh")}
                 </Button>
 
                 {showGoBack && (
                   <Button
-                    variant="cancel"
+                    variant="secondary"
                     onClick={() =>
                       navigate(target, {
                         replace: true,

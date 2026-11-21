@@ -15,7 +15,7 @@ export const LocaleProfileMiddleware = ({ children, configuration, loading, fail
   const location = useLocation();
   if (loading || (!configuration && !failed)) return <TopProgress active variant="center" />;
   // A failed prerequisite check must never expose the application shell.
-  if (!configuration) return <main className="grid min-h-dvh place-items-center bg-white p-6"><div className="max-w-sm space-y-4 text-center"><p className="text-sm text-slate-600">{t("toastLoadError")}</p><Button variant="outline" onClick={() => { void retry().catch(() => undefined); }}>{t("retry")}</Button></div></main>;
+  if (!configuration) return <main className="grid min-h-dvh place-items-center bg-white p-6"><div className="max-w-sm space-y-4 text-center"><p className="text-sm text-slate-600">{t("toastLoadError")}</p><Button variant="secondary" onClick={() => { void retry().catch(() => undefined); }}>{t("retry")}</Button></div></main>;
   const setup = location.pathname === "/locale-setup";
   const retainedHistory = ["legacy", "deletion_pending"].includes(organization?.organization?.lifecycle || "");
   if (!retainedHistory && needsLocaleSetup(configuration, isOwner) && !setup) return <Navigate replace to={`/locale-setup?return=${encodeURIComponent(location.pathname + location.search)}`} />;

@@ -723,7 +723,7 @@ const OnboardingPage: React.FC = () => {
                           icon={<CreditCard className="h-4 w-4" aria-hidden="true" />}
                         />
 
-                        <div className="mt-4"><Button variant="outline" onClick={() => navigate("/b/accounting/overview")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
+                        <div className="mt-4"><Button variant="secondary" onClick={() => navigate("/b/accounting/overview")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
                       </div>
 
                       <div className="rounded-lg border border-gray-200 p-4">
@@ -750,7 +750,7 @@ const OnboardingPage: React.FC = () => {
 
                             <div className="mt-4 flex flex-wrap items-center gap-3">
                               <Button
-                                variant="outline"
+                                variant="secondary"
                                 onClick={() => navigate(CATEGORY_SETTINGS_PATH)}
                               >
                                 <span className="inline-flex items-center gap-2">
@@ -763,7 +763,7 @@ const OnboardingPage: React.FC = () => {
                                 </span>
                               </Button>
 
-                              <Button variant="outline" onClick={() => void refreshOnboarding()}>
+                              <Button variant="secondary" onClick={() => void refreshOnboarding()}>
                                 <span className="inline-flex items-center gap-2">
                                   <RefreshCcw className="h-4 w-4" aria-hidden="true" />
                                   <span>

@@ -201,7 +201,7 @@ export default function InventoryLocationPanel({
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="cancel" type="button" onClick={attemptClose} disabled={busy}>{t("common.cancel")}</Button>
+          <Button variant="secondary" type="button" onClick={attemptClose} disabled={busy}>{t("common.cancel")}</Button>
           <Button type="submit" disabled={busy}>{saving ? t("common.saving") : t("common.save")}</Button>
         </div>
       </SidePanelForm>
@@ -214,7 +214,7 @@ export default function InventoryLocationPanel({
               <p className="mt-1 text-xs text-gray-600">{t("panel.discardMessage")}</p>
             </div>
             <div className="flex flex-col-reverse gap-2 px-5 py-4 md:flex-row md:justify-end">
-              <Button variant="outline" className="w-full md:w-auto" onClick={() => setConfirmDiscard(false)}>{t("common.cancel")}</Button>
+              <Button variant="secondary" className="w-full md:w-auto" onClick={() => setConfirmDiscard(false)}>{t("common.cancel")}</Button>
               <Button variant="danger" className="w-full md:w-auto" onClick={closeNow}>{t("panel.discard")}</Button>
             </div>
           </div>

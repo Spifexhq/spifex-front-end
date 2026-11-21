@@ -161,7 +161,7 @@ export const ViewsConfigModal: React.FC<{
                   {isRenaming ? (
                     <>
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         disabled={busy || !renamingName.trim()}
                         className="bg-white hover:bg-gray-50 max-sm:flex-1"
@@ -171,7 +171,7 @@ export const ViewsConfigModal: React.FC<{
                       </Button>
 
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         disabled={busy}
                         className="bg-white hover:bg-gray-50 max-sm:flex-1"
@@ -186,7 +186,7 @@ export const ViewsConfigModal: React.FC<{
                   ) : (
                     <PermissionMiddleware codeName="change_entry_view">
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         disabled={busy}
                         onClick={() => {
@@ -202,7 +202,7 @@ export const ViewsConfigModal: React.FC<{
                   )}
 
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     disabled={busy}
                     className="max-sm:flex-1"
@@ -215,7 +215,7 @@ export const ViewsConfigModal: React.FC<{
                   </Button>
                   <PermissionMiddleware codeName="delete_entry_view">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       disabled={busy}
                       className="max-sm:flex-1"
@@ -231,7 +231,7 @@ export const ViewsConfigModal: React.FC<{
         </div>
 
         <div className="flex justify-end mt-3">
-          <Button variant="outline" size="sm" disabled={busy} className="bg-white hover:bg-gray-50" onClick={onClose}>
+          <Button variant="secondary" size="sm" disabled={busy} className="bg-white hover:bg-gray-50" onClick={onClose}>
             {t("filterBar:configModal.footerClose")}
           </Button>
         </div>

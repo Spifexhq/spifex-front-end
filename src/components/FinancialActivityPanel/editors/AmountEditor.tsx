@@ -31,10 +31,10 @@ export const AmountEditor: React.FC<FilterEditorProps> = ({ t, localFilters, set
     </div>
 
     <div className="flex justify-end gap-2 mt-3">
-      <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={onRemove}>
+      <Button variant="secondary" size="sm" className="bg-white hover:bg-gray-50" onClick={onRemove}>
         {t("filterBar:buttons.remove")}
       </Button>
-      <Button variant="outlineBlack" size="sm" onClick={onApply}>
+      <Button variant="primary" size="sm" onClick={onApply}>
         {t("filterBar:buttons.apply")}
       </Button>
     </div>

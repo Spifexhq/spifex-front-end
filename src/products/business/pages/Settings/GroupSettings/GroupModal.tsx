@@ -220,7 +220,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
                 <Button
-                  variant="cancel"
+                  variant="secondary"
                   type="button"
                   onClick={attemptClose}
                   disabled={effectiveBusy}
@@ -252,7 +252,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
                 style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
               >
-                <Button variant="outline" onClick={() => setShowCloseConfirm(false)} className="w-full md:w-auto">
+                <Button variant="secondary" onClick={() => setShowCloseConfirm(false)} className="w-full md:w-auto">
                   {t("btn.cancel")}
                 </Button>
                 <Button

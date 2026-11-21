@@ -206,7 +206,7 @@ const AccountingBankMappingsPage: React.FC = () => {
   };
 
   if ((loading && !items.length) || lookupsLoading) return <PageSkeleton variant="accounting" rows={6} />;
-  if (!lookupsReady) return <div role="alert" className="space-y-3 rounded-lg border border-gray-200 p-5"><p className="text-sm text-red-700">{t("bankMappingsPage.lookupError", "Failed to load mapping form lookups.")}</p><Button variant="outline" onClick={() => void loadLookups()}>{t("redesign.retry", "Retry")}</Button></div>;
+  if (!lookupsReady) return <div role="alert" className="space-y-3 rounded-lg border border-gray-200 p-5"><p className="text-sm text-red-700">{t("bankMappingsPage.lookupError", "Failed to load mapping form lookups.")}</p><Button variant="secondary" onClick={() => void loadLookups()}>{t("redesign.retry", "Retry")}</Button></div>;
 
   return (
     <>
@@ -315,7 +315,7 @@ const AccountingBankMappingsPage: React.FC = () => {
 
             <label className="flex items-center gap-2 text-xs"><Checkbox checked={form.is_active} onChange={event => setForm(previous => ({ ...previous, is_active: event.target.checked }))} />{t("common.active", "Active")}</label>
             <div className="flex items-center justify-end gap-2">
-              <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>
+              <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving || !canManage}>

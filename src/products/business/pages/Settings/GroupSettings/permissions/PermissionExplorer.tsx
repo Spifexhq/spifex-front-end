@@ -337,10 +337,10 @@ const PermissionExplorer: React.FC<Props> = ({
             })}
           </p>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="xs" onClick={expandAll} disabled={disabled}>
+            <Button type="button" variant="secondary" size="xs" onClick={expandAll} disabled={disabled}>
               {t("explorer.expandAll", { defaultValue: "Expand all" })}
             </Button>
-            <Button type="button" variant="outline" size="xs" onClick={collapseAll} disabled={disabled}>
+            <Button type="button" variant="secondary" size="xs" onClick={collapseAll} disabled={disabled}>
               {t("explorer.collapseAll", { defaultValue: "Collapse all" })}
             </Button>
           </div>
@@ -486,7 +486,7 @@ const PermissionExplorer: React.FC<Props> = ({
                             )}
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="secondary"
                               size="xs"
                               onClick={() => toggleFeature(feature.id)}
                               aria-expanded={featureOpen}
@@ -624,7 +624,7 @@ const PermissionExplorer: React.FC<Props> = ({
             </div>
           )}
           <div className="flex flex-wrap items-center justify-end gap-2 md:ml-auto">
-            <Button type="button" variant="cancel" onClick={onUndo} disabled={!dirty || disabled || readOnly}>
+            <Button type="button" variant="secondary" onClick={onUndo} disabled={!dirty || disabled || readOnly}>
               {t("buttons.undo", { defaultValue: "Discard changes" })}
             </Button>
             <Button

@@ -62,7 +62,7 @@ export default function InventoryLocationPreviewPanel({
       title={t("locations.previewTitle")}
       subtitle={location ? `${location.code} · ${location.name}` : undefined}
       onClose={onClose}
-      footer={location && canEdit ? <Button type="button" variant="outline" onClick={() => onEdit(location)}>{t("common.edit")}</Button> : undefined}
+      footer={location && canEdit ? <Button type="button" variant="secondary" onClick={() => onEdit(location)}>{t("common.edit")}</Button> : undefined}
     >
       {location ? (
         <div className="space-y-6">

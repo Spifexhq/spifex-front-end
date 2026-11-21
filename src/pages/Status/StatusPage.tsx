@@ -34,8 +34,8 @@ export default function StatusPage({ kind, namespace }: { kind: StatusKind; name
         <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{t("heading")}</h1>
         <p className="mt-4 max-w-md text-sm leading-7 text-black/60 sm:text-base">{t("subtitle")}</p>
         <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row">
-          {kind === "maintenance" ? <Button variant="outline" onClick={() => window.location.reload()}><RotateCw size={15} className="mr-2" aria-hidden="true" />{t("actions.retry")}</Button> : <Button variant="primary" onClick={() => navigate("/b/overview")} >{t("actions.overview")}<ArrowRight size={15} className="ml-2" aria-hidden="true" /></Button>}
-          {kind === "error" && <Button variant="outline" onClick={() => window.location.reload()}>{t("actions.retry")}</Button>}
+          {kind === "maintenance" ? <Button variant="secondary" onClick={() => window.location.reload()}><RotateCw size={15} className="mr-2" aria-hidden="true" />{t("actions.retry")}</Button> : <Button variant="primary" onClick={() => navigate("/b/overview")} >{t("actions.overview")}<ArrowRight size={15} className="ml-2" aria-hidden="true" /></Button>}
+          {kind === "error" && <Button variant="secondary" onClick={() => window.location.reload()}>{t("actions.retry")}</Button>}
         </div>
         {!reduced && <button type="button" onClick={() => setPaused(value => !value)} aria-pressed={paused} className="mt-8 inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs text-black/50 transition-colors hover:text-black">{paused ? <Play size={13} aria-hidden="true" /> : <Pause size={13} aria-hidden="true" />} {t(paused ? "animation.resume" : "animation.pause")}</button>}
       </main>

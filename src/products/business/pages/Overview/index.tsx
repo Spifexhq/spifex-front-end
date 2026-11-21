@@ -244,7 +244,7 @@ export default function Overview() {
           <p>{error}</p>
 
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => setRetry((value) => value + 1)}
           >

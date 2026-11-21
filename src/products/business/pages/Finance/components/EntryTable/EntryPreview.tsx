@@ -75,14 +75,14 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
     const canSettle = !!editable && isOutstandingEntry(editable);
     const revertable = !!shown && isSettlement(shown) && !!onRevert;
     return <SidePanel skeletonVariant="detail" loading={loading || (!!entry && !currentDetails && !error)} eyebrow={t("entryDetails")} isOpen={!!entry} title={entry?.description || t("entryDetails")} subtitle={t(entry && isSettlement(entry) ? "settledEntry" : "plannedEntry")} onClose={onClose} footer={editable && (onEdit || (onSettle && canSettle)) ? <>
-      {onEdit && <Button variant="outline" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onEdit(editable); }}>{t("edit")}</Button>}
+      {onEdit && <Button variant="secondary" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onEdit(editable); }}>{t("edit")}</Button>}
       {onSettle && canSettle && <Button variant="primary" disabled={loading || !currentDetails || !!error} onClick={() => { onClose(); onSettle(editable); }}>{t("settle")}</Button>}
-    </> : revertable ? <Button variant="outline" isLoading={reverting} disabled={reverting || loading || !currentDetails} onClick={() => {
+    </> : revertable ? <Button variant="secondary" isLoading={reverting} disabled={reverting || loading || !currentDetails} onClick={() => {
       if (!shown || !onRevert) return;
       setReverting(true);
       void onRevert(shown).then(onClose).catch(cause => setError(apiErrorMessage(cause, t("detailLoadError")))).finally(() => setReverting(false));
     }}>{t("reopen")}</Button> : undefined}>
-  {loading ? <p role="status" className="py-6 text-xs text-gray-500">{t("loading")}</p> : error ? <div role="alert" className="space-y-3 text-xs text-red-700"><p>{error}</p><Button size="sm" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div> : shown && <div className="space-y-6">
+  {loading ? <p role="status" className="py-6 text-xs text-gray-500">{t("loading")}</p> : error ? <div role="alert" className="space-y-3 text-xs text-red-700"><p>{error}</p><Button size="sm" variant="secondary" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div> : shown && <div className="space-y-6">
    <section><p className="text-xs text-gray-500">{t("amount")}</p><p className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${signedAmount(shown) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{formatCurrency(signedAmount(shown))}</p></section>
    <SidePanelDetails fields={[
                 { label: t(isSettlement(shown) ? "valueDate" : "dueDate"), value: formatDateFromISO(entryDate(shown)) },
@@ -95,11 +95,11 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
    {!!shown.departments?.length && <section><h3 className="text-xs font-semibold text-gray-900">{t("departments")}</h3><SidePanelDetails fields={shown.departments.map(item => ({ label: item.name, value: `${item.percent}%` }))}/></section>}
    {!!shown.items?.length && <section><h3 className="text-xs font-semibold text-gray-900">{t("inventory")}</h3><SidePanelDetails fields={shown.items.map(item => ({ label: item.name, value: item.quantity }))}/></section>}
    <section className="border-t border-gray-200 pt-5"><h3 className="text-xs font-semibold text-gray-900">{t("accounting")}</h3>
-    {accountingError && <div role="status" className="mt-3 flex items-center justify-between gap-2 text-xs text-amber-700"><p>{accountingError}</p><Button size="xs" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div>}
+    {accountingError && <div role="status" className="mt-3 flex items-center justify-between gap-2 text-xs text-amber-700"><p>{accountingError}</p><Button size="xs" variant="secondary" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div>}
     {accounting && <><p className="mt-3 flex items-center gap-2 text-xs font-medium text-gray-800"><span className={`h-2 w-2 rounded-full ${status ? accountingColors[status] : "bg-gray-300"}`}/>{status ? t(`statuses.${status}`) : "—"}</p>{accounting.message && <p className="mt-2 text-xs leading-5 text-gray-500">{accounting.message}</p>}<SidePanelDetails fields={[
                     { label: t("mapping"), value: accounting.ledger_account_name || "—" }, { label: t("policy"), value: typeof accounting.policy_configured === "boolean" ? t(accounting.policy_configured ? "configured" : "missing") : t("unknown") }, { label: t("bankMapping"), value: typeof accounting.bank_mapping_configured === "boolean" ? t(accounting.bank_mapping_configured ? "configured" : "missing") : t("unknown") }, { label: t("book"), value: accounting.book_code || "—" }, { label: t("journal"), value: accounting.linked_journal ? journalDisplayId(accounting.linked_journal) : "-" },
                 ]}/>{accounting.next_action && <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3"><h4 className="text-xs font-medium text-gray-800">{t("nextAction")}</h4><p className="mt-1 text-xs leading-5 text-gray-500">{accounting.next_action}</p></div>}</>}
-    <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/b/accounting/overview")}>{t("openAccounting")}</Button>
+    <Button variant="secondary" size="sm" className="mt-4" onClick={() => navigate("/b/accounting/overview")}>{t("openAccounting")}</Button>
    </section>
    <EntryAttachments key={`attachments-${sourceEntryId(shown)}`} entryId={sourceEntryId(shown)} namespace="financeEntries" api={entryAttachmentApi} editable={canEditAttachments} onChanged={onChanged}/>
   </div>}

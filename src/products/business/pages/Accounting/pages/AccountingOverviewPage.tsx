@@ -176,8 +176,8 @@ function SetupOverview() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {next ? <Link to={next.to} className={primaryClass}>{next.label}<ArrowRight size={14} aria-hidden="true"/></Link>
-            : <Button variant="outlineBlack" className="gap-2" onClick={() => void activate()} isLoading={activating} disabled={!status.can_activate}>{t("setupFlow.activate")}<ArrowRight size={14} aria-hidden="true"/></Button>}
-          {!chartComplete && !booksComplete && profileReady ? <Button variant="outline" className="gap-2" onClick={() => openSetup("overview")}><Sparkles size={15} aria-hidden="true"/>{t("guidedSetup.questionnaire")}</Button> : null}
+            : <Button variant="primary" className="gap-2" onClick={() => void activate()} isLoading={activating} disabled={!status.can_activate}>{t("setupFlow.activate")}<ArrowRight size={14} aria-hidden="true"/></Button>}
+          {!chartComplete && !booksComplete && profileReady ? <Button variant="secondary" className="gap-2" onClick={() => openSetup("overview")}><Sparkles size={15} aria-hidden="true"/>{t("guidedSetup.questionnaire")}</Button> : null}
         </div>
       </div>
 
@@ -280,7 +280,7 @@ function OperationalOverview() {
 
     {error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
       <span>{error}</span>
-      <Button variant="outline" size="sm" onClick={() => { setTrial(null); setJournals(null); setReloadKey(value => value + 1); }}>{t("redesign.retry")}</Button>
+      <Button variant="secondary" size="sm" onClick={() => { setTrial(null); setJournals(null); setReloadKey(value => value + 1); }}>{t("redesign.retry")}</Button>
     </div> : null}
 
     {issues.length ? <section className="space-y-4 rounded-xl border border-amber-200 bg-white p-5">

@@ -40,7 +40,7 @@ export default function InventoryItemPreviewPanel({
   const footer = top?.kind === "prices"
     ? (
       <>
-        <Button key="prices-back" type="button" variant="outline" onClick={onClose}>{t("prices.back")}</Button>
+        <Button key="prices-back" type="button" variant="secondary" onClick={onClose}>{t("prices.back")}</Button>
         {canEdit ? <Button key="prices-add" type="button" onClick={() => onAddPrice(top.item)}>{t("prices.add")}</Button> : null}
       </>
     )
@@ -48,7 +48,7 @@ export default function InventoryItemPreviewPanel({
       ? (
         <>
           <Button key="item-history" type="button" variant="ghost" onClick={() => onPushPrices(item)}>{t("prices.historyTitle")}</Button>
-          {canEdit ? <Button key="item-edit" type="button" variant="outline" onClick={() => onEdit(item)}>{t("common.edit")}</Button> : null}
+          {canEdit ? <Button key="item-edit" type="button" variant="secondary" onClick={() => onEdit(item)}>{t("common.edit")}</Button> : null}
           {canEdit ? <Button key="item-adjust" type="button" onClick={() => onAdjust(item)}>{t("stock.addMovement")}</Button> : null}
         </>
       )

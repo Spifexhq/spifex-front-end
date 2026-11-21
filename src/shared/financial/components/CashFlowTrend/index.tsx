@@ -319,7 +319,7 @@ export function CashFlowTrendView({
         {failed ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
             <p className="text-xs text-slate-500">{t("trendCard.error")}</p>
-            {onRetry ? <Button variant="outline" size="xs" onClick={onRetry}>{t("trendCard.retry")}</Button> : null}
+            {onRetry ? <Button variant="secondary" size="xs" onClick={onRetry}>{t("trendCard.retry")}</Button> : null}
           </div>
         ) : !buckets.length && loading ? (
           <div className="flex h-full items-center px-5" aria-hidden="true">

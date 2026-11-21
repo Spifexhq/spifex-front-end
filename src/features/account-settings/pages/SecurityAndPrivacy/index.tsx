@@ -457,7 +457,7 @@ const SecurityAndPrivacy: React.FC = () => {
                     value={primaryEmail}
                     action={
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         onClick={openEmailModal}
                         disabled={isSubmitting || isTwoFactorSubmitting}
                       >
@@ -476,7 +476,7 @@ const SecurityAndPrivacy: React.FC = () => {
                     }
                     action={
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         onClick={openPasswordModal}
                         disabled={isSubmitting || isTwoFactorSubmitting}
                       >

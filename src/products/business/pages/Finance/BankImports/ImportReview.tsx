@@ -44,7 +44,7 @@ export default function ImportReview({ sessionId, canEdit, personal = false }: {
     catch (cause) { setError(apiErrorMessage(cause, t("workspace.error"))); return false; }
     finally { mutation.current = false; setBusy(false); }
   };
-  if (!session || !lookups) return error ? <ErrorState message={error} action={<Button variant="outline" onClick={() => setRetry(value => value + 1)}>{t("workspace.retry")}</Button>} /> : <PageSkeleton variant="review" />;
+  if (!session || !lookups) return error ? <ErrorState message={error} action={<Button variant="secondary" onClick={() => setRetry(value => value + 1)}>{t("workspace.retry")}</Button>} /> : <PageSkeleton variant="review" />;
   const committed = session.status === "committed", editable = canEdit && !committed;
   const summary = session.summary;
   const counts = [
@@ -69,7 +69,7 @@ export default function ImportReview({ sessionId, canEdit, personal = false }: {
         <form className="min-w-40 max-w-xs flex-1" onSubmit={event => { event.preventDefault(); setQuery(search.trim()); }}><Input size="sm" aria-label={t("workspace.searchTransactions")} placeholder={t("workspace.searchTransactions")} value={search} onChange={event => { setSearch(event.target.value); if (!event.target.value) setQuery(""); }} /></form>
         <div className="w-40"><LookupSelect label={t("workspace.status")} items={["pending", "ready", "excluded", "created"].map(id => ({ id, label: t(`workspace.states.${id}`) }))} value={status} onChange={setStatus} /></div>
         {status && <Button variant="ghost" size="sm" onClick={() => setStatus("")}>{t("workspace.clear")}</Button>}
-        {editable && <Button variant="outline" size="sm" disabled={busy || !summary.high_confidence_rows} onClick={() => void run(async () => { const result = await api.acceptConfidentStatementImportRows(sessionId); setNotice(t("workspace.accepted", { count: result.accepted })); })}>{t("workspace.acceptConfirmed")}</Button>}
+        {editable && <Button variant="secondary" size="sm" disabled={busy || !summary.high_confidence_rows} onClick={() => void run(async () => { const result = await api.acceptConfidentStatementImportRows(sessionId); setNotice(t("workspace.accepted", { count: result.accepted })); })}>{t("workspace.acceptConfirmed")}</Button>}
       </div>
     </Card>
     <Card as="section" radius="xl" tone="slate" padding="none" className="overflow-hidden">

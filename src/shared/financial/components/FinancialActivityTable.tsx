@@ -138,7 +138,7 @@ export default function FinancialActivityTable<T>({ records, newestFirst = false
     clearSelectionToken={clearSelectionToken}
     onEndReached={onEndReached}
     loadingMore={loadMore || pager.loading}
-    summary={pager.loading ? <p role="status" className="shrink-0 border-t border-gray-100 px-3 py-2 text-center text-xs text-gray-500">{t(records.length ? "loadingMore" : "loading")}</p> : pager.error ? <div className="flex justify-center py-2"><Button size="sm" variant="outline" onClick={onRetry}>{t("retry")}</Button></div> : undefined}
+    summary={pager.loading ? <p role="status" className="shrink-0 border-t border-gray-100 px-3 py-2 text-center text-xs text-gray-500">{t(records.length ? "loadingMore" : "loading")}</p> : pager.error ? <div className="flex justify-center py-2"><Button size="sm" variant="secondary" onClick={onRetry}>{t("retry")}</Button></div> : undefined}
     selectionActions={selection => onSelection?.({ ids: selection.ids, items: selection.items, clear: selection.clear })}
   />;
 }

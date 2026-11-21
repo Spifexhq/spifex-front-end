@@ -272,7 +272,7 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
           >
             <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
               <Button
-                variant="cancel"
+                variant="secondary"
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}

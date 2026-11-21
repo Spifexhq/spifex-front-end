@@ -261,7 +261,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
           >
             <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
               <Button
-                variant="cancel"
+                variant="secondary"
                 type="button"
                 onClick={onClose}
                 disabled={isBusy}

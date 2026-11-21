@@ -245,7 +245,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.name")}
                     value={org?.name ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("name")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("name")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updateName")}
                       </Button>
                     }
@@ -259,7 +259,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.address1")}
                     value={org?.line1 ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("line1")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("line1")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updateAddress1")}
                       </Button>
                     }
@@ -268,7 +268,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.address2")}
                     value={org?.line2 ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("line2")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("line2")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updateAddress2")}
                       </Button>
                     }
@@ -277,7 +277,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.city")}
                     value={org?.city ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("city")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("city")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updateCity")}
                       </Button>
                     }
@@ -286,7 +286,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.region")}
                     value={org?.region ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("region")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("region")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updateRegion")}
                       </Button>
                     }
@@ -295,7 +295,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.postalCode")}
                     value={org?.postal_code ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("postal_code")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("postal_code")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updatePostalCode")}
                       </Button>
                     }
@@ -304,7 +304,7 @@ const OrganizationSettings: React.FC = () => {
                     label={t("field.country")}
                     value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
                     action={
-                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting || !canEdit}>
+                      <Button variant="secondary" onClick={() => openModal("country")} disabled={isSubmitting || !canEdit}>
                         {t("btn.updateCountry")}
                       </Button>
                     }
@@ -321,7 +321,7 @@ const OrganizationSettings: React.FC = () => {
                       <p className="text-xs text-gray-500">{t("label.currentTz")}</p>
                       <p className="text-[13px] font-medium text-gray-900 break-words">{timezoneLabel}</p>
                     </div>
-                    <Button variant="outline" onClick={() => openModal("timezone")} disabled={isSubmitting || !canEdit}>
+                    <Button variant="secondary" onClick={() => openModal("timezone")} disabled={isSubmitting || !canEdit}>
                       {t("btn.updateTimezone")}
                     </Button>
                   </div>
@@ -332,7 +332,7 @@ const OrganizationSettings: React.FC = () => {
                 <div className="px-4 py-3">
                   <p className="text-xs text-gray-700">{t("description.currency")}</p>
                   <div className="mt-3">
-                    <Button variant="outline" onClick={handleCurrencyNavigation} disabled={isSubmitting || !canManageCurrency}>
+                    <Button variant="secondary" onClick={handleCurrencyNavigation} disabled={isSubmitting || !canManageCurrency}>
                       {t("btn.manageCurrency")}
                     </Button>
                   </div>

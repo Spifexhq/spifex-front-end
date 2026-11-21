@@ -70,7 +70,7 @@ export default function InventoryLocationsPage() {
 
   if (recordFilters.pager.loading && !recordFilters.rows.length) return <PageSkeleton variant="accounting" rows={5} />;
   if (recordFilters.pager.error && !recordFilters.rows.length) {
-    return <ErrorState title={t("locations.empty")} message={recordFilters.pager.error} action={<Button variant="outline" size="sm" onClick={refresh}>{t("common.retry")}</Button>} />;
+    return <ErrorState title={t("locations.empty")} message={recordFilters.pager.error} action={<Button variant="secondary" size="sm" onClick={refresh}>{t("common.retry")}</Button>} />;
   }
 
   return (

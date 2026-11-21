@@ -259,7 +259,7 @@ const AccountingBooksPage: React.FC = () => {
           </section>
 
           <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>
+            <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
               {t("common.cancel", "Cancel")}
             </Button>
             <Button type="submit" disabled={saving}>

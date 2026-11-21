@@ -33,7 +33,7 @@ export default function OverviewFilters({ query, options, onChange, onExport, lo
       onChange={basis => onChange({ ...query, basis, bank_id: undefined })} />
     <div className="flex flex-wrap items-center gap-2">
       {[7, 30, 90].map(days => <Button key={days} variant="ghost" size="sm" onClick={() => onChange({ ...query, ...periodPreset(days) })}>{t("lastDays", { count: days })}</Button>)}
-      <Button variant="outline" size="sm" className="inline-flex items-center gap-2" onClick={onExport} disabled={!exportable || loading}><Download size={15} aria-hidden="true" />{t("export")}</Button>
+      <Button variant="secondary" size="sm" className="inline-flex items-center gap-2" onClick={onExport} disabled={!exportable || loading}><Download size={15} aria-hidden="true" />{t("export")}</Button>
     </div>
   </>} onSubmit={event => { event.preventDefault(); onChange(draft); }}>
     <div className="min-w-36 flex-1"><Input size="sm" kind="date" label={t("from")} value={draft.start_date} max={draft.end_date} onValueChange={value => setDraft(previous => ({ ...previous, start_date: value }))} required /></div>
@@ -41,7 +41,7 @@ export default function OverviewFilters({ query, options, onChange, onExport, lo
     <div className="min-w-40 flex-1">{choose("cashflow_category_id", t("category"), options?.categories || [])}</div>
     {query.basis === "settled" && !!options?.banks.length && <div className="min-w-40 flex-1">{choose("bank_id", t("bank"), options.banks)}</div>}
     <div className="min-w-40 flex-[1.5]"><Input size="sm" label={t("search")} placeholder={t("searchPlaceholder")} value={draft.description || ""} onChange={event => setDraft(previous => ({ ...previous, description: event.target.value }))} /></div>
-    <Button type="submit" variant="primary" size="sm" disabled={loading}>{t("apply")}</Button>
+    <Button type="submit" variant="primary" size="sm" disabled={loading} quietDisabled={loading}>{t("apply")}</Button>
     {(draft.bank_id || draft.cashflow_category_id || draft.description) && <Button variant="ghost" size="sm" onClick={() => setDraft(previous => ({ ...previous, bank_id: undefined, cashflow_category_id: undefined, description: undefined }))}>{t("clear")}</Button>}
   </OverviewFilterPanel>;
 }

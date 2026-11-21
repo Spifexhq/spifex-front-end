@@ -111,7 +111,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         </div>
         <div className="max-h-[min(11rem,20dvh)] overflow-y-auto overscroll-contain px-4 pb-2 sm:px-5">
           {bankState.loading ? <FinancialActivitySkeleton variant="banks" />
-          : bankState.error ? <div role="status" className="flex items-center justify-between gap-3 py-3"><p className="text-xs text-red-700">{bankState.error}</p><Button variant="outline" size="xs" onClick={() => retryBanks()}>{t("kpiCards:overview.retry")}</Button></div>
+          : bankState.error ? <div role="status" className="flex items-center justify-between gap-3 py-3"><p className="text-xs text-red-700">{bankState.error}</p><Button variant="secondary" size="xs" onClick={() => retryBanks()}>{t("kpiCards:overview.retry")}</Button></div>
           : !bankRows.length ? <p className="py-4 text-xs text-gray-500">{t("banksTable:empty")}</p>
           : <ul className="divide-y divide-gray-100">{bankRows.map(bank => <li key={bank.id} className="flex items-center justify-between gap-3 py-1">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -129,7 +129,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         {showMetrics && (error ? (
           <div role="status" className="col-span-full flex flex-wrap items-center justify-between gap-2 px-5 py-4 xl:col-span-3">
             <span className="text-xs text-red-700">{t("kpiCards:overview.loadError")}</span>
-            <Button variant="outline" size="xs" onClick={retry}>{t("kpiCards:overview.retry")}</Button>
+            <Button variant="secondary" size="xs" onClick={retry}>{t("kpiCards:overview.retry")}</Button>
           </div>
         ) : metrics.map((metric) => (
           <div key={metric.key} aria-busy={loading} className="min-w-0 border-l border-gray-100 px-4 py-2 sm:px-5 sm:py-3">
@@ -151,7 +151,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           onSearchEnter={() => void tryApplyCurrentFilters()}
           onSearchChange={value => setLocalFilters(prev => ({ ...prev, description: value }))} />
         <div className="relative" ref={addFilterMenuRef}>
-          <Button variant="outline" size="sm" className="gap-1.5 bg-white" aria-haspopup="menu" aria-expanded={addFilterMenuOpen}
+          <Button variant="secondary" size="sm" className="gap-1.5 bg-white" aria-haspopup="menu" aria-expanded={addFilterMenuOpen}
             onClick={() => { setOpenEditor(null); setViewsMenuOpen(false); setAddFilterMenuOpen(value => !value); }}>
             <SlidersHorizontal size={13} aria-hidden />{t("filterBar:buttons.toggleFilters")}
             {activeFiltersCount > 0 && <span className="rounded bg-gray-100 px-1.5 text-[10px] text-gray-600">{activeFiltersCount}</span>}
@@ -159,7 +159,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           {addFilterMenuOpen && <Menu anchorRef={addFilterMenuRef} roleLabel={t("filterBar:menu.aria")} items={addFilterItems}
             onClose={() => setAddFilterMenuOpen(false)} onAfterAction={() => setAddFilterMenuOpen(false)} />}
         </div>
-        <Button variant="outlineBlack" size="sm" disabled={!canApply} onClick={() => void tryApplyCurrentFilters()}>{t("filterBar:buttons.apply")}</Button>
+        <Button variant="primary" size="sm" disabled={!canApply} onClick={() => void tryApplyCurrentFilters()}>{t("filterBar:buttons.apply")}</Button>
         <div className="ml-auto flex items-center gap-1">
           <PermissionMiddleware codeName={configPermission}>
             <div className="relative" ref={viewsMenuRef}>

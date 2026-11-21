@@ -21,7 +21,7 @@ function ClosePrompt({ onKeep, onDiscard, onContinue }: { onKeep(): void; onDisc
     </div>
     <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
       <Button variant="ghost" onClick={onContinue}>{t("guidedSetup.continueEditing")}</Button>
-      <Button variant="outline" className="gap-2" onClick={onKeep}><ArchiveRestore size={15} aria-hidden="true"/>{t("guidedSetup.keepScratch")}</Button>
+      <Button variant="secondary" className="gap-2" onClick={onKeep}><ArchiveRestore size={15} aria-hidden="true"/>{t("guidedSetup.keepScratch")}</Button>
       <Button variant="danger" className="gap-2" onClick={onDiscard}><Trash2 size={15} aria-hidden="true"/>{t("guidedSetup.discardAnswers")}</Button>
     </div>
   </section>;

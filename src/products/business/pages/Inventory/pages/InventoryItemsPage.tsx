@@ -94,7 +94,7 @@ export default function InventoryItemsPage() {
 
   if (loading) return <PageSkeleton variant="accounting" rows={6} />;
   if (error && !recordFilters.rows.length) {
-    return <ErrorState title={t("items.empty")} message={error} action={<Button variant="outline" size="sm" onClick={refresh}>{t("common.retry")}</Button>} />;
+    return <ErrorState title={t("items.empty")} message={error} action={<Button variant="secondary" size="sm" onClick={refresh}>{t("common.retry")}</Button>} />;
   }
 
   return (
@@ -142,7 +142,7 @@ export default function InventoryItemsPage() {
           { key: "status", label: t("common.status"), render: item => <InventoryStatusBadge status={item.stock_status} label={t(`status.${item.stock_status}`)} /> },
         ]}
         actions={item => canEdit ? (
-          <Button type="button" size="sm" variant="outline" onClick={() => setStockPanel({ open: true, itemId: item.id })}>{t("stock.addMovement")}</Button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => setStockPanel({ open: true, itemId: item.id })}>{t("stock.addMovement")}</Button>
         ) : undefined}
       />
 

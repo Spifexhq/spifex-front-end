@@ -433,7 +433,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
                 <Button
-                  variant="cancel"
+                  variant="secondary"
                   type="button"
                   onClick={attemptClose}
                   disabled={effectiveBusy}
@@ -462,7 +462,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                 style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
               >
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowCloseConfirm(false)}
                 >

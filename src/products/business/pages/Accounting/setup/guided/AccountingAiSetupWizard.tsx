@@ -205,7 +205,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
     return <Card as="section" radius="xl" tone="slate" padding="default" className="mx-auto max-w-2xl space-y-3" role="alert">
       <h1 className="text-base font-semibold text-gray-900">{t("guidedSetup.unavailableTitle")}</h1>
       <p className="text-sm leading-6 text-gray-600">{contextError || t("guidedSetup.unavailableBody")}</p>
-      <Button variant="outline" onClick={() => void loadContext()}>{t("guidedSetup.retry")}</Button>
+      <Button variant="secondary" onClick={() => void loadContext()}>{t("guidedSetup.retry")}</Button>
     </Card>;
   }
   if (blocked) {
@@ -218,7 +218,7 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
           <p className="mt-1.5 text-sm leading-6 text-gray-600">{blocker?.message || t("guidedSetup.providerUnavailable")}</p>
         </div>
       </div>
-      <Button variant="outlineBlack" onClick={() => go(target)}>{t("guidedSetup.continueSetup")}</Button>
+      <Button variant="primary" onClick={() => go(target)}>{t("guidedSetup.continueSetup")}</Button>
     </Card>;
   }
 
@@ -298,14 +298,14 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
           </div>)}
         </div>
         {hasAssumptionCorrections ? <div className="flex justify-end">
-          <Button type="button" variant="outline" onClick={() => void generate(assumptionCorrections())} disabled={busy}>{t("guidedSetup.regenerateWithCorrections")}</Button>
+          <Button type="button" variant="secondary" onClick={() => void generate(assumptionCorrections())} disabled={busy}>{t("guidedSetup.regenerateWithCorrections")}</Button>
         </div> : null}
       </section> : null}
     </> : null}
   </> : result ? <div className="space-y-4 py-2 text-center">
     <motion.span initial={{ scale: reduced ? 1 : 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: reduced ? 0 : 0.2 }} className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Check size={20} aria-hidden="true" /></motion.span>
     <div><h2 className="text-base font-semibold text-gray-900">{t("guidedSetup.successTitle")}</h2><p className="mt-1 text-sm leading-6 text-gray-500">{t("guidedSetup.successBody", { accounts: result.created.accounts, books: result.created.books, rules: result.created.category_rules })}</p></div>
-    <Button variant="outlineBlack" onClick={() => go("/b/accounting/overview")}>{t("guidedSetup.openAccounting")}</Button>
+    <Button variant="primary" onClick={() => go("/b/accounting/overview")}>{t("guidedSetup.openAccounting")}</Button>
   </div> : null;
 
   const primary = step === 0 ? { label: t("guidedSetup.continue"), action: () => setStep(1), disabled: false }
@@ -325,8 +325,8 @@ export default function AccountingAiSetupWizard({ source, onClose }: { source: s
       </AnimatePresence>
     </Card>
     {step < 4 ? <footer className="flex flex-wrap items-center justify-between gap-3">
-      <div>{step > 0 && step < 4 ? <Button variant="outline" className="gap-2" onClick={() => setStep(value => value - 1)} disabled={busy}><ArrowLeft size={15} aria-hidden="true" />{t("guidedSetup.back")}</Button> : null}</div>
-      {primary ? <Button variant="outlineBlack" className="gap-2" onClick={primary.action} disabled={primary.disabled || busy} isLoading={busy}>{primary.label}{step < 2 ? <ArrowRight size={15} aria-hidden="true" /> : null}</Button> : null}
+      <div>{step > 0 && step < 4 ? <Button variant="secondary" className="gap-2" onClick={() => setStep(value => value - 1)} disabled={busy}><ArrowLeft size={15} aria-hidden="true" />{t("guidedSetup.back")}</Button> : null}</div>
+      {primary ? <Button variant="primary" className="gap-2" onClick={primary.action} disabled={primary.disabled || busy} isLoading={busy}>{primary.label}{step < 2 ? <ArrowRight size={15} aria-hidden="true" /> : null}</Button> : null}
     </footer> : null}
   </section>;
 }

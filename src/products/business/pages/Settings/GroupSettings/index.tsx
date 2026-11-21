@@ -614,7 +614,7 @@ const GroupSettings: React.FC = () => {
                         {selectedGroupDetail && !selectedGroupDetail.is_system && (
                           <PermissionMiddleware codeName={"manage_access"}>
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               className="inline-flex items-center gap-2"
                               onClick={handleDuplicateGroup}
                               disabled={busy}
@@ -627,7 +627,7 @@ const GroupSettings: React.FC = () => {
                         {selectedGroupDetail && !selectedGroupDetail.is_system && (
                           <PermissionMiddleware codeName={"manage_access"}>
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               className="inline-flex items-center gap-2"
                               onClick={openRenameModal}
                               disabled={busy}
@@ -640,7 +640,7 @@ const GroupSettings: React.FC = () => {
                         {selectedGroupDetail && !selectedGroupDetail.is_system && (
                           <PermissionMiddleware codeName={"manage_access"}>
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               onClick={requestDeleteGroup}
                               disabled={busy}
                               aria-busy={busy || undefined}

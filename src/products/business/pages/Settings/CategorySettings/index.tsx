@@ -360,7 +360,7 @@ const CategorySettingsPage: React.FC = () => {
                 {hasFilters && <SettingsClearFilters label={t("actions.clear")} onClick={clearFilters} />}
               </SettingsFilters>
               <div className="flex flex-wrap items-center gap-2">
-                {parentChoicesLoaded && parentChoices.length === 0 && <Button type="button" variant="outline" onClick={() => setImportOpen(true)} isLoading={importing} disabled={saving || importing}>{importing ? t("actions.importing") : t("actions.importDefaults")}</Button>}
+                {parentChoicesLoaded && parentChoices.length === 0 && <Button type="button" variant="secondary" onClick={() => setImportOpen(true)} isLoading={importing} disabled={saving || importing}>{importing ? t("actions.importing") : t("actions.importDefaults")}</Button>}
                 <Button type="button" onClick={openCreate} disabled={saving || importing}>{t("actions.new")}</Button>
               </div>
             </div>
@@ -486,7 +486,7 @@ const CategorySettingsPage: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+            <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
               {t("actions.cancel")}
             </Button>
             <Button type="submit" disabled={saving}>

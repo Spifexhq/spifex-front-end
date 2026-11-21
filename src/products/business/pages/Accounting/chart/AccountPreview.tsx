@@ -11,8 +11,8 @@ export default function AccountPreview({ selected, items, onClose, onEdit, onDel
   return (
     <SidePanel  showFooterHint={false} isOpen={!!selected} title={selected?.name || ""} subtitle={selected?.code} onClose={() => onClose()}
       footer={selected && (onEdit || onDelete) ? <>
-        {onDelete && !selected.is_system ? <Button type="button" variant="cancel" className="w-full md:w-auto" onClick={() => { onClose(); onDelete(selected); }}>{t("workspace.delete")}</Button> : <span />}
-        {onEdit && <Button type="button" variant="outline" className="w-full md:w-auto" onClick={() => { onClose(); onEdit(selected); }}>{t("workspace.edit")}</Button>}
+        {onDelete && !selected.is_system ? <Button type="button" variant="secondary" className="w-full md:w-auto" onClick={() => { onClose(); onDelete(selected); }}>{t("workspace.delete")}</Button> : <span />}
+        {onEdit && <Button type="button" variant="secondary" className="w-full md:w-auto" onClick={() => { onClose(); onEdit(selected); }}>{t("workspace.edit")}</Button>}
       </> : undefined}>
       {selected && <div className="space-y-6"><SidePanelDetails fields={[
         [<AccountingTerm term="posting">{t("modal.accountType")}</AccountingTerm>, t(`modal.${selected.account_type}`)], [<AccountingTerm term="section">{t("modal.statementSection")}</AccountingTerm>, sectionLabel(selected.statement_section)], [<AccountingTerm term="normalBalance">{t("modal.normalBalance")}</AccountingTerm>, t(`modal.${selected.normal_balance}`)], [t("modal.parent"), items.find(item => item.id === selected.parent_id)?.name || "—"], [t("modal.currencyCode"), selected.currency_code || "—"], [<AccountingTerm term="bankControl">{t("modal.bankControl")}</AccountingTerm>, accounting(selected.is_bank_control ? "common.yes" : "common.no")], [<AccountingTerm term="manualPosting">{t("modal.manualPosting")}</AccountingTerm>, accounting(selected.allows_manual_posting ? "common.yes" : "common.no")], [t("modal.reportGroup"), selected.report_group || "—"], [t("modal.reportSubgroup"), selected.report_subgroup || "—"], [t("modal.externalRef"), selected.external_ref || "—"],

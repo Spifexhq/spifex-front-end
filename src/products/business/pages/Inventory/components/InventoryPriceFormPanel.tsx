@@ -122,7 +122,7 @@ export default function InventoryPriceFormPanel({
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="cancel" type="button" onClick={onClose} disabled={saving}>{t("common.cancel")}</Button>
+          <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>{t("common.cancel")}</Button>
           <Button type="submit" disabled={saving}>{saving ? t("common.saving") : editing ? t("prices.correct") : t("prices.add")}</Button>
         </div>
       </SidePanelForm>

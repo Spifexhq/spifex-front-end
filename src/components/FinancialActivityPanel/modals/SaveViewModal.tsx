@@ -218,7 +218,7 @@ export const SaveViewModal: React.FC<{
 
           <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:justify-end">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               disabled={busy}
               className="bg-white hover:bg-gray-50"
@@ -231,7 +231,7 @@ export const SaveViewModal: React.FC<{
             </Button>
 
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               className="bg-white hover:bg-gray-50"
               disabled={!canSave}

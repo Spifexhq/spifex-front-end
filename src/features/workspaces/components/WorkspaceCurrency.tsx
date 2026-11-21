@@ -44,7 +44,7 @@ export default function WorkspaceCurrency() {
     <Select label={t("currency")} items={currencies} selected={currencies.filter(item => item.value === code)} onChange={items => { setCode(items[0]?.value || ""); setSaved(false); }} getItemKey={item => item.value} getItemLabel={item => item.label} singleSelect hideCheckboxes disabled={loading || busy || !writable || !policy?.can_change}/>
     {policy?.reason === "financial_history" && <p className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-6 text-gray-600">{t("currencyLocked")}</p>}
     {writable && policy?.can_change && <Input kind="text" type="password" autoComplete="current-password" label={t("currentPassword")} value={password} onChange={event => setPassword(event.target.value)} disabled={busy} required/>}
-    {error && <div role="alert" className="flex items-center gap-3 text-xs text-red-700">{error}{!policy && <Button type="button" variant="outline" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button>}</div>}
+    {error && <div role="alert" className="flex items-center gap-3 text-xs text-red-700">{error}{!policy && <Button type="button" variant="secondary" size="xs" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button>}</div>}
     {saved && <p role="status" className="text-xs text-emerald-700">{t("saved")}</p>}
     {writable && policy?.can_change && <div className="flex justify-end"><Button type="submit" isLoading={busy} disabled={loading || busy || !code || !password || code === policy.currency}>{t("save")}</Button></div>}
   </form></PreferenceSection>;

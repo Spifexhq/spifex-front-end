@@ -36,4 +36,23 @@ export default tseslint.config(
       'jsx-a11y/no-autofocus': 'off',
     },
   },
+  {
+    // Pages never pick the brand orange themselves; `primary` (black) is the
+    // page-level main action. Components may expose `accent` internally.
+    files: [
+      'src/pages/**/*.tsx',
+      'src/features/**/pages/**/*.tsx',
+      'src/products/*/pages/**/*.tsx',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXAttribute[name.name="variant"][value.value="accent"]',
+          message:
+            'Pages use variant="primary" (black). Orange accent is reserved for shared components.',
+        },
+      ],
+    },
+  },
 )

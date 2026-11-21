@@ -177,15 +177,15 @@ export default function WorkspaceManagementPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-            {!isCurrent && <Button size="xs" variant="outline" disabled={!!switchBusy} isLoading={switchBusy === workspace.id} onClick={() => void openWorkspace(workspace)}>{t("openWorkspace")}</Button>}
-            {canRestore && <Button size="xs" variant="outline" onClick={() => { setError(""); setNotice(""); setRestoreTarget(workspace); setRestorePassword(""); setRestoreConfirmed(false); restoreKey.current = crypto.randomUUID(); }}>{t("undoDeletion")}</Button>}
-            {eligible && <Button variant="outline" size="xs" className="!border-red-200 !text-red-700 hover:!bg-red-50" onClick={() => { setError(""); setDeleteTarget(workspace); setPassword(""); setConfirmed(false); requestKey.current = crypto.randomUUID(); }}>{t("deleteWorkspace")}</Button>}
+            {!isCurrent && <Button size="xs" variant="secondary" disabled={!!switchBusy} isLoading={switchBusy === workspace.id} onClick={() => void openWorkspace(workspace)}>{t("openWorkspace")}</Button>}
+            {canRestore && <Button size="xs" variant="secondary" onClick={() => { setError(""); setNotice(""); setRestoreTarget(workspace); setRestorePassword(""); setRestoreConfirmed(false); restoreKey.current = crypto.randomUUID(); }}>{t("undoDeletion")}</Button>}
+            {eligible && <Button variant="secondary" size="xs" className="!border-red-200 !text-red-700 hover:!bg-red-50" onClick={() => { setError(""); setDeleteTarget(workspace); setPassword(""); setConfirmed(false); requestKey.current = crypto.randomUUID(); }}>{t("deleteWorkspace")}</Button>}
           </div>
         </li>;
       })}</ul> : <EmptyState size="sm" title={t("empty")} className="px-4" />}
     </section>
 
-    <FloatingDialog isOpen={!!deleteTarget} title={t("deleteWorkspace")} closeLabel={t("close")} onClose={closeDelete} busy={busy} width={520} height={500} onSubmit={event => { event.preventDefault(); void scheduleDeletion(); }} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={closeDelete}>{t("cancel")}</Button><Button type="submit" variant="cancel" disabled={busy || !password || !confirmed} isLoading={busy}>{t("scheduleDeletion")}</Button></div>}>
+    <FloatingDialog isOpen={!!deleteTarget} title={t("deleteWorkspace")} closeLabel={t("close")} onClose={closeDelete} busy={busy} width={520} height={500} onSubmit={event => { event.preventDefault(); void scheduleDeletion(); }} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={closeDelete}>{t("cancel")}</Button><Button type="submit" variant="secondary" disabled={busy || !password || !confirmed} isLoading={busy}>{t("scheduleDeletion")}</Button></div>}>
       {error && <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
       <div className="space-y-5">
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-[13px] leading-5 text-red-900"><p className="font-semibold">{t("permanentWorkspaceDeletionWarningTitle")}</p><p className="mt-2">{t("permanentWorkspaceDeletionWarning", { name: deleteTarget?.name, days: 90 })}</p><p className="mt-2">{t("subscriptionCancellationWarning")}</p></div>
@@ -194,7 +194,7 @@ export default function WorkspaceManagementPage() {
       </div>
     </FloatingDialog>
 
-    <FloatingDialog isOpen={!!restoreTarget} title={t("restoreWorkspace")} closeLabel={t("close")} onClose={closeRestore} busy={busy} width={520} height={500} onSubmit={event => { event.preventDefault(); void restoreWorkspace(); }} footer={<div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={closeRestore}>{t("cancel")}</Button><Button type="submit" variant="primary" disabled={busy || !restorePassword || !restoreConfirmed} isLoading={busy}>{t("restoreWorkspaceAction")}</Button></div>}>
+    <FloatingDialog isOpen={!!restoreTarget} title={t("restoreWorkspace")} closeLabel={t("close")} onClose={closeRestore} busy={busy} width={520} height={500} onSubmit={event => { event.preventDefault(); void restoreWorkspace(); }} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={closeRestore}>{t("cancel")}</Button><Button type="submit" variant="primary" disabled={busy || !restorePassword || !restoreConfirmed} isLoading={busy}>{t("restoreWorkspaceAction")}</Button></div>}>
       {error && <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
       <div className="space-y-5">
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-[13px] leading-5 text-amber-900"><p className="font-semibold">{t("restoreWorkspace")}</p><p className="mt-2">{t("restoreWorkspaceWarning")}</p></div>

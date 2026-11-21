@@ -66,7 +66,7 @@ const SubscriptionCanceled: React.FC = () => {
                     {t("subscription:checkout.backToPlans", "Back to subscription management")}
                   </Button>
 
-                  <Button variant="outline" onClick={() => navigate("/b/settings", { replace: true })}>
+                  <Button variant="secondary" onClick={() => navigate("/b/settings", { replace: true })}>
                     {t("subscription:btn.goSettings", "Go to settings")}
                   </Button>
                 </div>

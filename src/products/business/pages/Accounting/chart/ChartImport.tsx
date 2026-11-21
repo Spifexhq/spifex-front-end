@@ -222,10 +222,10 @@ const ChartImport: React.FC<Props> = ({
         />
       </label>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => void api.downloadLedgerCsvTemplate()}>
+        <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => void api.downloadLedgerCsvTemplate()}>
           {t("setup.downloadCsv", "Download CSV template")}
         </Button>
-        <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => void api.downloadLedgerXlsxTemplate()}>
+        <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => void api.downloadLedgerXlsxTemplate()}>
           {t("setup.downloadXlsx", "Download XLSX template")}
         </Button>
       </div>
@@ -252,7 +252,7 @@ const ChartImport: React.FC<Props> = ({
             <p className="text-xs font-semibold text-gray-700">{t("setup.baseStructureTitle", "Base structure")}</p>
             <p className="text-[11px] leading-5 text-gray-500">{t("setup.baseStructureHelp", "Copy this header and add one row per account.")}</p>
           </div>
-          <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void copyStructure()} aria-label={t("setup.copyStructure", "Copy base structure")}>
+          <Button type="button" variant="secondary" size="sm" className="gap-2" onClick={() => void copyStructure()} aria-label={t("setup.copyStructure", "Copy base structure")}>
             {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
             <span className="hidden sm:inline">{copied ? t("setup.copied", "Copied") : t("setup.copyStructure", "Copy structure")}</span>
           </Button>

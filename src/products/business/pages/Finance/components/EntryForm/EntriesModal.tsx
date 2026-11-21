@@ -918,7 +918,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
                 <Button
-                  variant="cancel"
+                  variant="secondary"
                   type="button"
                   onClick={attemptClose}
                   disabled={isSubmitting}
@@ -955,7 +955,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
               >
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => { setShowCloseConfirm(false); setPendingEntryId(null); }}
                 >
@@ -1012,7 +1012,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 </> : undefined}
     >
       {isLoadingEntry || sourcesLoading || relatedLoading ? <DialogSkeleton label={t("entriesModal:guidance.loading")} /> : <>
-        {sourceIssues.length > 0 && <div role="status" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p className="font-medium">{t("entriesModal:options.title")}</p><ul className="mt-2 space-y-1">{sourceIssues.map(issue => <li key={issue.source}><b>{t(`entriesModal:options.${issue.source}`)}</b> — {issue.status === 403 ? t("entriesModal:options.forbidden") : issue.status ? t("entriesModal:options.failed", { status: issue.status }) : t(issue.invalidResponse ? "entriesModal:options.invalidResponse" : "entriesModal:options.connection")}{issue.requestId && <span className="block text-[10px]">{t("entriesModal:options.reference", { id: issue.requestId })}</span>}</li>)}</ul><Button type="button" variant="outline" className="mt-3" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
+        {sourceIssues.length > 0 && <div role="status" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p className="font-medium">{t("entriesModal:options.title")}</p><ul className="mt-2 space-y-1">{sourceIssues.map(issue => <li key={issue.source}><b>{t(`entriesModal:options.${issue.source}`)}</b> — {issue.status === 403 ? t("entriesModal:options.forbidden") : issue.status ? t("entriesModal:options.failed", { status: issue.status }) : t(issue.invalidResponse ? "entriesModal:options.invalidResponse" : "entriesModal:options.connection")}{issue.requestId && <span className="block text-[10px]">{t("entriesModal:options.reference", { id: issue.requestId })}</span>}</li>)}</ul><Button type="button" variant="secondary" className="mt-3" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
         <div id="entry-form-panel" role="tabpanel" aria-labelledby={`entry-tab-${activeTab}`} className="space-y-5">{renderTabContent()}</div>
       </>}
     </FloatingDialog>

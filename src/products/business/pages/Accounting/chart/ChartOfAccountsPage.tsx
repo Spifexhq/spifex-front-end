@@ -108,11 +108,11 @@ export default function ChartOfAccountsPage() {
         })}
         <span aria-hidden="true" className="mx-0.5 h-6 w-px bg-gray-200"/>
         {chart.canAdd && <Button className="gap-2" onClick={() => setModal({ account: null })}><Plus size={15} aria-hidden="true" />{t("workspace.addAccount")}</Button>}
-        {chart.canDelete && <Button ref={menuRef} variant="outline" aria-label={t("workspace.moreActions")} aria-expanded={menu} onClick={() => setMenu(!menu)}><MoreHorizontal size={16} aria-hidden="true" /></Button>}
+        {chart.canDelete && <Button ref={menuRef} variant="secondary" aria-label={t("workspace.moreActions")} aria-expanded={menu} onClick={() => setMenu(!menu)}><MoreHorizontal size={16} aria-hidden="true" /></Button>}
       </div>
     </div>
     <ChartFilters value={filters} onApply={setFilters} /></>}
-    {chart.error !== null && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"><p>{chart.error || t("workspace.requestError")}</p><Button variant="outline" onClick={() => void chart.reload()}>{accounting("redesign.retry")}</Button></div>}
+    {chart.error !== null && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"><p>{chart.error || t("workspace.requestError")}</p><Button variant="secondary" onClick={() => void chart.reload()}>{accounting("redesign.retry")}</Button></div>}
     <div id="chart-view-panel" role="tabpanel" aria-labelledby={`chart-views-${view}`} tabIndex={0} className="min-w-0 focus-visible:outline-2 focus-visible:outline-indigo-500">
     {chart.loading ? <DataTableSkeleton rows={6} /> : chart.accounts.length > 0 ? view === "accounts" ? <ChartOfAccounts items={filtered} allAccounts={chart.accounts} viewMode={display} onViewModeChange={setDisplay} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? account => setDeleting({ account }) : undefined} /> : <AccountInsights filters={filters} view={view} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? async account => { if (!await chart.remove(account)) throw new Error(t("workspace.requestError")); await refresh(); } : undefined} /> : !chart.canAdd && <p className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6">{t("workspace.emptyTitle")}</p>}
     </div>

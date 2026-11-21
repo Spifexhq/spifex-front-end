@@ -256,7 +256,7 @@ const CurrencySettings: React.FC = () => {
                   label={t("currencySettings:field.current")}
                   value={currentCurrencyLabel}
                   action={
-                    <Button variant="outline" onClick={openModal} disabled={isSubmitting || !canManage}>
+                    <Button variant="secondary" onClick={openModal} disabled={isSubmitting || !canManage}>
                       {t("currencySettings:btn.change")}
                     </Button>
                   }
@@ -326,7 +326,7 @@ const CurrencySettings: React.FC = () => {
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button
-                    variant="cancel"
+                    variant="secondary"
                     type="button"
                     onClick={closeModal}
                     disabled={isSubmitting}

@@ -382,7 +382,7 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
           <SidePanelFooter
           >
             <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
-              <Button variant="cancel" type="button" onClick={onClose} disabled={isSubmitting} className="w-full md:w-auto">
+              <Button variant="secondary" type="button" onClick={onClose} disabled={isSubmitting} className="w-full md:w-auto">
                 {t("btn.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">

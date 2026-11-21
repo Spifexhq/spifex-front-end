@@ -1,9 +1,13 @@
-// src/components/ui/sizes.ts
+// src/shared/ui/Button/sizes.ts
 import type { ButtonSize, ButtonVariant } from "./Button.types";
 
 export const BUTTON_BASE =
-  "inline-flex select-none items-center justify-center rounded-md font-medium " +
-  "transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex select-none items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap " +
+  "transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400 " +
+  "disabled:cursor-not-allowed";
+
+/** Dimming is opt-in through the component so background work can stay quiet. */
+export const BUTTON_DISABLED = "disabled:opacity-50";
 
 export const BUTTON_SIZES: Record<ButtonSize, string> = {
   xs: "h-7 px-2.5 text-[11px]",
@@ -18,38 +22,27 @@ export const BUTTON_SIZES: Record<ButtonSize, string> = {
 
 export const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "text-white border border-transparent " +
-    "bg-[var(--accentPrimaryStrong)] hover:bg-[var(--accentPrimaryStrongHover)] " +
-    "active:bg-[var(--accentPrimaryStrongPressed)] disabled:bg-[var(--accentPrimaryStrongDisabled)]",
+    "border border-transparent bg-gray-900 text-white " +
+    "hover:bg-gray-800 active:bg-black",
 
-  common:
-    "text-[var(--black)] [border:var(--controlBorder)] " +
-    "bg-[var(--accentCommon)] hover:bg-[var(--accentCommonHover)] " +
-    "active:bg-[var(--accentCommonPressed)] disabled:bg-[var(--accentCommonDisabled)]",
-
-  cancel:
-    "text-[var(--black)] [border:var(--controlBorder)] " +
-    "bg-[var(--accentCancel)] hover:bg-[var(--accentCancelHover)] " +
-    "active:bg-[var(--accentCancelPressed)] disabled:bg-[var(--accentCancelDisabled)]",
-
-  danger:
-    "text-white [border:var(--controlBorder)] " +
-    "bg-[var(--accentDanger)] hover:bg-[var(--accentDangerHover)] " +
-    "active:bg-[var(--accentDangerPressed)] disabled:bg-[var(--accentDangerDisabled)]",
-
-  outline:
-    "text-[var(--black)] [border:var(--controlBorder)] " +
-    "bg-transparent hover:bg-[#f9f9f9] active:bg-[#f2f2f2] disabled:bg-[#fbfbfb]",
-
-  outlineBlack:
-    "text-white [border:var(--controlBorder)] " +
-    "bg-black hover:bg-[#1b1b1b] active:bg-[#242124] disabled:bg-[#fbfbfb] disabled:text-[var(--black)]",
+  secondary:
+    "border border-gray-300 bg-white text-gray-900 " +
+    "hover:bg-gray-50 active:bg-gray-100",
 
   ghost:
-    "bg-transparent border border-transparent text-[var(--black)] " +
-    "hover:bg-black/5 active:bg-black/10",
+    "border border-transparent bg-transparent text-gray-700 " +
+    "hover:bg-gray-100 active:bg-gray-200",
 
-  muted:
-    "text-gray-700 [border:var(--controlBorder)] " +
-    "bg-gray-100 hover:bg-gray-200 active:bg-gray-300",
+  danger:
+    "border border-transparent bg-red-600 text-white " +
+    "hover:bg-red-700 active:bg-red-800",
+
+  dangerSoft:
+    "border border-red-200 bg-white text-red-600 " +
+    "hover:bg-red-50 active:bg-red-100",
+
+  /** Brand orange. Shared components only — pages use `primary` instead. */
+  accent:
+    "border border-transparent bg-[var(--accentPrimary)] text-white " +
+    "hover:bg-[var(--accentPrimaryHover)] active:bg-[var(--accentPrimaryPressed)]",
 };

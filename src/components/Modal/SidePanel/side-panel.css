@@ -34,8 +34,6 @@
 .settings-modal-subtitle { margin: 5px 0 0; font-size: 12px; line-height: 18px; color: #687385; }
 .settings-modal-scroll { font-size: 13px; color: #202936; }
 .settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 34px; height: 34px; padding: 6px 14px; font-size: 12px; line-height: 20px; font-weight: 500; }
-.settings-modal :is(.settings-modal-footer,form > footer) [data-variant="outline"], .settings-modal :is(.settings-modal-footer,form > footer) [data-variant="cancel"] { border: 1px solid #d6d6d6; background: #f5f5f5; color: #202020; }
-.settings-modal :is(.settings-modal-footer,form > footer) :is([data-variant="outline"],[data-variant="cancel"]):hover { background: #f1f1f1; }
 @media(max-width:767px) { .settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 40px; height: 40px; }}
 .settings-modal-footer .settings-modal-footer-layout { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; }
 .settings-modal-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; font-size: 12px; line-height: 18px; color: #687385; }

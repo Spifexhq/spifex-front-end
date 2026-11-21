@@ -26,10 +26,10 @@ export const BanksEditor: React.FC<FilterEditorProps> = ({
     />
 
     <div className="flex justify-end gap-2 mt-3">
-      <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={onRemove}>
+      <Button variant="secondary" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={onRemove}>
         {t("filterBar:buttons.remove")}
       </Button>
-      <Button variant="outlineBlack" size="sm" onClick={onApply}>
+      <Button variant="primary" size="sm" onClick={onApply}>
         {t("filterBar:buttons.apply")}
       </Button>
     </div>

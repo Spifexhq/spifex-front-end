@@ -301,7 +301,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               </div>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
-                <Button variant="cancel" disabled={isSubmitting} type="button" onClick={attemptClose} className="w-full md:w-auto">
+                <Button variant="secondary" disabled={isSubmitting} type="button" onClick={attemptClose} className="w-full md:w-auto">
                   {t("actions.cancel")}
                 </Button>
                 <Button type="submit" disabled={!isValid || isSubmitting || loadingBanks || banksError} className="w-full md:w-auto">
@@ -326,7 +326,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
                 style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
               >
-                <Button variant="outline" className="w-full md:w-auto" onClick={() => setShowCloseConfirm(false)}>
+                <Button variant="secondary" className="w-full md:w-auto" onClick={() => setShowCloseConfirm(false)}>
                   {t("actions.back", { defaultValue: "Back" })}
                 </Button>
                 <Button variant="danger" className="w-full md:w-auto !bg-red-500 hover:!bg-red-600" onClick={closeModal}>
@@ -364,7 +364,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         )}
 </> : undefined}
     >
-      {loadingBanks ? <DialogSkeleton fields={5} label={t("guidance.loading")} /> : banksError ? <div role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p>{t("errors.loadBanks")}</p><Button type="button" variant="outline" className="mt-3" onClick={() => setBankAttempt(value => value + 1)}>{t("guidance.retry")}</Button></div> : <>
+      {loadingBanks ? <DialogSkeleton fields={5} label={t("guidance.loading")} /> : banksError ? <div role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p>{t("errors.loadBanks")}</p><Button type="button" variant="secondary" className="mt-3" onClick={() => setBankAttempt(value => value + 1)}>{t("guidance.retry")}</Button></div> : <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Input
                 kind="date"
@@ -410,7 +410,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               <div className="flex items-end justify-start md:col-span-2 md:order-last">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={swapBanks}
                   disabled={!formData.source_bank && !formData.dest_bank}

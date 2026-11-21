@@ -141,10 +141,10 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
           }}
         >
           <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
-            <Button type="button" size="sm" ref={cancelRef} variant="outline" onClick={onCancel} disabled={busy}>
+            <Button type="button" size="sm" ref={cancelRef} variant="secondary" onClick={onCancel} disabled={busy}>
               {cancelLabel}
             </Button>
-            <Button type="button" size="sm" variant={variant === "danger" ? "danger" : "outlineBlack"} onClick={onConfirm} disabled={busy} isLoading={busy}>
+            <Button type="button" size="sm" variant={variant === "danger" ? "danger" : "primary"} onClick={onConfirm} disabled={busy} isLoading={busy}>
               {confirmLabel}
             </Button>
           </div>

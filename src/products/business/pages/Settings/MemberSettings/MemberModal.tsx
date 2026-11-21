@@ -565,7 +565,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                               "Use the full Administrator template only when broad administrative access is intended.",
                           })}
                         </p>
-                        <Button type="button" variant="outline" size="xs" onClick={assignAdminTemplate} disabled={busy}>
+                        <Button type="button" variant="secondary" size="xs" onClick={assignAdminTemplate} disabled={busy}>
                           {t("btn.useAdminTemplate", { defaultValue: "Use Administrator template" })}
                         </Button>
                       </div>
@@ -600,7 +600,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                           </p>
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="secondary"
                             size="xs"
                             onClick={() => void loadSelectedGroupCodes()}
                             disabled={isGroupsPreviewLoading || busy}
@@ -644,7 +644,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                       </div>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="secondary"
                         size="xs"
                         onClick={() => void loadEffectiveAccess()}
                         disabled={isPreviewLoading || busy}
@@ -784,7 +784,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
                 <Button
-                  variant="cancel"
+                  variant="secondary"
                   type="button"
                   onClick={attemptClose}
                   disabled={busy}
@@ -814,7 +814,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                 style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
               >
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowDiscardConfirm(false)}
                 >

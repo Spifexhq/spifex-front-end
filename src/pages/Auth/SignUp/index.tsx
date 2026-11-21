@@ -656,7 +656,7 @@ const SignUp = () => {
                       }`}
                     >
                       <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                        <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-900">{form.name}</p><p className="mt-1 break-all text-xs text-slate-500">{form.email}</p></div><button type="button" onClick={() => setStep(1)} disabled={isLoading} className="shrink-0 text-xs font-medium text-[var(--accentPrimary)] hover:text-black">{t("reviewEdit")}</button></div>
+                        <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-900">{form.name}</p><p className="mt-1 break-all text-xs text-slate-500">{form.email}</p></div><button type="button" onClick={() => setStep(1)} disabled={isLoading} className="shrink-0 text-xs font-medium text-gray-600 underline-offset-2 hover:text-gray-900 hover:underline">{t("reviewEdit")}</button></div>
                         <p className="mt-3 border-t border-slate-200 pt-3 text-xs text-slate-500">{selectedCountry[0]?.label} · {selectedCurrency[0]?.label}</p>
                       </div>
                       <p className="text-sm text-slate-600 mb-1">
@@ -717,7 +717,7 @@ const SignUp = () => {
                   <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {step > 1 && step < 4 && (
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         type="button"
                         onClick={handleBack}
                         disabled={isLoading}

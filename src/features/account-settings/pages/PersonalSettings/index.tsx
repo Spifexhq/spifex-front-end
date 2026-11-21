@@ -314,7 +314,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.fullName")}
                     value={profile?.name ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("name")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("name")} disabled={isSubmitting}>
                         {t("btn.updateName")}
                       </Button>
                     }
@@ -324,7 +324,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.phone")}
                     value={profile?.phone ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("phone")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("phone")} disabled={isSubmitting}>
                         {t("btn.updatePhone")}
                       </Button>
                     }
@@ -334,7 +334,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.jobTitle")}
                     value={profile?.job_title ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("job_title")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("job_title")} disabled={isSubmitting}>
                         {t("btn.updateJobTitle")}
                       </Button>
                     }
@@ -344,7 +344,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.department")}
                     value={profile?.department ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("department")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("department")} disabled={isSubmitting}>
                         {t("btn.updateDepartment")}
                       </Button>
                     }
@@ -358,7 +358,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.address1")}
                     value={profile?.line1 ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("line1")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("line1")} disabled={isSubmitting}>
                         {t("btn.updateAddress1")}
                       </Button>
                     }
@@ -367,7 +367,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.address2")}
                     value={profile?.line2 ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("line2")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("line2")} disabled={isSubmitting}>
                         {t("btn.updateAddress2")}
                       </Button>
                     }
@@ -376,7 +376,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.city")}
                     value={profile?.city ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("city")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("city")} disabled={isSubmitting}>
                         {t("btn.updateCity")}
                       </Button>
                     }
@@ -385,7 +385,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.region")}
                     value={profile?.region ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("region")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("region")} disabled={isSubmitting}>
                         {t("btn.updateRegion")}
                       </Button>
                     }
@@ -394,7 +394,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.postalCode")}
                     value={profile?.postal_code ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("postal_code")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("postal_code")} disabled={isSubmitting}>
                         {t("btn.updatePostalCode")}
                       </Button>
                     }
@@ -403,7 +403,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.country")}
                     value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
                     action={
-                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("country")} disabled={isSubmitting}>
                         {t("btn.updateCountry")}
                       </Button>
                     }
@@ -420,7 +420,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                       <p className="text-xs text-gray-500">{t("label.current")}</p>
                       <p className="text-[13px] font-medium text-gray-900 break-words">{timezoneLabel}</p>
                     </div>
-                    <Button variant="outline" onClick={() => openModal("timezone")} disabled={isSubmitting}>
+                    <Button variant="secondary" onClick={() => openModal("timezone")} disabled={isSubmitting}>
                       {t("btn.update")}
                     </Button>
                   </div>
@@ -433,7 +433,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.nationalId")}
                     value={maskNationalId(profile?.national_id)}
                     action={
-                      <Button variant="outline" onClick={() => openModal("national_id")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("national_id")} disabled={isSubmitting}>
                         {t("btn.updateNationalId")}
                       </Button>
                     }
@@ -442,7 +442,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.birthDate")}
                     value={birthDateLabel}
                     action={
-                      <Button variant="outline" onClick={() => openModal("birth_date")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("birth_date")} disabled={isSubmitting}>
                         {t("btn.updateBirthDate")}
                       </Button>
                     }
@@ -451,7 +451,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.gender")}
                     value={genderLabel}
                     action={
-                      <Button variant="outline" onClick={() => openModal("gender")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("gender")} disabled={isSubmitting}>
                         {t("btn.updateGender")}
                       </Button>
                     }
@@ -460,7 +460,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                     label={t("field.note")}
                     value={profile?.note ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("note")} disabled={isSubmitting}>
+                      <Button variant="secondary" onClick={() => openModal("note")} disabled={isSubmitting}>
                         {t("btn.updateNote")}
                       </Button>
                     }
@@ -472,7 +472,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                 <div className="px-4 py-3">
                   <p className="text-xs text-gray-700">{t("security.subtitle")}</p>
                   <div className="mt-3">
-                    <Button variant="outline" onClick={handleSecurityNavigation} disabled={isSubmitting}>
+                    <Button variant="secondary" onClick={handleSecurityNavigation} disabled={isSubmitting}>
                       {t("btn.manageSecurity")}
                     </Button>
                   </div>
@@ -483,7 +483,7 @@ const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ pro
                 <div className="px-4 py-3">
                   <p className="text-xs text-gray-700">{t("formats.subtitle")}</p>
                   <div className="mt-3">
-                    <Button variant="outline" onClick={handleFormatsNavigation} disabled={isSubmitting}>
+                    <Button variant="secondary" onClick={handleFormatsNavigation} disabled={isSubmitting}>
                       {t("btn.manageFormats")}
                     </Button>
                   </div>

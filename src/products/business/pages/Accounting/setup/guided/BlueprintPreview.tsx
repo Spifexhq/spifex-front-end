@@ -91,10 +91,10 @@ export default function BlueprintPreview({ preview, banks }: { preview: AiSetupP
         {copyError ? <p role="alert" className="mt-1 text-[11px] text-rose-700">{copyError}</p> : null}
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => downloadChartCsv(blueprint.accounts)}>
+        <Button type="button" variant="secondary" size="sm" className="gap-2" onClick={() => downloadChartCsv(blueprint.accounts)}>
           <Download size={14} aria-hidden="true" />{t("guidedSetup.downloadChartCsv", "Download CSV")}
         </Button>
-        <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void copyChart()}>
+        <Button type="button" variant="secondary" size="sm" className="gap-2" onClick={() => void copyChart()}>
           {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
           {copied ? t("guidedSetup.copied", "Copied") : t("guidedSetup.copyChart", "Copy rows")}
         </Button>

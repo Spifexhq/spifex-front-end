@@ -410,7 +410,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
             <label className="flex items-center gap-2 text-xs"><Checkbox checked={form.status === "active"} onChange={event => setForm(previous => ({ ...previous, status: event.target.checked ? "active" : "inactive" }))} />{t("common.active", "Active")}</label>
             <div className="flex items-center justify-end gap-2">
-              <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>
+              <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving || !canManage}>

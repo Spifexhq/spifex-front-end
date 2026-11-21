@@ -125,7 +125,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
           {hasSettingsFilters && <SettingsClearFilters label={t("clearFilters")} onClick={clearSettingsFilters} />}
         </SettingsFilters>
         {canCreate && <div className="flex flex-wrap items-center gap-2">
-          {canImportDefaults && <Button type="button" variant="outline" onClick={() => setImportOpen(true)} disabled={importingDefaults}>{importingDefaults ? t("categoriesImport.importing") : t("categoriesImport.action")}</Button>}
+          {canImportDefaults && <Button type="button" variant="secondary" onClick={() => setImportOpen(true)} disabled={importingDefaults}>{importingDefaults ? t("categoriesImport.importing") : t("categoriesImport.action")}</Button>}
           <Button type="button" onClick={() => setDialog({ kind: collection })}>{t("create")}</Button>
         </div>}
       </div>
@@ -158,8 +158,8 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
       </Popover>}
     </> : <Card as="form" radius="xl" padding="none" onSubmit={event => { event.preventDefault(); setAppliedSearch(search.trim()); }} className="flex flex-wrap items-end gap-3 p-3 sm:p-4">
       <div className="min-w-48 flex-1"><Input kind="text" label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)}/></div>
-      <Button type="submit" variant="outline">{t("apply")}</Button>
-      {search && <Button type="button" variant="outline" onClick={() => { setSearch(""); }}>{t("clearFilters")}</Button>}
+      <Button type="submit" variant="secondary">{t("apply")}</Button>
+      {search && <Button type="button" variant="secondary" onClick={() => { setSearch(""); }}>{t("clearFilters")}</Button>}
     </Card>}
     {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
     {notice && <p role="status" className="text-xs text-emerald-700">{notice}</p>}

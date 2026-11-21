@@ -94,7 +94,7 @@ export default function ImportBulkSelectionBar({ open, selection, categories, bu
       >
         <p role="status" className="text-xs leading-5 text-gray-700">{confirmText}</p>
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button ref={cancelRef} type="button" size="sm" variant="outline" disabled={busy} onClick={cancel}>{t("workspace.cancel")}</Button>
+          <Button ref={cancelRef} type="button" size="sm" variant="secondary" disabled={busy} onClick={cancel}>{t("workspace.cancel")}</Button>
           <Button type="button" size="sm" variant="danger" className="gap-1.5" isLoading={busy} disabled={busy} onClick={() => void exclude()}>
             <Ban size={13} aria-hidden="true" />{t("workspace.exclude")}
           </Button>
@@ -122,7 +122,7 @@ export default function ImportBulkSelectionBar({ open, selection, categories, bu
           <Button type="button" size="sm" variant="primary" className="gap-1.5" disabled={busy || !category} onClick={() => void apply()}>
             <Check size={13} aria-hidden="true" />{t("workspace.apply")}
           </Button>
-          <Button ref={excludeRef} type="button" size="sm" variant="outline" className="gap-1.5" disabled={busy} onClick={() => setConfirming(true)}>
+          <Button ref={excludeRef} type="button" size="sm" variant="secondary" className="gap-1.5" disabled={busy} onClick={() => setConfirming(true)}>
             <Ban size={13} aria-hidden="true" />{t("workspace.exclude")}
           </Button>
         </div>

@@ -41,7 +41,7 @@ export default function InventoryOverviewPage() {
   }, [load]);
 
   if (loading && !summary) return <PageSkeleton variant="accounting" rows={6} />;
-  if (error && !summary) return <ErrorState title={t("overview.title")} message={error} action={<Button variant="outline" size="sm" onClick={() => void load()}>{t("common.retry")}</Button>} />;
+  if (error && !summary) return <ErrorState title={t("overview.title")} message={error} action={<Button variant="secondary" size="sm" onClick={() => void load()}>{t("common.retry")}</Button>} />;
 
   const data = summary;
   const metrics = data ? [
@@ -55,7 +55,7 @@ export default function InventoryOverviewPage() {
 
   return (
     <div className="space-y-5">
-      {error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"><span>{error}</span><Button variant="outline" size="sm" onClick={() => void load()}>{t("common.retry")}</Button></div> : null}
+      {error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"><span>{error}</span><Button variant="secondary" size="sm" onClick={() => void load()}>{t("common.retry")}</Button></div> : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         {metrics.map(metric => <MetricCard key={metric.key} label={metric.label} value={metric.value.toLocaleString()} Icon={metric.Icon} hint={metric.hint} />)}

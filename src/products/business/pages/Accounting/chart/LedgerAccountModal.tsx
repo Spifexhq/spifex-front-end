@@ -498,7 +498,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 <span className="ml-3 text-gray-500">{translate("footer.shortcuts")}</span>
               </p>
               <div className="grid grid-cols-2 gap-2 md:ml-auto md:flex md:gap-2">
-                <Button type="button" variant="cancel" onClick={onClose} disabled={busy} className="w-full md:w-auto">{translate("btn.cancel")}</Button>
+                <Button type="button" variant="secondary" onClick={onClose} disabled={busy} className="w-full md:w-auto">{translate("btn.cancel")}</Button>
                 <Button type="submit" disabled={busy} className="w-full md:w-auto">
                   {translate("btn.save")}
                 </Button>

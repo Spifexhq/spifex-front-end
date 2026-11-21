@@ -410,7 +410,7 @@ const AccountingJournalsPage: React.FC = () => {
 
           {recordFilters.pager.error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
             <span>{recordFilters.pager.error}</span>
-            <Button variant="outline" size="sm" onClick={() => void load()}>{t("redesign.retry", "Retry")}</Button>
+            <Button variant="secondary" size="sm" onClick={() => void load()}>{t("redesign.retry", "Retry")}</Button>
           </div> : null}
 
           {recordFilters.filters}
@@ -426,8 +426,8 @@ const AccountingJournalsPage: React.FC = () => {
                 { key: "lines", label: t("journalsPage.columns.lines", "Lines"), render: item => String(item.lines?.length ?? 0) },
                 { key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
               ]} actions={item => item.status === "posted" && item.source_type === "manual" ? <div className="flex items-center justify-end gap-1">
-                <Button type="button" variant="outline" size="sm" disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button>
-                <Button type="button" variant="outline" size="iconSm" aria-label={t("journalsPage.actions.delete", "Delete")} title={t("journalsPage.actions.delete", "Delete")} disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => setDeleteTarget(item)}><Trash2 size={13} aria-hidden="true"/></Button>
+                <Button type="button" variant="secondary" size="sm" disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button>
+                <Button type="button" variant="secondary" size="iconSm" aria-label={t("journalsPage.actions.delete", "Delete")} title={t("journalsPage.actions.delete", "Delete")} disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => setDeleteTarget(item)}><Trash2 size={13} aria-hidden="true"/></Button>
               </div> : null} />
             </div>
           </Card>
@@ -436,7 +436,7 @@ const AccountingJournalsPage: React.FC = () => {
 
           {historyFilters.pager.error ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
             <span>{historyFilters.pager.error}</span>
-            <Button variant="outline" size="sm" onClick={() => void historyFilters.pager.refresh()}>{t("redesign.retry", "Retry")}</Button>
+            <Button variant="secondary" size="sm" onClick={() => void historyFilters.pager.refresh()}>{t("redesign.retry", "Retry")}</Button>
           </div> : null}
 
           {historyFilters.filters}
@@ -554,7 +554,7 @@ const AccountingJournalsPage: React.FC = () => {
                   <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     className="gap-2"
                     onClick={() =>
@@ -651,7 +651,7 @@ const AccountingJournalsPage: React.FC = () => {
                         {form.lines.length > 1 ? (
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={() =>
                               setForm((prev) => ({
@@ -690,7 +690,7 @@ const AccountingJournalsPage: React.FC = () => {
             </section>
 
             <div className="flex items-center justify-end gap-2">
-              <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>
+              <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
@@ -708,7 +708,7 @@ const AccountingJournalsPage: React.FC = () => {
         subtitle={activeJournal ? journalDisplayId(activeJournal) : topPreview?.kind !== "journal" ? topPreview?.id : undefined}
         recordLabel={activeJournal ? t("footer.journal", "Journal") : undefined}
         recordName={activeJournal ? journalDisplayId(activeJournal) : undefined}
-        footer={!activeJournal ? <Button type="button" variant="outline" onClick={closePreview}>{t("journalsPage.backToJournal", "Back")}</Button> : undefined}
+        footer={!activeJournal ? <Button type="button" variant="secondary" onClick={closePreview}>{t("journalsPage.backToJournal", "Back")}</Button> : undefined}
       >
         <motion.div
           key={topPreview?.kind === "journal" ? journalDisplayId(topPreview.journal) : topPreview ? `${topPreview.kind}:${topPreview.id}` : "closed"}
@@ -755,7 +755,7 @@ const AccountingJournalsPage: React.FC = () => {
         {!activeJournal && relatedPreview?.loading && <p role="status" className="py-6 text-xs text-gray-500">{t("journalsPage.relatedLoading", "Loading related entry…")}</p>}
         {!activeJournal && relatedPreview?.error && <div role="alert" className="space-y-3 text-xs text-red-700">
           <p>{relatedPreview.error}</p>
-          <Button type="button" size="sm" variant="outline" onClick={() => setRelatedRetry(value => value + 1)}>{t("journalsPage.relatedRetry", "Try again")}</Button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => setRelatedRetry(value => value + 1)}>{t("journalsPage.relatedRetry", "Try again")}</Button>
         </div>}
         {!activeJournal && relatedData && <div className="space-y-5">
           {relatedData.description && <p className="text-[13px] leading-6 text-slate-600">{relatedData.description}</p>}
