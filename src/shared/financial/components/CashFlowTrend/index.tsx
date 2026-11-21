@@ -7,11 +7,14 @@ import SegmentedControl from "@/shared/ui/SegmentedControl";
 import AnimatedNumber from "@/shared/ui/AnimatedNumber";
 import Button from "@/shared/ui/Button";
 import { formatCurrency, formatDateFromISO } from "@/lib";
+import { CHART_COLORS } from "@/shared/financial/chartColors";
 import type { PeriodPoint } from "@/models/finance/overview";
 import {
+  compactAxisLabel,
   cumulative,
   indexFromRatio,
   linePath,
+  niceTicks,
   paddedDomain,
   resample,
   tickIndices,
@@ -21,18 +24,18 @@ import { FORECAST_RANGES, type ForecastFilters, type ForecastLoader, type RangeK
 import { useForecast } from "./useForecast";
 
 type Mode = "due" | "projected";
-type SeriesKey = "receivables" | "paid" | "net" | "balance";
+type SeriesKey = "receivables" | "paid" | "balance";
 
 const COLORS: Record<SeriesKey, string> = {
-  receivables: "#059669",
-  paid: "#B42318",
-  net: "#0EA5E9",
-  balance: "#4F46E5",
+  receivables: CHART_COLORS.positive,
+  paid: CHART_COLORS.negative,
+  balance: CHART_COLORS.balance,
 };
 const GHOST = "#CBD5E1";
 
 const HEIGHT = 260;
-/** Horizontal breathing room so edge labels never touch the card border. */
+/** Space reserved for the Y-axis labels, and breathing room on the right. */
+const AXIS_LEFT = 46;
 const PAD = 18;
 const MORPH_SPRING = { type: "spring", stiffness: 95, damping: 24, mass: 1 } as const;
 const HOVER_SPRING = { type: "spring", stiffness: 340, damping: 32, mass: 0.5 } as const;
@@ -84,7 +87,7 @@ export function CashFlowTrendView({
 }: CashFlowTrendViewProps) {
   const { t, i18n } = useTranslation("overview");
   const [mode, setMode] = useState<Mode>("due");
-  const [visible, setVisible] = useState({ receivables: true, paid: true, net: false, balance: true });
+  const [visible, setVisible] = useState({ receivables: true, paid: true, balance: true });
   const [hover, setHover] = useState<number | null>(null);
   const [plotRef, width] = useElementWidth<HTMLDivElement>();
   const gradientId = `cash-flow-${useId().replace(/:/g, "")}`;
@@ -117,16 +120,15 @@ export function CashFlowTrendView({
   const cumNet = useMemo(() => cumulative(netValues), [netValues]);
   const balance = useMemo(() => cumNet.map((value) => (opening ?? 0) + value), [cumNet, opening]);
 
-  const innerWidth = Math.max(1, width - PAD * 2);
+  const innerWidth = Math.max(1, width - AXIS_LEFT - PAD);
 
   /** Every mode keeps the same semantics per key so paths can morph instead of swap. */
   const series = useMemo(() => {
-    const rows: { key: SeriesKey; values: number[]; dashed?: boolean }[] = [];
+    const rows: { key: SeriesKey; values: number[] }[] = [];
     if (visible.receivables) rows.push({ key: "receivables", values: dueMode ? inValues : cumIn });
     if (visible.paid) rows.push({ key: "paid", values: dueMode ? outValues : cumOut });
-    if (visible.net) rows.push({ key: "net", values: dueMode ? netValues : cumNet, dashed: true });
     return rows;
-  }, [cumIn, cumNet, cumOut, dueMode, inValues, netValues, outValues, visible]);
+  }, [cumIn, cumOut, dueMode, inValues, outValues, visible]);
 
   const [min, max] = useMemo(() => {
     let low = Infinity;
@@ -152,6 +154,8 @@ export function CashFlowTrendView({
     [innerWidth, max, min, series]
   );
 
+  const yTicks = useMemo(() => niceTicks(min, max, 4), [min, max]);
+
   /** The projected balance line exists only in Projected mode and can be hidden. */
   const balancePath = useMemo(
     () => (dueMode || !visible.balance ? "" : linePath(balance, innerWidth, HEIGHT, min, max)),
@@ -165,11 +169,14 @@ export function CashFlowTrendView({
 
   const hoveredBucket = hover !== null ? buckets[hover] : null;
   const ratio = hover !== null && buckets.length > 1 ? hover / (buckets.length - 1) : null;
-  const hoveredX = ratio !== null ? PAD + ratio * innerWidth : 0;
+  const hoveredX = ratio !== null ? AXIS_LEFT + ratio * innerWidth : 0;
   const splitX = ratio !== null ? ratio * innerWidth : innerWidth;
 
   const shownIn = hoveredBucket ? Number(hoveredBucket.in) || 0 : totalIn;
   const shownOut = hoveredBucket ? Number(hoveredBucket.out) || 0 : totalOut;
+  // Projected mode plots cumulative flows, so the header follows the same curve.
+  const shownReceivables = dueMode ? shownIn : hover !== null ? cumIn[hover] ?? 0 : totalIn;
+  const shownPaid = dueMode ? shownOut : hover !== null ? cumOut[hover] ?? 0 : totalOut;
   const shownNet = hoveredBucket ? Number(hoveredBucket.net) || 0 : netDue;
   const shownBalance = hover !== null ? balance[hover] ?? opening ?? 0 : closing;
   const shownMovement = shownBalance - (opening ?? 0);
@@ -210,7 +217,7 @@ export function CashFlowTrendView({
     if (buckets.length < 1) return;
     const rect = event.currentTarget.getBoundingClientRect();
     if (!rect.width) return;
-    setHover(indexFromRatio((event.clientX - rect.left - PAD) / innerWidth, buckets.length));
+    setHover(indexFromRatio((event.clientX - rect.left - AXIS_LEFT) / innerWidth, buckets.length));
   };
 
   const toggle = (key: keyof typeof visible) =>
@@ -263,24 +270,7 @@ export function CashFlowTrendView({
               transition={{ duration: 0.14, ease: "easeOut" }}
               className="flex flex-wrap items-center gap-x-3 gap-y-1"
             >
-              {dueMode ? (
-                <>
-                  <span className="inline-flex items-center gap-1.5 text-slate-600">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLORS.receivables }} />
-                    <span className="tabular-nums">
-                      <AnimatedNumber value={shownIn} format={money} duration={numberDuration} />
-                    </span>
-                    <span className="text-slate-400">{t("trendCard.receivables").toLowerCase()}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-slate-600">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLORS.paid }} />
-                    <span className="tabular-nums">
-                      <AnimatedNumber value={shownOut} format={money} duration={numberDuration} />
-                    </span>
-                    <span className="text-slate-400">{t("trendCard.paid").toLowerCase()}</span>
-                  </span>
-                </>
-              ) : (
+              {!dueMode ? (
                 <span
                   className="inline-flex items-center gap-1 font-medium"
                   style={{ color: shownMovement >= 0 ? "#059669" : "#DC2626" }}
@@ -299,7 +289,21 @@ export function CashFlowTrendView({
                   ) : null}
                   <span className="font-normal text-slate-400">{t("trendCard.vsToday")}</span>
                 </span>
-              )}
+              ) : null}
+              <span className="inline-flex items-center gap-1.5 text-slate-600">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLORS.receivables }} />
+                <span className="tabular-nums">
+                  <AnimatedNumber value={shownReceivables} format={money} duration={numberDuration} />
+                </span>
+                <span className="text-slate-400">{t("trendCard.receivables").toLowerCase()}</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-slate-600">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLORS.paid }} />
+                <span className="tabular-nums">
+                  <AnimatedNumber value={shownPaid} format={money} duration={numberDuration} />
+                </span>
+                <span className="text-slate-400">{t("trendCard.paid").toLowerCase()}</span>
+              </span>
             </motion.div>
           </AnimatePresence>
           <span className="text-slate-400">
@@ -367,7 +371,34 @@ export function CashFlowTrendView({
                   </clipPath>
                 </defs>
 
-                <g transform={`translate(${PAD} 0)`}>
+                <g transform={`translate(${AXIS_LEFT} 0)`}>
+                  {yTicks.map((value) => {
+                    const y = HEIGHT - ((value - min) / (max - min || 1)) * HEIGHT;
+                    return (
+                      <g key={value}>
+                        <line
+                          x1={0}
+                          x2={innerWidth}
+                          y1={y}
+                          y2={y}
+                          stroke="#0f172a"
+                          strokeOpacity={0.05}
+                          strokeWidth={1}
+                        />
+                        <text
+                          x={-10}
+                          y={y + 3.5}
+                          textAnchor="end"
+                          fontSize={10}
+                          fill="#94a3b8"
+                          className="tabular-nums"
+                        >
+                          {compactAxisLabel(value)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
                   {paths.map((row) => (
                     <g key={row.key}>
                       <motion.path
@@ -377,10 +408,9 @@ export function CashFlowTrendView({
                         transition={reduced ? { duration: 0 } : { d: MORPH_SPRING, opacity: { duration: 0.3, ease: "easeOut" } }}
                         fill="none"
                         stroke={GHOST}
-                        strokeWidth={row.dashed ? 1.8 : 2.4}
+                        strokeWidth={2.4}
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeDasharray={row.dashed ? "6 5" : undefined}
                         clipPath={`url(#${futureClipId})`}
                       />
                       <motion.path
@@ -390,10 +420,9 @@ export function CashFlowTrendView({
                         transition={reduced ? { duration: 0 } : { d: MORPH_SPRING, opacity: { duration: 0.3, ease: "easeOut" } }}
                         fill="none"
                         stroke={COLORS[row.key]}
-                        strokeWidth={row.dashed ? 1.8 : 2.4}
+                        strokeWidth={2.4}
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeDasharray={row.dashed ? "6 5" : undefined}
                         clipPath={`url(#${pastClipId})`}
                       />
                     </g>
@@ -443,7 +472,7 @@ export function CashFlowTrendView({
                         stroke="#0F172A"
                         strokeOpacity={0.14}
                         strokeWidth={1}
-                        animate={{ x1: hoveredX - PAD, x2: hoveredX - PAD }}
+                        animate={{ x1: hoveredX - AXIS_LEFT, x2: hoveredX - AXIS_LEFT }}
                         transition={reduced ? { duration: 0 } : HOVER_SPRING}
                       />
                       {markers.map((marker) => (
@@ -454,7 +483,7 @@ export function CashFlowTrendView({
                           stroke={marker.color}
                           strokeWidth={2}
                           initial={false}
-                          animate={{ cx: hoveredX - PAD, cy: marker.y }}
+                          animate={{ cx: hoveredX - AXIS_LEFT, cy: marker.y }}
                           transition={reduced ? { duration: 0 } : HOVER_SPRING}
                         />
                       ))}
@@ -487,7 +516,7 @@ export function CashFlowTrendView({
       {!failed && buckets.length > 0 ? (
         <div className="relative mt-2 h-4">
           {ticks.map(({ index, label }) => {
-            const position = PAD + (buckets.length > 1 ? (index / (buckets.length - 1)) * innerWidth : innerWidth / 2);
+            const position = AXIS_LEFT + (buckets.length > 1 ? (index / (buckets.length - 1)) * innerWidth : innerWidth / 2);
             const align = index === 0 ? "translate-x-0" : index === buckets.length - 1 ? "-translate-x-full" : "-translate-x-1/2";
             return (
               <span
@@ -515,13 +544,6 @@ export function CashFlowTrendView({
             color={COLORS.paid}
             pressed={visible.paid}
             onClick={() => toggle("paid")}
-          />
-          <SeriesChip
-            label={t("trendCard.net")}
-            color={COLORS.net}
-            pressed={visible.net}
-            dashed
-            onClick={() => toggle("net")}
           />
           {!dueMode ? (
             <SeriesChip
@@ -551,11 +573,10 @@ export function CashFlowTrendView({
   );
 }
 
-function SeriesChip({ label, color, pressed, dashed, onClick }: {
+function SeriesChip({ label, color, pressed, onClick }: {
   label: string;
   color: string;
   pressed: boolean;
-  dashed?: boolean;
   onClick(): void;
 }) {
   return (
@@ -568,10 +589,7 @@ function SeriesChip({ label, color, pressed, dashed, onClick }: {
       <span
         aria-hidden="true"
         className="h-0.5 w-3 rounded-full"
-        style={{
-          backgroundColor: pressed ? (dashed ? "transparent" : color) : "#CBD5E1",
-          backgroundImage: pressed && dashed ? `repeating-linear-gradient(90deg, ${color} 0 3px, transparent 3px 5px)` : undefined,
-        }}
+        style={{ backgroundColor: pressed ? color : "#CBD5E1" }}
       />
       {label}
     </button>

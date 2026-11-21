@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { personalApi } from "@/products/personal/services/api";
 import { useAuthContext } from "@/hooks/useAuth";
 import { formatCompactCurrency, formatCurrency, formatDateFromISO } from "@/lib";
+import { CHART_COLORS, trendColor } from "@/shared/financial/chartColors";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import type { PersonalDashboard } from "@/products/personal/types";
 import Input from "@/shared/ui/Input";
@@ -93,19 +94,20 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const metricCards = useMemo<OverviewMetricCard[]>(() => {
     if (!data) return [];
     const formatMoney = (value: string | number) => formatCompactCurrency(Number(value), data.currency || undefined);
-    const metric = (key: string, field: "in" | "out" | "net", color: string): OverviewMetricCard => {
+    const metric = (key: string, field: "in" | "out" | "net"): OverviewMetricCard => {
       const value = Number(data.metrics?.[field] || 0);
       const previous = Number(data.previous?.[field] || 0);
       const delta = percentageChange(value, previous);
       const positive = delta != null && (field === "out" ? delta <= 0 : delta >= 0);
+      const trend = cumulative(data.series, field);
       return {
         key,
         label: t(key),
         value,
         finalValue: formatMoney(value),
         format: formatMoney,
-        color,
-        trend: cumulative(data.series, field),
+        color: field === "in" ? CHART_COLORS.positive : field === "out" ? CHART_COLORS.negative : trendColor(trend),
+        trend,
         delta,
         deltaTone: delta == null ? "neutral" : positive ? "positive" : "negative",
         deltaLabel: t("noComparison", { ns: "overview" }),
@@ -114,10 +116,10 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
     };
     const balance = Number(data.available_balance || 0);
     return [
-      { key: "balance", label: t("balance"), value: balance, finalValue: formatMoney(balance), format: formatMoney, color: "#6366f1", caption: t("currentBalance") },
-      metric("income", "in", "#10b981"),
-      metric("expense", "out", "#f97316"),
-      metric("net", "net", "#818cf8"),
+      { key: "balance", label: t("balance"), value: balance, finalValue: formatMoney(balance), format: formatMoney, color: CHART_COLORS.balance, caption: t("currentBalance") },
+      metric("income", "in"),
+      metric("expense", "out"),
+      metric("net", "net"),
     ];
   }, [data, t]);
 

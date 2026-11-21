@@ -112,3 +112,31 @@ export function cumulative(values: number[]): number[] {
     return running;
   });
 }
+
+/** Y-axis label: compact and integer-only (14M, 333k, 900). */
+export function compactAxisLabel(value: number): string {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  if (abs >= 1e9) return `${sign}${Math.round(abs / 1e9)}B`;
+  if (abs >= 1e6) return `${sign}${Math.round(abs / 1e6)}M`;
+  if (abs >= 1e3) return `${sign}${Math.round(abs / 1e3)}k`;
+  return `${sign}${Math.round(abs)}`;
+}
+
+/** Round tick values inside [min, max] using a 1/2/5 step. */
+export function niceTicks(min: number, max: number, count = 4): number[] {
+  const span = max - min;
+  if (!Number.isFinite(span) || span <= 0) return [min];
+
+  const raw = span / count;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const normalized = raw / magnitude;
+  const stepSize = (normalized < 1.5 ? 1 : normalized < 3 ? 2 : normalized < 7 ? 5 : 10) * magnitude;
+
+  const first = Math.ceil(min / stepSize) * stepSize;
+  const ticks: number[] = [];
+  for (let value = first; value <= max + stepSize * 0.001; value += stepSize) {
+    ticks.push(Number(value.toFixed(6)));
+  }
+  return ticks;
+}
