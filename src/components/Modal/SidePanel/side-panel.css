@@ -47,6 +47,7 @@
   .settings-modal-hint { display: none; }
   .settings-modal-footer .settings-modal-footer-layout { justify-content: space-between; }
   .settings-modal-footer .settings-modal-action-buttons { margin-left: 0; }
+  .settings-modal-footer .settings-modal-footer-layout--actions-only .settings-modal-action-buttons { margin-left: auto; }
   .settings-modal-footer-close { margin-left: auto; }
 }
 

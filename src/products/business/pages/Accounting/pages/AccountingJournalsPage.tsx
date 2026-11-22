@@ -4,6 +4,7 @@ import { useAccountingSource } from "@/products/business/hooks/useAccountingReco
 import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import DataTable from "@/shared/ui/DataTable";
 import Card from "@/shared/ui/Card";
+import TableCard from "@/shared/ui/TableCard";
 import AccountingStatus from "../components/AccountingStatus";
 import AccountingMetricCard from "../components/AccountingMetricCard";
 import { journalDisplayId } from "@/lib/journalDisplay";
@@ -415,9 +416,8 @@ const AccountingJournalsPage: React.FC = () => {
 
           {recordFilters.filters}
 
-          <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.listTitle", "Journal list")}>
-            <div className="p-4 sm:p-5">
-              <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={openJournalPreview} columns={[
+          <TableCard title={t("journalsPage.listTitle", "Journal list")}>
+              <DataTable<JournalEntry> frame={false} pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={openJournalPreview} columns={[
                 { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => journalDisplayId(item) },
                 { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
                 { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
@@ -429,8 +429,7 @@ const AccountingJournalsPage: React.FC = () => {
                 <Button type="button" variant="secondary" size="sm" disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => void reverseJournal(item.id)}>{reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}</Button>
                 <Button type="button" variant="secondary" size="iconSm" aria-label={t("journalsPage.actions.delete", "Delete")} title={t("journalsPage.actions.delete", "Delete")} disabled={!canManage || reversingId === item.id || deletingId === item.id} onClick={() => setDeleteTarget(item)}><Trash2 size={13} aria-hidden="true"/></Button>
               </div> : null} />
-            </div>
-          </Card>
+          </TableCard>
         </div> : <div role="tabpanel" id="journal-history-panel" aria-labelledby="journal-tabs-history" className="space-y-5">
           <p className="max-w-2xl text-xs leading-5 text-slate-500">{t("journalsPage.history.description", "Deleted journals are kept here with the person, time and lines involved.")}</p>
 
@@ -441,9 +440,9 @@ const AccountingJournalsPage: React.FC = () => {
 
           {historyFilters.filters}
 
-          <Card as="section" radius="xl" tone="slate" padding="none" title={t("journalsPage.history.title", "Deletion history")}>
-            <div className="p-4 sm:p-5">
+          <TableCard title={t("journalsPage.history.title", "Deletion history")}>
               <DataTable<JournalAuditEvent>
+                frame={false}
                 pager={historyFilters.pager}
                 items={historyFilters.rows}
                 emptyLabel={t("journalsPage.history.empty", "No deleted journals yet.")}
@@ -459,8 +458,7 @@ const AccountingJournalsPage: React.FC = () => {
                   { key: "total", label: t("journalsPage.history.columns.total", "Total"), render: item => formatCurrency(item.total_debit_minor / 100, item.currency_code) },
                 ]}
               />
-            </div>
-          </Card>
+          </TableCard>
         </div>}
 
         {snackbar ? (

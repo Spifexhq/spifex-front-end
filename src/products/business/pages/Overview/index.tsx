@@ -3,13 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { isCancel } from "axios";
-import { Loader2, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import { api } from "@/core/api/requests";
 import { useAppShell } from "@/contexts/AppShellContext";
 import { useAuthContext } from "@/hooks/useAuth";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
-import { formatDateFromISO } from "@/lib";
 
 import type {
   OverviewData,
@@ -214,7 +213,7 @@ export default function Overview() {
       .join(" ") || t("there");
 
   return (
-    <main className="mx-auto min-w-0 max-w-[1600px] space-y-5 overflow-x-auto px-4 py-6 sm:px-8 lg:px-10">
+    <main className="mx-auto min-w-0 max-w-[1600px] space-y-5 px-4 py-6 sm:px-8 lg:px-10">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
           {t(`greetings.${greeting}`, {
@@ -259,33 +258,6 @@ export default function Overview() {
       ) : (
         data && (
           <div className="space-y-5" aria-busy={loading}>
-            <div className="flex min-h-5 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-              <span>
-                {formatDateFromISO(data.period.start)} –{" "}
-                {formatDateFromISO(data.period.end)}
-              </span>
-
-              <span>
-                {t(`basisDescriptions.${data.period.basis}`)}
-              </span>
-
-              <span
-                role="status"
-                className="ml-auto inline-flex min-w-24 items-center justify-end gap-1.5 text-slate-400"
-              >
-                {loading ? (
-                  <>
-                    <Loader2
-                      size={13}
-                      className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                    {t("updating")}
-                  </>
-                ) : (
-                  data.currency
-                )}
-              </span>
-            </div>
-
             {data.capabilities.metrics && data.metrics && (
               <>
                 <OverviewMetrics data={data} />

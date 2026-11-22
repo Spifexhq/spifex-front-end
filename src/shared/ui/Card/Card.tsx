@@ -1,5 +1,6 @@
 import type { ElementType, HTMLAttributes, ReactNode } from "react";
 import classNames from "classnames";
+import InfoTooltip from "@/shared/ui/InfoTooltip";
 
 export type CardTone = "panel" | "slate" | "metric";
 export type CardPadding = "none" | "compact" | "default" | "spacious";
@@ -13,6 +14,10 @@ export type CardProps = {
   header?: ReactNode;
   title?: ReactNode;
   description?: ReactNode;
+  /** Explanation shown from the info icon next to the title. Prefer this over a subtitle. */
+  tooltip?: ReactNode;
+  /** Accessible name for the tooltip trigger; defaults to the title when it is a string. */
+  tooltipLabel?: string;
   actions?: ReactNode;
   footer?: ReactNode;
   className?: string;
@@ -50,6 +55,8 @@ export default function Card({
   header,
   title,
   description,
+  tooltip,
+  tooltipLabel,
   actions,
   footer,
   className,
@@ -75,11 +82,16 @@ export default function Card({
       {...rest}
     >
       {hasHeader ? (
-        <header className={classNames("flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3", divider)}>
+        <header className={classNames("flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3", divider)}>
           <div className="min-w-0 flex-1">
             {header ?? (
               <>
-                {title ? <h2 className="text-[13px] font-semibold text-gray-900">{title}</h2> : null}
+                {title ? (
+                  <h2 className="flex min-w-0 items-center gap-1 text-sm font-semibold text-gray-900">
+                    {title}
+                    {tooltip ? <InfoTooltip label={tooltipLabel ?? (typeof title === "string" ? title : "Info")}>{tooltip}</InfoTooltip> : null}
+                  </h2>
+                ) : null}
                 {description ? <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p> : null}
               </>
             )}

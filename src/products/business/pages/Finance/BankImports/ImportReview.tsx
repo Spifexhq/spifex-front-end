@@ -73,7 +73,7 @@ export default function ImportReview({ sessionId, canEdit, personal = false }: {
       </div>
     </Card>
     <Card as="section" radius="xl" tone="slate" padding="none" className="overflow-hidden">
-      <DataTable<StatementImportRow> items={pager.items} pager={pager} busy={pager.loading || busy} error={pager.error} canEdit={editable} editLabel={t("workspace.review")} getRowName={item => item.source_description} onInspect={next => { setRow(next); setEditorOpen(true); }} onEdit={next => { setRow(next); setEditorOpen(true); }} emptyLabel={t("workspace.noTransactions")} selectable={editable} canSelect={editable} clearSelectionToken={clearSelection} className="rounded-none! border-0!"
+      <DataTable<StatementImportRow> items={pager.items} pager={pager} busy={pager.loading || busy} error={pager.error} canEdit={editable} editLabel={t("workspace.review")} getRowName={item => item.source_description} onInspect={next => { setRow(next); setEditorOpen(true); }} onEdit={next => { setRow(next); setEditorOpen(true); }} emptyLabel={t("workspace.noTransactions")} selectable={editable} canSelect={editable} clearSelectionToken={clearSelection} frame={false}
         columns={[
           { key: "name", label: t("workspace.description"), render: item => <div className="min-w-0"><span className="font-medium">{item.final_description || item.source_description}</span>{item.duplicate_confidence >= .8 && <span className="ml-2 text-xs text-amber-700">{t("workspace.duplicate")}</span>}</div> },
           { key: "date", label: t("workspace.date"), render: item => item.final_due_date || item.source_date || t("workspace.notSet") },

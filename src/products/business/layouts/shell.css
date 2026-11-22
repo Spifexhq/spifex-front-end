@@ -1,2 +1,22 @@
-.app-shell-content { transition: margin-left 220ms cubic-bezier(.22, 1, .36, 1); }
-@media (prefers-reduced-motion: reduce) { .app-shell-content { transition: none; } }
+/*
+ * The shell owns the viewport. Pinning it removes the page from the document
+ * flow, so the body can never grow a second scrollbar next to #app-page-scroll.
+ */
+.app-shell {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app-shell-content {
+  transition: margin-left 220ms cubic-bezier(.22, 1, .36, 1);
+}
+
+#app-page-scroll {
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell-content { transition: none; }
+}

@@ -29,6 +29,8 @@ export type DataTableProps<T> = {
     fillHeight?: boolean;
     /** Render the full table without an inner vertical scroll. Use for compact overview tables. */
     fitContent?: boolean;
+    /** Draw the table's own border/rounding. Set false when a TableCard already frames it. */
+    frame?: boolean;
     virtualize?: boolean;
     rowHeight?: number | ((item: T) => number);
     loadingMore?: boolean;

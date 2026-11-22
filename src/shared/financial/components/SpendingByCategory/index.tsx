@@ -13,10 +13,8 @@ export default function SpendingByCategory({ data }: { data: OverviewData }) {
   const categoriesTotal = data.categories.reduce((sum, item) => sum + Number(item.amount), 0);
 
   return (
-    <Card as="section" radius="xl" tone="slate" padding="default" className="min-w-0">
-      <h2 className="text-sm font-semibold text-slate-900">{t("spending")}</h2>
-      <p className="mt-1 text-xs text-slate-500">{t("spendingDescription")}</p>
-      <p className="mb-5 mt-5 text-2xl font-semibold tracking-tight text-slate-900">{money(data.metrics?.out || "0")}</p>
+    <Card as="section" radius="xl" tone="slate" padding="default" className="min-w-0" title={t("spending")} tooltip={t("spendingDescription")}>
+      <p className="mb-5 text-2xl font-semibold tracking-tight text-slate-900">{money(data.metrics?.out || "0")}</p>
       <div aria-hidden="true" className="mb-6 flex h-2 overflow-hidden rounded-full bg-slate-100">
         {data.categories.map((item, index) => (
           <div key={item.id} style={{ width: `${expenses ? (Number(item.amount) / expenses) * 100 : 0}%`, backgroundColor: SWATCHES[index] }} />

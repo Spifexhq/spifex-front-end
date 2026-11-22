@@ -2,7 +2,6 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type Poin
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Card from "@/shared/ui/Card";
-import InfoTooltip from "@/shared/ui/InfoTooltip";
 import SegmentedControl from "@/shared/ui/SegmentedControl";
 import AnimatedNumber from "@/shared/ui/AnimatedNumber";
 import Button from "@/shared/ui/Button";
@@ -236,17 +235,16 @@ export function CashFlowTrendView({
   const showEmpty = !loading && !failed && buckets.length === 0;
 
   return (
-    <Card as="section" radius="xl" tone="slate" padding="none" className="min-w-0 overflow-hidden">
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-5">
-        <div className="min-w-0">
-          <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-900">
-            {t("trend")}
-            <InfoTooltip label={t("calculation")}>{t("trendCard.help")}</InfoTooltip>
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            {overdue ? t("trendCard.overdueHint") : t("trendCard.projectedHint")}
-          </p>
-        </div>
+    <Card
+      as="section"
+      radius="xl"
+      tone="slate"
+      padding="none"
+      className="min-w-0 overflow-hidden"
+      title={t("trend")}
+      tooltip={t("trendCard.help")}
+      tooltipLabel={t("calculation")}
+      actions={
         <SegmentedControl<Mode>
           value={mode}
           label={t("trendCard.modeLabel")}
@@ -256,8 +254,8 @@ export function CashFlowTrendView({
             { value: "overdue", label: t("trendCard.overdue") },
           ]}
         />
-      </div>
-
+      }
+    >
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
           {t(overdue ? "trendCard.overdueCaption" : "trendCard.projectedCaption")}

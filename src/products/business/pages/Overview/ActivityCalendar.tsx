@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Card from "@/shared/ui/Card";
 import AnimatedNumber from "@/shared/ui/AnimatedNumber";
-import { formatDateFromISO } from "@/lib";
+import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { OverviewData, PeriodPoint } from "@/models/finance/overview";
 
-type ActiveCell = { x: number; y: number; date: string; count: number };
+type ActiveCell = { x: number; y: number; date: string; count: number; net: string };
 
 export default function ActivityCalendar({ data }: { data: OverviewData }) {
   const { t, i18n } = useTranslation("overview");
@@ -18,6 +18,8 @@ export default function ActivityCalendar({ data }: { data: OverviewData }) {
   const cells: (PeriodPoint | null)[] = [...Array.from({ length: offset }, () => null), ...data.activity];
   const maxCount = Math.max(1, ...data.activity.map((day) => day.count));
   const total = data.activity.reduce((count, day) => count + day.count, 0);
+  const netTotal = data.activity.reduce((sum, day) => sum + Number(day.net || 0), 0);
+  const money = (value: string | number) => formatCurrency(value, data.currency || undefined);
 
   const showCell = (day: PeriodPoint) => (event: React.PointerEvent<HTMLDivElement>) => {
     const wrapper = wrapperRef.current;
@@ -32,14 +34,13 @@ export default function ActivityCalendar({ data }: { data: OverviewData }) {
       y: cell.top - base.top,
       date: day.date,
       count: day.count,
+      net: day.net,
     });
   };
 
   return (
-    <Card as="section" radius="xl" tone="slate" padding="default" className="min-w-0">
-      <h2 className="text-sm font-semibold text-slate-900">{t("activity")}</h2>
-      <p className="mt-1 text-xs text-slate-400">{t("activityDescription", { count: data.activity.length })}</p>
-      <p className="mb-5 mt-4 text-2xl font-semibold tracking-tight tabular-nums text-slate-900">
+    <Card as="section" radius="xl" tone="slate" padding="default" className="min-w-0" title={t("activity")} tooltip={t("activityDescription", { count: data.activity.length })}>
+      <p className="mb-5 text-2xl font-semibold tracking-tight tabular-nums text-slate-900">
         <AnimatedNumber
           value={total}
           format={(value) => Math.round(value).toLocaleString(i18n.language)}
@@ -98,7 +99,10 @@ export default function ActivityCalendar({ data }: { data: OverviewData }) {
               className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white shadow-lg"
               style={{ left: active.x, top: active.y - 6 }}
             >
-              {formatDateFromISO(active.date)} · {t("transactionsCount", { count: active.count })}
+              <p>{formatDateFromISO(active.date)} · {t("transactionsCount", { count: active.count })}</p>
+              <p className={`mt-0.5 tabular-nums ${Number(active.net) >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                {t("dayNet")} {Number(active.net) > 0 ? "+" : ""}{money(active.net)}
+              </p>
             </motion.div>
           ) : null}
         </AnimatePresence>
@@ -106,7 +110,8 @@ export default function ActivityCalendar({ data }: { data: OverviewData }) {
 
       <div className="mt-3 flex flex-wrap justify-between gap-2 text-[10px] text-slate-400">
         <span>
-          {formatDateFromISO(data.activity[0]?.date || data.period.start)} – {formatDateFromISO(data.period.end)}
+          {formatDateFromISO(data.activity[0]?.date || data.period.start)} – {formatDateFromISO(data.period.end)} · {t("dayNet")}{" "}
+          <span className={`tabular-nums ${netTotal >= 0 ? "text-emerald-700" : "text-rose-600"}`}>{netTotal > 0 ? "+" : ""}{money(netTotal)}</span>
         </span>
         <span>
           {t("less")} <span className="inline-block h-2 w-2 rounded-sm bg-slate-100" />{" "}

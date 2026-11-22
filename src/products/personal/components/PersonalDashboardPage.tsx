@@ -17,6 +17,7 @@ import CashFlowTrend from "@/shared/financial/components/CashFlowTrend";
 import SpendingByCategory from "@/shared/financial/components/SpendingByCategory";
 import { loadPersonalForecast } from "./usePersonalForecast";
 import Card from "@/shared/ui/Card";
+import TableCard from "@/shared/ui/TableCard";
 import OverviewFilterPanel from "@/shared/financial/components/Overview/OverviewFilterPanel";
 import { exportSeries } from "@/shared/financial/overviewCsv";
 import { EmptyState } from "@/shared/ui/State";
@@ -163,7 +164,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const greeting = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
   const displayName = user?.name?.trim().split(/\s+/).slice(0, 2).join(" ") || t("there", { ns: "overview" });
 
-  return <div className="min-w-0 space-y-5 overflow-x-auto" aria-busy={loading}>
+  return <div className="min-w-0 space-y-5" aria-busy={loading}>
     <header className="space-y-1">
       <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{reports ? t("reports") : t(`greetings.${greeting}`, { ns: "overview", name: displayName })}</h1>
       <p className="text-sm text-slate-500">{t(reports ? "reportsDescription" : "overviewDescription")}</p>
@@ -196,12 +197,13 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
         <SpendingByCategory data={data} />
       </div>
       {!reports && <>
-        <div className="grid gap-3 lg:grid-cols-2">{([['budgets', data.budgets], ['goals', data.goals]] as const).map(([kind, items]) => <Card as="section" key={kind} radius="xl" tone="slate" padding="compact">
-          <div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold text-slate-900">{t(kind)}</h2><Link to={`/p/${kind}`} className="text-xs font-medium text-slate-500 hover:text-slate-900">{t("viewAll")}</Link></div>
+        <div className="grid gap-3 lg:grid-cols-2">{([['budgets', data.budgets], ['goals', data.goals]] as const).map(([kind, items]) => <Card as="section" key={kind} radius="xl" tone="slate" padding="compact" title={t(kind)} actions={<Link to={`/p/${kind}`} className="text-xs font-medium text-slate-500 hover:text-slate-900">{t("viewAll")}</Link>}>
           {!items.length ? <EmptyState size="xs" title={t("empty")} /> : <ul className="space-y-4">{items.slice(0, 4).map(item => <li key={item.id}><div className="flex justify-between gap-4 text-xs"><span className="truncate text-slate-700">{item.name}</span><span className="tabular-nums text-slate-500">{Math.round(Number(item.progress) || 0)}%</span></div><div className="mt-2 h-1.5 rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, Number(item.progress) || 0))}%` }} /></div></li>)}</ul>}
         </Card>)}</div>
-        <section><h2 className="mb-3 text-sm font-semibold text-slate-900">{t("recent")}</h2><DataTable items={data.recent} columns={[{ key: "name", label: t("description"), render: row => row.description }, { key: "date", label: t("due_date"), render: row => row.date }, { key: "amount", mobile: true, label: t("amount"), render: row => money(row.amount) }]} emptyLabel={t("empty")} pagination={false} inspectable={false} /></section>
-        <Card as="section" radius="xl" tone="slate" padding="compact"><h2 className="text-sm font-semibold text-slate-900">{t("upcoming")}</h2><ul className="mt-3 divide-y divide-slate-100">{data.upcoming.map(item => <li key={item.id} className="flex items-center justify-between gap-4 py-3 text-xs"><div><p className="font-medium text-slate-700">{item.description}</p><p className="mt-1 text-slate-500">{item.date}</p></div><span className="tabular-nums">{money(item.amount)}</span></li>)}</ul>{!data.upcoming.length && <EmptyState size="xs" title={t("empty")} />}</Card>
+        <TableCard title={t("recent")}>
+          <DataTable frame={false} items={data.recent} columns={[{ key: "name", label: t("description"), render: row => row.description }, { key: "date", label: t("due_date"), render: row => row.date }, { key: "amount", mobile: true, label: t("amount"), render: row => money(row.amount) }]} emptyLabel={t("empty")} pagination={false} inspectable={false} />
+        </TableCard>
+        <Card as="section" radius="xl" tone="slate" padding="compact" title={t("upcoming")}><ul className="divide-y divide-slate-100">{data.upcoming.map(item => <li key={item.id} className="flex items-center justify-between gap-4 py-3 text-xs"><div><p className="font-medium text-slate-700">{item.description}</p><p className="mt-1 text-slate-500">{item.date}</p></div><span className="tabular-nums">{money(item.amount)}</span></li>)}</ul>{!data.upcoming.length && <EmptyState size="xs" title={t("empty")} />}</Card>
       </>}
     </>}
   </div>;

@@ -8,6 +8,7 @@ import { formatCurrency, formatDateFromISO } from "@/lib";
 import { useAuthContext } from "@/hooks/useAuth";
 import DataTable from "@/shared/ui/DataTable";
 import Card from "@/shared/ui/Card";
+import TableCard from "@/shared/ui/TableCard";
 import MetricCard from "@/shared/ui/MetricCard";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Button from "@/shared/ui/Button";
@@ -62,15 +63,13 @@ export default function InventoryOverviewPage() {
       </section>
 
       {data ? <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-        <Card
-          as="section"
-          tone="slate"
-          radius="xl"
+        <TableCard
           title={t("overview.lowStockTitle")}
-          description={t("overview.lowStockDescription")}
+          tooltip={t("overview.lowStockDescription")}
           actions={<Link to="/b/inventory/stock?status=low" className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:underline">{t("overview.viewStock")}<ArrowRight size={12} aria-hidden="true" /></Link>}
         >
           <DataTable<InventorySummary["low_stock_items"][number]>
+            frame={false}
             items={data.low_stock_items}
             pagination={false}
             inspectable={false}
@@ -83,10 +82,11 @@ export default function InventoryOverviewPage() {
               { key: "status", label: t("common.status"), render: item => <InventoryStatusBadge status={item.stock_status} label={t(`status.${item.stock_status}`)} /> },
             ]}
           />
-        </Card>
+        </TableCard>
 
-        <Card as="section" tone="slate" radius="xl" title={t("overview.recentMovementsTitle")} description={t("overview.recentMovementsDescription")}>
+        <TableCard title={t("overview.recentMovementsTitle")} tooltip={t("overview.recentMovementsDescription")}>
           <DataTable<InventorySummary["recent_movements"][number]>
+            frame={false}
             items={data.recent_movements}
             pagination={false}
             inspectable={false}
@@ -99,10 +99,10 @@ export default function InventoryOverviewPage() {
               { key: "quantity", label: t("stock.movementColumns.quantity"), render: movement => <span className={`tabular-nums ${movement.quantity_delta < 0 ? "text-rose-700" : "text-emerald-700"}`}>{movement.quantity_delta > 0 ? "+" : ""}{movement.quantity_delta}</span> },
             ]}
           />
-        </Card>
+        </TableCard>
       </div> : null}
 
-      {data ? <Card as="section" tone="slate" radius="xl" title={t("overview.byLocationTitle")} description={t("overview.byLocationDescription")}>
+      {data ? <Card as="section" tone="slate" radius="xl" padding="none" bodyClassName="p-4 sm:p-5" title={t("overview.byLocationTitle")} tooltip={t("overview.byLocationDescription")}>
         {data.by_location.length ? (
           <div className="divide-y divide-slate-100">
             {data.by_location.map(location => (

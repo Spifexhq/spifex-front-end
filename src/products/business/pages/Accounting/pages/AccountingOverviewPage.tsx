@@ -18,6 +18,7 @@ import { api } from "@/core/api/requests";
 import { journalDisplayId } from "@/lib/journalDisplay";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
+import TableCard from "@/shared/ui/TableCard";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
@@ -299,14 +300,13 @@ function OperationalOverview() {
     </div>
 
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-      <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.trialBalance")} description={t("overview.trialBalanceDescription")} actions={<div className="flex items-center gap-3">
+      <TableCard title={t("overview.trialBalance")} tooltip={t("overview.trialBalanceDescription")} actions={<div className="flex items-center gap-3">
         {!loading && accounts.length > 0 ? <StatusPill tone={balanced ? "success" : "danger"}>{balanced ? t("overview.balanced") : t("overview.unbalanced")}</StatusPill> : null}
         <Link to="/b/accounting/chart-of-accounts" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.openChart")}<ArrowRight size={12} aria-hidden="true"/></Link>
       </div>}>
-        <div className="p-4 sm:p-5">
-          {loading ? <div className="space-y-3">{[1,2,3,4,5].map(key => <SkeletonLine key={key} className="h-7 w-full"/>)}</div>
+          {loading ? <div className="space-y-3 p-4 sm:p-5">{[1,2,3,4,5].map(key => <SkeletonLine key={key} className="h-7 w-full"/>)}</div>
             : accounts.length ? <>
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] border-collapse text-xs">
                   <thead className="bg-slate-50/80"><tr className="border-b border-slate-200">
                     <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-medium text-slate-500">{t("overview.account")}</th>
@@ -335,10 +335,9 @@ function OperationalOverview() {
                   </tr></tfoot>
                 </table>
               </div>
-              {(accountsWithBalances.length) > accounts.length ? <p className="mt-3 text-[11px] text-slate-500">{t("overview.showingAccounts", { shown: accounts.length, total: accountsWithBalances.length })}</p> : null}
-            </> : <p className="rounded-lg border border-dashed border-slate-200 px-3 py-5 text-xs text-slate-500">{t("overview.noBalances")}</p>}
-        </div>
-      </Card>
+              {(accountsWithBalances.length) > accounts.length ? <p className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">{t("overview.showingAccounts", { shown: accounts.length, total: accountsWithBalances.length })}</p> : null}
+            </> : <p className="m-4 rounded-lg border border-dashed border-slate-200 px-3 py-5 text-xs text-slate-500">{t("overview.noBalances")}</p>}
+      </TableCard>
 
       <Card as="section" radius="xl" tone="slate" padding="none" title={t("overview.recentJournals")} actions={<Link to="/b/accounting/journals" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900">{t("overview.viewAll")}<ArrowRight size={12} aria-hidden="true"/></Link>}>
         <div className="p-4 sm:p-5">
