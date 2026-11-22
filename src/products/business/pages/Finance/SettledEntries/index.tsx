@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/products/business/components/Sidebar";
 import { SettledEntriesTable } from "./SettledEntriesTable";
+import { entryQuery } from "../components/EntryTable/entryRows";
 import FinancialActivityPanel from "@/components/FinancialActivityPanel";
 
 import { PermissionMiddleware } from "@/middlewares";
@@ -88,7 +89,12 @@ const Settled = () => {
           <FinancePageFrame settled={true}>
           <FinancialActivityPanel filters={filters} onApply={handleApplyFilters}
             contextSettlement={true} refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
+            banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}
+            exportQuery={(range) => ({
+              ...entryQuery(filters, true),
+              start_date: range.start || undefined,
+              end_date: range.end || undefined,
+            })}>
             <PermissionMiddleware codeName={["view_settled_entries"]} requireAll>
               <SettledEntriesTable
                 key={tableKey}

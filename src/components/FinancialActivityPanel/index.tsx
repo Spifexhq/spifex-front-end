@@ -6,9 +6,10 @@ import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { SlidersHorizontal, ChevronDown, Settings2, Save, Eye, ArrowUpRight, Landmark } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Settings2, Save, Eye, ArrowUpRight, Landmark, Download } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
+import { api } from "@/core/api/requests";
 import { useOptionalPersonalAccess } from "@/products/personal/access/PersonalAccessProvider";
 import { resolvePersonalPermission } from "@/products/personal/access/permissions";
 import Button from "@/shared/ui/Button";
@@ -26,6 +27,8 @@ import { Menu } from "./ui/Menu";
 import { Popover } from "./ui/Popover";
 import { SaveViewModal } from "./modals/SaveViewModal";
 import { ViewsConfigModal } from "./modals/ViewsConfigModal";
+import ExportModal from "./modals/ExportModal";
+import { buildExportFilename, type ExportQueryBuilder } from "./export";
 
 function getInitials(name: string) {
   if (!name) return "BK";
@@ -36,9 +39,9 @@ function getInitials(name: string) {
 }
 
 /** The single Cash flow / Settled panel; hooks isolate API and filter logic. */
-export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/b/settings/banks", excludeObservationFilter = false }: {
+export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/b/settings/banks", excludeObservationFilter = false, exportQuery }: {
  children: ReactNode; filters: EntryFilters; onApply(payload: {filters: EntryFilters}): void;
- contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean; manageBanksPath?: string; excludeObservationFilter?: boolean;
+ contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean; manageBanksPath?: string; excludeObservationFilter?: boolean; exportQuery?: ExportQueryBuilder;
 }) {
  const { t } = useTranslation(["filterBar", "kpiCards", "banksTable"]);
  const navigate = useNavigate();
@@ -55,11 +58,13 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
  const showBanks = canView("view_bank");
  const showMetrics = canView(contextSettlement ? "view_settlement_kpis" : "view_cash_flow_kpis");
  const showFilters = canView("view_filters");
+ const showExport = !!exportQuery && canView(contextSettlement ? "view_settled_entries" : "view_cash_flow_entries");
  const { metrics, loading, error, retry } = useActivityMetrics({filters, contextSettlement, refreshToken, enabled: showMetrics, personal: isPersonal});
  const { state: bankState, ids: bankIds, sorted: bankRows, totalFmt: bankTotal, retryBanks } = useBankBalances(filters.bank_id, banksRefreshKey, showBanks, isPersonal);
  useFinanceLoading("banks", showBanks && bankState.loading);
  useFinanceLoading("metrics", showMetrics && loading);
  const [expanded, setExpanded] = useState(false);
+ const [exportOpen, setExportOpen] = useState(false);
  const detailsId = useId();
  const reduced = useReducedMotion();
  const {
@@ -162,6 +167,10 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         </div>
         <Button variant="primary" size="sm" disabled={!canApply} onClick={() => void tryApplyCurrentFilters()}>{t("filterBar:buttons.apply")}</Button>
         <div className="ml-auto flex items-center gap-1">
+          {showExport && <Button variant="ghost" size="sm" className="gap-1.5" aria-label={t("filterBar:buttons.export")} title={t("filterBar:buttons.export")}
+            onClick={() => { setOpenEditor(null); setAddFilterMenuOpen(false); setViewsMenuOpen(false); setExportOpen(true); }}>
+            <Download size={15} aria-hidden /><span className="hidden sm:inline">{t("filterBar:buttons.export")}</span>
+          </Button>}
           <PermissionMiddleware codeName={configPermission}>
             <div className="relative" ref={viewsMenuRef}>
               <Button variant="ghost" size="sm" className="gap-1.5" aria-label={t("filterBar:buttons.views")} aria-haspopup="menu" aria-expanded={viewsMenuOpen}
@@ -214,6 +223,23 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           />
     </div>
   </div>}
+  {showExport && exportQuery && <ExportModal
+    open={exportOpen}
+    onClose={() => setExportOpen(false)}
+    settled={contextSettlement}
+    defaultStart={filters.start_date || ""}
+    defaultEnd={filters.end_date || ""}
+    onExport={async ({ format, start, end }) => {
+      const query = exportQuery({ start, end });
+      await api.exportFinancialActivity({
+        scope: isPersonal ? "personal" : "business",
+        settled: contextSettlement,
+        format,
+        params: query,
+        filename: buildExportFilename({ personal: isPersonal, settled: contextSettlement, format, start, end }),
+      });
+    }}
+  />}
   <div className="flex min-h-0 flex-1 flex-col [&>div]:rounded-none [&>div]:border-0 [&>div]:shadow-none [&>section]:rounded-none [&>section]:border-0 [&>section]:shadow-none">{children}</div>
  </div>;
 }

@@ -10,6 +10,7 @@
     "apply": "Apply",
     "clear": "Clear filters",
     "remove": "Remove",
+    "export": "Export",
     "toggleFilters": "Filters"
   },
   "menu": {
@@ -101,6 +102,27 @@
   },
   "aria": {
     "removeFilter": "remove filter"
+  },
+  "exportModal": {
+    "title": "Export list",
+    "close": "Close",
+    "descriptionCashFlow": "Download the cash-flow entries that match the current filters.",
+    "descriptionSettled": "Download the settled entries that match the current filters.",
+    "format": "Format",
+    "csv": "CSV",
+    "excel": "Excel",
+    "dateRange": "Date range (optional)",
+    "start": "From",
+    "end": "To",
+    "clearDates": "Clear dates",
+    "dateHint": "Leave both dates empty to export all dates.",
+    "excelNote": "Excel files are split into sheets of up to 1,048,575 rows.",
+    "privacy": "Account numbers, attachments and internal identifiers are not included.",
+    "cancel": "Cancel",
+    "export": "Export",
+    "exporting": "Preparing file…",
+    "invalidRange": "The end date must be on or after the start date.",
+    "failed": "Couldn't export the list. Please try again."
   },
   "pendingChanges": "Changes not applied"
 }

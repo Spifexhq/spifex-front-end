@@ -10,6 +10,7 @@
     "apply": "Appliquer",
     "clear": "Effacer les filtres",
     "remove": "Supprimer",
+    "export": "Exporter",
     "toggleFilters": "Filtres"
   },
   "menu": {
@@ -101,6 +102,27 @@
   },
   "aria": {
     "removeFilter": "supprimer le filtre"
+  },
+  "exportModal": {
+    "title": "Exporter la liste",
+    "close": "Fermer",
+    "descriptionCashFlow": "Téléchargez les écritures de trésorerie correspondant aux filtres actuels.",
+    "descriptionSettled": "Téléchargez les écritures réglées correspondant aux filtres actuels.",
+    "format": "Format",
+    "csv": "CSV",
+    "excel": "Excel",
+    "dateRange": "Période (facultatif)",
+    "start": "Du",
+    "end": "Au",
+    "clearDates": "Effacer les dates",
+    "dateHint": "Laissez les deux dates vides pour exporter toutes les dates.",
+    "excelNote": "Les fichiers Excel sont répartis en feuilles de 1 048 575 lignes maximum.",
+    "privacy": "Les numéros de compte, les pièces jointes et les identifiants internes ne sont pas inclus.",
+    "cancel": "Annuler",
+    "export": "Exporter",
+    "exporting": "Préparation du fichier…",
+    "invalidRange": "La date de fin doit être égale ou postérieure à la date de début.",
+    "failed": "Impossible d’exporter la liste. Réessayez."
   },
   "pendingChanges": "Modifications non appliquées"
 }

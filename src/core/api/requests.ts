@@ -155,6 +155,28 @@ async function downloadTemplate(path: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+async function downloadFile(
+  path: string,
+  params: Record<string, unknown>,
+  filename: string,
+) {
+  const res = await http.get(path, {
+    params,
+    responseType: 'blob',
+    validateStatus: (s: number) => s >= 200 && s < 300,
+  });
+
+  const blob = res.data as Blob;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 
 export const api = {
   /* --- Auth --- */
@@ -384,6 +406,28 @@ export const api = {
 
   getEntriesTable: (payload: GetEntryRequest) =>
     request<GetEntryResponse>(`cashflow/entries/table/`, "GET", payload),
+
+  exportFinancialActivity: (payload: {
+    scope: "business" | "personal";
+    settled: boolean;
+    format: "csv" | "xlsx";
+    params: Record<string, unknown>;
+    filename: string;
+  }) => {
+    const path =
+      payload.scope === "personal"
+        ? payload.settled
+          ? "personal/transactions/settled-activity/export/"
+          : "personal/transactions/export/"
+        : payload.settled
+          ? "cashflow/settlements/export/"
+          : "cashflow/entries/export/";
+    return downloadFile(
+      path,
+      { ...payload.params, export_format: payload.format },
+      payload.filename,
+    );
+  },
 
   getEntry: (id: string) =>
     request<Entry>(`cashflow/entries/${id}/`, "GET"),

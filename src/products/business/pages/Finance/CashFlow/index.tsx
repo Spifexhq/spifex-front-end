@@ -6,6 +6,7 @@ import { Sidebar } from '@/products/business/components/Sidebar';
 import type { SidebarEntryModalState } from '@/products/business/components/Sidebar';
 import SettlementModal from "../components/SettlementForm/SettlementModal";
 import { CashFlowTable, type CashFlowTableHandle } from './CashFlowTable';
+import { entryQuery } from "../components/EntryTable/entryRows";
 import FinancialActivityPanel from '@/components/FinancialActivityPanel';
 
 
@@ -154,7 +155,12 @@ const CashFlow = () => {
           <FinancePageFrame settled={false}>
           <FinancialActivityPanel filters={filters} onApply={handleApplyFilters}
             contextSettlement={false} refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
+            banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}
+            exportQuery={(range) => ({
+              ...entryQuery(filters, false),
+              start_date: range.start || undefined,
+              end_date: range.end || undefined,
+            })}>
             <PermissionMiddleware codeName={['view_cash_flow_entries']} requireAll>
               <CashFlowTable
                 ref={tableRef}

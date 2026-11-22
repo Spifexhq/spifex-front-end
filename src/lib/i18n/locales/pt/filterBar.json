@@ -10,6 +10,7 @@
     "apply": "Aplicar",
     "clear": "Limpar filtros",
     "remove": "Remover",
+    "export": "Exportar",
     "toggleFilters": "Filtros"
   },
   "menu": {
@@ -101,6 +102,27 @@
   },
   "aria": {
     "removeFilter": "remover filtro"
+  },
+  "exportModal": {
+    "title": "Exportar lista",
+    "close": "Fechar",
+    "descriptionCashFlow": "Baixe os lançamentos de fluxo de caixa que correspondem aos filtros atuais.",
+    "descriptionSettled": "Baixe os lançamentos liquidados que correspondem aos filtros atuais.",
+    "format": "Formato",
+    "csv": "CSV",
+    "excel": "Excel",
+    "dateRange": "Período (opcional)",
+    "start": "De",
+    "end": "Até",
+    "clearDates": "Limpar datas",
+    "dateHint": "Deixe as duas datas vazias para exportar todo o período.",
+    "excelNote": "Arquivos Excel são divididos em planilhas de até 1.048.575 linhas.",
+    "privacy": "Números de conta, anexos e identificadores internos não são incluídos.",
+    "cancel": "Cancelar",
+    "export": "Exportar",
+    "exporting": "Preparando arquivo…",
+    "invalidRange": "A data final deve ser igual ou posterior à data inicial.",
+    "failed": "Não foi possível exportar a lista. Tente novamente."
   },
   "pendingChanges": "Alterações não aplicadas"
 }

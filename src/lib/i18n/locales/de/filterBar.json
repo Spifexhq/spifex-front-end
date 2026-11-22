@@ -10,6 +10,7 @@
     "apply": "Anwenden",
     "clear": "Filter löschen",
     "remove": "Entfernen",
+    "export": "Exportieren",
     "toggleFilters": "Filter"
   },
   "menu": {
@@ -101,6 +102,27 @@
   },
   "aria": {
     "removeFilter": "Filter entfernen"
+  },
+  "exportModal": {
+    "title": "Liste exportieren",
+    "close": "Schließen",
+    "descriptionCashFlow": "Laden Sie die Cashflow-Buchungen herunter, die den aktuellen Filtern entsprechen.",
+    "descriptionSettled": "Laden Sie die abgerechneten Buchungen herunter, die den aktuellen Filtern entsprechen.",
+    "format": "Format",
+    "csv": "CSV",
+    "excel": "Excel",
+    "dateRange": "Zeitraum (optional)",
+    "start": "Von",
+    "end": "Bis",
+    "clearDates": "Daten löschen",
+    "dateHint": "Lassen Sie beide Daten leer, um alle Daten zu exportieren.",
+    "excelNote": "Excel-Dateien werden in Arbeitsblätter mit maximal 1.048.575 Zeilen aufgeteilt.",
+    "privacy": "Kontonummern, Anhänge und interne Kennungen sind nicht enthalten.",
+    "cancel": "Abbrechen",
+    "export": "Exportieren",
+    "exporting": "Datei wird vorbereitet…",
+    "invalidRange": "Das Enddatum muss am oder nach dem Startdatum liegen.",
+    "failed": "Die Liste konnte nicht exportiert werden. Bitte versuchen Sie es erneut."
   },
   "pendingChanges": "Änderungen nicht angewendet"
 }
