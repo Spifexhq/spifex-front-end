@@ -102,6 +102,8 @@ const SignUp = () => {
   // Success state
   const [emailServiceUrl, setEmailServiceUrl] = useState<string>("");
   const [createdEmail, setCreatedEmail] = useState<string>("");
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
+  const [resendConfirmationCountdown, setResendConfirmationCountdown] = useState(0);
 
   // Prevent refilling email repeatedly from URL once the user edits it
   const [didHydrateEmailFromQuery, setDidHydrateEmailFromQuery] = useState(false);
@@ -259,6 +261,22 @@ const SignUp = () => {
     setSelectedCurrency(found ? [found] : []);
   }, [prefs.currency, CURRENCIES]);
 
+  useEffect(() => {
+    if (resendConfirmationCountdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setResendConfirmationCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendConfirmationCountdown]);
+
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\s/g, "");
     setForm((prev) => ({ ...prev, email: value }));
@@ -290,6 +308,29 @@ const SignUp = () => {
   const handleOpenEmail = () => {
     if (!emailServiceUrl) return;
     window.open(emailServiceUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleResendConfirmation = async () => {
+    if (
+      !createdEmail ||
+      isResendingConfirmation ||
+      resendConfirmationCountdown > 0
+    ) {
+      return;
+    }
+
+    setIsResendingConfirmation(true);
+    try {
+      const response = await api.resendVerificationEmail(createdEmail);
+      setResendConfirmationCountdown(
+        Number(response.data?.retry_after_seconds) || 300,
+      );
+      showSnack(t("resendVerificationSent"), "success");
+    } catch {
+      showSnack(t("resendVerificationFailed"), "error");
+    } finally {
+      setIsResendingConfirmation(false);
+    }
   };
 
   const validateStep1 = async () => {
@@ -782,6 +823,26 @@ const SignUp = () => {
                     {t("redirectOpenEmailButton")}
                   </Button>
                 )}
+
+                <div className="mt-3">
+                  <Button
+                    variant="secondary"
+                    onClick={() => void handleResendConfirmation()}
+                    isLoading={isResendingConfirmation}
+                    disabled={
+                      !createdEmail ||
+                      isResendingConfirmation ||
+                      resendConfirmationCountdown > 0
+                    }
+                    className="w-full h-11 rounded-xl bg-white text-sm font-medium"
+                  >
+                    {resendConfirmationCountdown > 0
+                      ? t("resendVerificationCooldown", {
+                          seconds: resendConfirmationCountdown,
+                        })
+                      : t("resendVerification")}
+                  </Button>
+                </div>
               </div>
             )}
           </div>

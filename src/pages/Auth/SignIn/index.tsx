@@ -7,6 +7,7 @@ import type { ApiErrorBody } from "@/models/Api";
 
 import { useAuth } from "@/api";
 import { baseURL } from "@/core/api/http";
+import { api } from "@/core/api/requests";
 import { safeReturnToFromLocation } from "./returnTo";
 import Snackbar from "@/shared/ui/Snackbar";
 import Button from "@/shared/ui/Button";
@@ -71,6 +72,10 @@ const SignIn: React.FC = () => {
   const [resendCountdown, setResendCountdown] = useState(0);
   const [resendAttempts, setResendAttempts] = useState(0);
 
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationCountdown, setVerificationCountdown] = useState(0);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
 
@@ -101,6 +106,22 @@ const SignIn: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [resendCountdown]);
+
+  useEffect(() => {
+    if (verificationCountdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setVerificationCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [verificationCountdown]);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
 
@@ -195,11 +216,52 @@ const SignIn: React.FC = () => {
       persistRememberedEmail(normalizedEmail);
       completeSignIn();
     } catch (err: unknown) {
+      const code = isApiErrorBody(err) ? err.code : "";
+      const needsVerification = code === "email_not_verified";
+      setVerificationPending(needsVerification);
+      if (needsVerification) {
+        // The backend already sent a fresh link for this attempt, so respect
+        // the same five-minute cooldown before offering another one.
+        setVerificationCountdown((prev) => (prev > 0 ? prev : 300));
+      }
       const { message, severity } = resolveErrorMessage(err);
       setSnack({ message, severity });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleResendVerification = async () => {
+    if (
+      !normalizedEmail ||
+      isResendingVerification ||
+      verificationCountdown > 0
+    ) {
+      return;
+    }
+
+    setIsResendingVerification(true);
+    try {
+      const response = await api.resendVerificationEmail(normalizedEmail);
+      setVerificationPending(true);
+      setVerificationCountdown(
+        Number(response.data?.retry_after_seconds) || 300,
+      );
+      setSnack({ message: t("resendVerificationSent"), severity: "success" });
+    } catch {
+      setSnack({ message: t("resendVerificationFailed"), severity: "error" });
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
+  const handleVerificationHelp = () => {
+    if (!normalizedEmail) {
+      setSnack({ message: t("fillAllFields"), severity: "warning" });
+      return;
+    }
+    setVerificationPending(true);
+    void handleResendVerification();
   };
 
   const handleSubmitTwoFactor = async () => {
@@ -302,7 +364,11 @@ const SignIn: React.FC = () => {
                       placeholder={t("emailPlaceholder")}
                       type="email"
                       value={email}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      setEmail(e.target.value);
+                      setVerificationPending(false);
+                      setVerificationCountdown(0);
+                    }}
                       disabled={isLoading}
                       autoComplete="email"
                       autoCorrect="off"
@@ -347,6 +413,29 @@ const SignIn: React.FC = () => {
                     </Link>
                   </div>
 
+                  {verificationPending && (
+                    <div
+                      role="status"
+                      className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900"
+                    >
+                      <p>{t("emailNotVerified")}</p>
+                      <button
+                        type="button"
+                        onClick={() => void handleResendVerification()}
+                        disabled={
+                          isResendingVerification || verificationCountdown > 0
+                        }
+                        className="font-semibold text-amber-900 underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-60 disabled:no-underline"
+                      >
+                        {verificationCountdown > 0
+                          ? t("resendVerificationCooldown", {
+                              seconds: verificationCountdown,
+                            })
+                          : t("resendVerification")}
+                      </button>
+                    </div>
+                  )}
+
                   <Button
                     variant="primary"
                     type="submit"
@@ -356,6 +445,17 @@ const SignIn: React.FC = () => {
                   >
                     {t("signInButton")}
                   </Button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleVerificationHelp}
+                      className="text-xs font-medium text-slate-500 hover:text-slate-900 hover:underline underline-offset-4"
+                      disabled={isLoading || isResendingVerification}
+                    >
+                      {t("verificationHelp")}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>

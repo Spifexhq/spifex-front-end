@@ -186,6 +186,13 @@ export const api = {
   signUp: (payload: SignUpRequest) =>
     request<SignUpResponse>("auth/signup/", "POST", payload),
 
+  resendVerificationEmail: (email: string) =>
+    request<{ message: string; retry_after_seconds: number }>(
+      "auth/signup/resend-verification/",
+      "POST",
+      { email },
+    ),
+
   signOut: () =>
     request<SignOutResponse>("auth/signout/", "POST"),
 
