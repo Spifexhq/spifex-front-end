@@ -1,10 +1,11 @@
 import type { FinancialActivityRecord, FinancialActivityRow } from "./FinancialActivityTable";
 
 export function buildFinancialActivityRows<T>(records: FinancialActivityRecord<T>[], hasMore = false, newestFirst = false): FinancialActivityRow<T>[] {
-  const unique = [...new Map(records.map(record => [record.id, record])).values()]
-    .sort((a, b) => newestFirst
-      ? b.date.localeCompare(a.date) || b.id.localeCompare(a.id)
-      : a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  const unique = [...new Map(records.map(record => [record.id, record])).values()];
+  // The API computes running balances in date + creation order, so keep that
+  // order within a date. Re-sorting by external id breaks the balance sequence.
+  unique.sort((a, b) => a.date.localeCompare(b.date));
+  if (newestFirst) unique.reverse();
   const rows: FinancialActivityRow<T>[] = [];
   let month = "", totalMinor = 0, balance: number | null = null;
   const closeMonth = (partial = false) => {

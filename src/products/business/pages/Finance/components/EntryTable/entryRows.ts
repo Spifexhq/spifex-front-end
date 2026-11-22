@@ -18,7 +18,7 @@ export type EntryRow = {
 };
 /** Keep balances authoritative: a missing server balance is unknown, never a fabricated zero. */
 export function buildEntryRows(entries: FinancialEntry[], hasMore = false): EntryRow[] {
-    const unique = [...new Map(entries.map(entry => [entryId(entry), entry])).values()].sort((a, b) => entryDate(a).localeCompare(entryDate(b)) || entryId(a).localeCompare(entryId(b)));
+    const unique = [...new Map(entries.map(entry => [entryId(entry), entry])).values()].sort((a, b) => entryDate(a).localeCompare(entryDate(b)));
     const rows: EntryRow[] = [];
     let month = "", total = 0, balance: number | null = null;
     const closeMonth = (partial = false) => { if (month)
