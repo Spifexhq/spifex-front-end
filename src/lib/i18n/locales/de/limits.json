@@ -7,11 +7,11 @@
     "planUnknown": "—"
   },
   "legend": {
-    "ok": "OK < 70%",
-    "warn": "70–89%",
-    "high": "90–99%",
-    "exhausted": "100% ausgeschöpft",
-    "unmetered": "Unbegrenzt"
+    "ok": "Im Limit",
+    "warn": "70–89 % genutzt",
+    "high": "90–99 % genutzt",
+    "exhausted": "Am Limit",
+    "unmetered": "Kein Limit"
   },
   "searchPlaceholder": "Nach Code, Name oder Beschreibung suchen…",
   "th": {
@@ -22,11 +22,11 @@
     "percent": "%"
   },
   "status": {
-    "ok": "OK",
-    "warning": "Warnung",
-    "high": "Hoch",
-    "exhausted": "Ausgeschöpft",
-    "unmetered": "Unbegrenzt"
+    "ok": "Im Limit",
+    "warning": "Kurz vor dem Limit",
+    "high": "Hohe Nutzung",
+    "exhausted": "Am Limit",
+    "unmetered": "Kein Limit"
   },
   "periods": {
     "daily": "Pro Tag",
@@ -40,6 +40,62 @@
   "infinite": "Kein Maximalwert",
   "remaining": "Verbleibend",
   "empty": "Keine Berechtigungen entsprechen deiner Suche.",
+  "plan": {
+    "current": "Aktueller Tarif",
+    "manage": "Tarif verwalten",
+    "refresh": "Aktualisieren",
+    "business": "Unternehmen",
+    "personal": "Persönlich",
+    "hint": "Die Nutzung wird pro Arbeitsbereich erfasst. Limits werden je nach Zeitraum zurückgesetzt."
+  },
+  "summary": {
+    "all": "Alle Limits",
+    "attention": "Achtung",
+    "atLimit": "Am Limit",
+    "unlimited": "Kein Limit"
+  },
+  "filters": {
+    "label": "Limit-Filter",
+    "search": "Limits durchsuchen",
+    "status": "Nach Status filtern",
+    "period": "Nach Zeitraum filtern",
+    "sort": "Sortieren nach",
+    "allStatuses": "Alle",
+    "allPeriods": "Alle Zeiträume",
+    "sortUsage": "Nutzung",
+    "sortName": "Name",
+    "sortPeriod": "Zeitraum",
+    "ascending": "Aufsteigend",
+    "descending": "Absteigend",
+    "clear": "Filter löschen"
+  },
+  "table": {
+    "title": "Limits",
+    "permission": "Limit",
+    "usage": "Nutzung",
+    "period": "Zeitraum",
+    "status": "Status",
+    "showing": "{{shown}} von {{total}} angezeigt",
+    "filtered": "{{shown}} von {{total}}"
+  },
+  "usage": {
+    "left_one": "{{count}} übrig",
+    "left_other": "{{count}} übrig",
+    "noCap": "Kein Limit",
+    "notMetered": "Wird nicht auf ein Limit angerechnet",
+    "resetsOn": "Zurücksetzung am {{date}}"
+  },
+  "emptyState": {
+    "title": "Keine Limits gefunden",
+    "body": "Versuchen Sie eine andere Suche oder löschen Sie die Status- und Zeitraumfilter.",
+    "noneTitle": "Keine Limits anzuzeigen",
+    "noneBody": "Dieser Tarif stellt für diesen Arbeitsbereich keine messbaren Limits bereit."
+  },
+  "errors": {
+    "title": "Limits konnten nicht geladen werden",
+    "body": "Die Nutzung dieses Arbeitsbereichs konnte nicht geladen werden.",
+    "retry": "Erneut versuchen"
+  },
   "perms": {
     "add_cash_flow_entries": {
       "label": "Cash-Flow-Buchung anlegen",

@@ -7,11 +7,11 @@
     "planUnknown": "—"
   },
   "legend": {
-    "ok": "OK < 70%",
-    "warn": "70–89%",
-    "high": "90–99%",
-    "exhausted": "100% utilizado",
-    "unmetered": "Ilimitado"
+    "ok": "Dentro do limite",
+    "warn": "70–89% utilizado",
+    "high": "90–99% utilizado",
+    "exhausted": "No limite",
+    "unmetered": "Sem limite"
   },
   "searchPlaceholder": "Buscar por código, nome ou descrição…",
   "th": {
@@ -22,11 +22,11 @@
     "percent": "%"
   },
   "status": {
-    "ok": "OK",
-    "warning": "Atenção",
-    "high": "Alto",
-    "exhausted": "Esgotado",
-    "unmetered": "Ilimitado"
+    "ok": "Dentro do limite",
+    "warning": "Perto do limite",
+    "high": "Utilização elevada",
+    "exhausted": "No limite",
+    "unmetered": "Sem limite"
   },
   "periods": {
     "daily": "Por dia",
@@ -40,6 +40,62 @@
   "infinite": "Sem limite máximo",
   "remaining": "Restante",
   "empty": "Nenhuma permissão corresponde à sua busca.",
+  "plan": {
+    "current": "Plano atual",
+    "manage": "Gerir plano",
+    "refresh": "Atualizar",
+    "business": "Empresarial",
+    "personal": "Pessoal",
+    "hint": "A utilização é registada por espaço de trabalho. Os limites renovam conforme o respetivo período."
+  },
+  "summary": {
+    "all": "Todos os limites",
+    "attention": "Atenção",
+    "atLimit": "No limite",
+    "unlimited": "Sem limite"
+  },
+  "filters": {
+    "label": "Filtros de limites",
+    "search": "Pesquisar limites",
+    "status": "Filtrar por estado",
+    "period": "Filtrar por período",
+    "sort": "Ordenar por",
+    "allStatuses": "Todos",
+    "allPeriods": "Todos os períodos",
+    "sortUsage": "Utilização",
+    "sortName": "Nome",
+    "sortPeriod": "Período",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
+    "clear": "Limpar filtros"
+  },
+  "table": {
+    "title": "Limites",
+    "permission": "Limite",
+    "usage": "Utilização",
+    "period": "Período",
+    "status": "Estado",
+    "showing": "A mostrar {{shown}} de {{total}}",
+    "filtered": "{{shown}} de {{total}}"
+  },
+  "usage": {
+    "left_one": "{{count}} restante",
+    "left_other": "{{count}} restantes",
+    "noCap": "Sem limite máximo",
+    "notMetered": "Não conta para um limite",
+    "resetsOn": "Renova em {{date}}"
+  },
+  "emptyState": {
+    "title": "Nenhum limite corresponde",
+    "body": "Experimente outra pesquisa ou limpe os filtros de estado e período.",
+    "noneTitle": "Sem limites para mostrar",
+    "noneBody": "Este plano não expõe limites controláveis para este espaço de trabalho."
+  },
+  "errors": {
+    "title": "Não foi possível carregar os limites",
+    "body": "Não foi possível carregar a utilização deste espaço de trabalho.",
+    "retry": "Tentar novamente"
+  },
   "perms": {
     "add_cash_flow_entries": {
       "label": "Criar lançamento no Fluxo de Caixa",

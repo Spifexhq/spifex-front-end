@@ -7,11 +7,11 @@
     "planUnknown": "—"
   },
   "legend": {
-    "ok": "OK < 70%",
-    "warn": "70–89%",
-    "high": "90–99%",
-    "exhausted": "100% utilisé",
-    "unmetered": "Illimité"
+    "ok": "Dans la limite",
+    "warn": "70–89 % utilisé",
+    "high": "90–99 % utilisé",
+    "exhausted": "Limite atteinte",
+    "unmetered": "Sans limite"
   },
   "searchPlaceholder": "Rechercher par code, nom ou description…",
   "th": {
@@ -22,11 +22,11 @@
     "percent": "%"
   },
   "status": {
-    "ok": "OK",
-    "warning": "Avertissement",
-    "high": "Élevé",
-    "exhausted": "Épuisé",
-    "unmetered": "Illimité"
+    "ok": "Dans la limite",
+    "warning": "Proche de la limite",
+    "high": "Utilisation élevée",
+    "exhausted": "Limite atteinte",
+    "unmetered": "Sans limite"
   },
   "periods": {
     "daily": "Par jour",
@@ -40,6 +40,62 @@
   "infinite": "Sans plafond",
   "remaining": "Restant",
   "empty": "Aucune permission ne correspond à votre recherche.",
+  "plan": {
+    "current": "Forfait actuel",
+    "manage": "Gérer le forfait",
+    "refresh": "Actualiser",
+    "business": "Entreprise",
+    "personal": "Personnel",
+    "hint": "L’utilisation est suivie par espace de travail. Les limites se réinitialisent selon leur période."
+  },
+  "summary": {
+    "all": "Toutes les limites",
+    "attention": "À surveiller",
+    "atLimit": "Limite atteinte",
+    "unlimited": "Sans limite"
+  },
+  "filters": {
+    "label": "Filtres des limites",
+    "search": "Rechercher des limites",
+    "status": "Filtrer par état",
+    "period": "Filtrer par période",
+    "sort": "Trier par",
+    "allStatuses": "Toutes",
+    "allPeriods": "Toutes les périodes",
+    "sortUsage": "Utilisation",
+    "sortName": "Nom",
+    "sortPeriod": "Période",
+    "ascending": "Croissant",
+    "descending": "Décroissant",
+    "clear": "Effacer les filtres"
+  },
+  "table": {
+    "title": "Limites",
+    "permission": "Limite",
+    "usage": "Utilisation",
+    "period": "Période",
+    "status": "État",
+    "showing": "Affichage de {{shown}} sur {{total}}",
+    "filtered": "{{shown}} sur {{total}}"
+  },
+  "usage": {
+    "left_one": "{{count}} restante",
+    "left_other": "{{count}} restantes",
+    "noCap": "Sans plafond",
+    "notMetered": "Non compté dans une limite",
+    "resetsOn": "Réinitialisation le {{date}}"
+  },
+  "emptyState": {
+    "title": "Aucune limite ne correspond",
+    "body": "Essayez une autre recherche ou effacez les filtres d’état et de période.",
+    "noneTitle": "Aucune limite à afficher",
+    "noneBody": "Ce forfait n’expose aucune limite mesurable pour cet espace de travail."
+  },
+  "errors": {
+    "title": "Impossible de charger les limites",
+    "body": "Nous n’avons pas pu charger l’utilisation de cet espace de travail.",
+    "retry": "Réessayer"
+  },
   "perms": {
     "add_cash_flow_entries": {
       "label": "Créer une écriture de trésorerie",

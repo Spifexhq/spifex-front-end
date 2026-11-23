@@ -7,11 +7,11 @@
     "planUnknown": "—"
   },
   "legend": {
-    "ok": "OK < 70%",
-    "warn": "70–89%",
-    "high": "90–99%",
-    "exhausted": "100% exhausted",
-    "unmetered": "Unmetered"
+    "ok": "Within limit",
+    "warn": "70–89% used",
+    "high": "90–99% used",
+    "exhausted": "At limit",
+    "unmetered": "No limit"
   },
   "searchPlaceholder": "Search permission code, name, or description…",
   "th": {
@@ -22,11 +22,11 @@
     "percent": "%"
   },
   "status": {
-    "ok": "OK",
-    "warning": "Warning",
-    "high": "High",
-    "exhausted": "Exhausted",
-    "unmetered": "Unmetered"
+    "ok": "Within limit",
+    "warning": "Near limit",
+    "high": "High usage",
+    "exhausted": "At limit",
+    "unmetered": "No limit"
   },
   "periods": {
     "daily": "Per day",
@@ -40,6 +40,62 @@
   "infinite": "No cap",
   "remaining": "Remaining",
   "empty": "No permissions match your search.",
+  "plan": {
+    "current": "Current plan",
+    "manage": "Manage plan",
+    "refresh": "Refresh",
+    "business": "Business",
+    "personal": "Personal",
+    "hint": "Usage is tracked per workspace. Limits reset according to their period."
+  },
+  "summary": {
+    "all": "All limits",
+    "attention": "Attention",
+    "atLimit": "At limit",
+    "unlimited": "No limit"
+  },
+  "filters": {
+    "label": "Limit filters",
+    "search": "Search limits",
+    "status": "Filter by status",
+    "period": "Filter by period",
+    "sort": "Sort by",
+    "allStatuses": "All",
+    "allPeriods": "All periods",
+    "sortUsage": "Usage",
+    "sortName": "Name",
+    "sortPeriod": "Period",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "clear": "Clear filters"
+  },
+  "table": {
+    "title": "Limits",
+    "permission": "Limit",
+    "usage": "Usage",
+    "period": "Period",
+    "status": "Status",
+    "showing": "Showing {{shown}} of {{total}}",
+    "filtered": "{{shown}} of {{total}}"
+  },
+  "usage": {
+    "left_one": "{{count}} left",
+    "left_other": "{{count}} left",
+    "noCap": "No cap",
+    "notMetered": "Not counted against a cap",
+    "resetsOn": "Resets {{date}}"
+  },
+  "emptyState": {
+    "title": "No limits match",
+    "body": "Try a different search, or clear the status and period filters.",
+    "noneTitle": "No limits to show",
+    "noneBody": "This plan does not expose any trackable limits for this workspace."
+  },
+  "errors": {
+    "title": "Could not load limits",
+    "body": "We could not load usage for this workspace.",
+    "retry": "Try again"
+  },
   "perms": {
     "add_cash_flow_entries": {
       "label": "Create Cash Flow entry",
