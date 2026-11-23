@@ -2,7 +2,6 @@ import type { Permission } from "@/models/auth/rbac";
 import {
   ACCESS_CAPABILITIES,
   BUSINESS_PERMISSION_CODES,
-  LEGACY_CODES,
   PERMISSION_BY_CODE,
   PERMISSION_DEPENDENCIES,
   type PermissionAction,
@@ -36,7 +35,7 @@ export function moduleCodes(module: PermissionModule): string[] {
 }
 
 export function presetCodes(feature: PermissionFeature, preset: PresetId): string[] {
-  const actions = feature.actions.filter((action) => !action.legacy);
+  const actions = feature.actions;
   if (preset === "read") {
     return actions
       .filter((action) => action.kind === "page" || action.kind === "view")
@@ -192,7 +191,7 @@ export function actionCanBeDelegated(
   options: { isOwner: boolean; actorCodes: Set<string> },
 ): boolean {
   if (options.isOwner) return true;
-  if (LEGACY_CODES.has(code) || ACCESS_CAPABILITIES.has(code)) return false;
+  if (ACCESS_CAPABILITIES.has(code)) return false;
   return options.actorCodes.has(code);
 }
 

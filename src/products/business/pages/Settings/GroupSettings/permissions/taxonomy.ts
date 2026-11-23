@@ -1,10 +1,10 @@
 /** Authoritative R2.5 Business permission taxonomy. One primary location per code. */
 
-export type ActionKind = "page" | "view" | "create" | "edit" | "delete" | "configure" | "manage" | "legacy";
+export type ActionKind = "page" | "view" | "create" | "edit" | "delete" | "configure" | "manage";
 
 export type PresetId = "read" | "edit" | "full";
 
-export type PermissionAction = { code: string; kind: ActionKind; sensitive?: boolean; administrative?: boolean; legacy?: boolean };
+export type PermissionAction = { code: string; kind: ActionKind; sensitive?: boolean; administrative?: boolean };
 
 export type PermissionFeature = { id: string; name: string; description: string; actions: PermissionAction[] };
 
@@ -111,9 +111,6 @@ export const PERMISSION_TAXONOMY: PermissionModule[] = [
           { code: 'business_view_member_settings_page', kind: 'page' },
           { code: 'business_view_member', kind: 'view' },
           { code: 'manage_members', kind: 'manage', sensitive: true, administrative: true },
-          { code: 'business_add_member', kind: 'legacy', administrative: true, legacy: true },
-          { code: 'business_change_member', kind: 'legacy', administrative: true, legacy: true },
-          { code: 'business_delete_member', kind: 'legacy', administrative: true, legacy: true },
         ],
       },
       {
@@ -123,23 +120,11 @@ export const PERMISSION_TAXONOMY: PermissionModule[] = [
         ],
       },
       {
-        id: 'user-accounts', name: 'User Accounts (Legacy)', description: 'Legacy user-account codes retained for compatibility.',
-        actions: [
-          { code: 'view_user', kind: 'view' },
-          { code: 'add_user', kind: 'legacy', administrative: true, legacy: true },
-          { code: 'change_user', kind: 'legacy', administrative: true, legacy: true },
-          { code: 'delete_user', kind: 'legacy', sensitive: true, administrative: true, legacy: true },
-        ],
-      },
-      {
         id: 'permission-groups', name: 'Permission Groups', description: 'Group list, group settings, assignments and group lifecycle.',
         actions: [
           { code: 'view_group_settings_page', kind: 'page' },
           { code: 'view_group', kind: 'view' },
           { code: 'manage_access', kind: 'manage', sensitive: true, administrative: true },
-          { code: 'add_group', kind: 'legacy', administrative: true, legacy: true },
-          { code: 'change_group', kind: 'legacy', administrative: true, legacy: true },
-          { code: 'delete_group', kind: 'legacy', sensitive: true, administrative: true, legacy: true },
         ],
       },
       {
@@ -307,8 +292,6 @@ export const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
 };
 
 export const ACCESS_CAPABILITIES = new Set(["manage_members", "manage_member_roles", "manage_access", "view_effective_access"]);
-
-export const LEGACY_CODES = new Set(["add_user", "change_user", "delete_user", "business_add_member", "business_change_member", "business_delete_member", "add_group", "change_group", "delete_group"]);
 
 export type ScopeResourceType = "bank_account" | "department" | "project";
 

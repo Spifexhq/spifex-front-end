@@ -20,17 +20,6 @@ const RESOURCE_BY_CODE: Record<string, string> = {
   personal_add_transfer: "transfers",
   delete_transfer: "transfers",
 
-  add_user: "members",
-  change_user: "members",
-  delete_user: "members",
-  business_add_member: "members",
-  business_change_member: "members",
-  business_delete_member: "members",
-
-  add_group: "groups",
-  change_group: "groups",
-  delete_group: "groups",
-
   add_bank: "bankAccounts",
   change_bank: "bankAccounts",
   delete_bank: "bankAccounts",
@@ -112,9 +101,6 @@ const ACTION_BY_CODE: Record<string, UsageAction> = {
   personal_add_transfer: "transferred",
   personal_settle_transaction: "settled",
   personal_reverse_settlement: "reversed",
-  business_add_member: "added",
-  business_change_member: "updated",
-  business_delete_member: "deleted",
 };
 
 /** What the change did, so the toast never shows only a bare resource name. */

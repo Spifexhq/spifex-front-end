@@ -401,7 +401,6 @@ const LimitsAndUsage = () => {
       if (row.status === "unlimited") unlimited += 1;
       if (row.status === "exhausted") {
         atLimit += 1;
-        attention += 1;
       } else if (row.status === "warn" || row.status === "high") {
         attention += 1;
       }
@@ -418,7 +417,7 @@ const LimitsAndUsage = () => {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const matches = rows.filter((row) => {
-      if (statusFilter === "attention" && !["warn", "high", "exhausted"].includes(row.status)) {
+      if (statusFilter === "attention" && !["warn", "high"].includes(row.status)) {
         return false;
       }
       if (statusFilter === "atLimit" && row.status !== "exhausted") return false;
@@ -651,7 +650,7 @@ const LimitsAndUsage = () => {
               <Search
                 size={15}
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
               />
               <Input
                 kind="text"

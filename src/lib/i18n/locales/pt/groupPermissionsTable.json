@@ -65,10 +65,6 @@
       "label": "Permissões (dados)",
       "description": "Permite visualizar o catálogo de permissões."
     },
-    "view_user": {
-      "label": "Usuários (dados)",
-      "description": "Permite visualizar dados de usuários."
-    },
     "business_view_member": {
       "label": "Colaboradores (dados)",
       "description": "Permite visualizar dados de colaboradores."
@@ -152,42 +148,6 @@
     "delete_statement": {
       "label": "Excluir extrato",
       "description": "Permite excluir extratos bancários."
-    },
-    "add_user": {
-      "label": "Criar usuário",
-      "description": "Permite criar usuários."
-    },
-    "change_user": {
-      "label": "Editar usuário",
-      "description": "Permite editar usuários."
-    },
-    "delete_user": {
-      "label": "Excluir usuário",
-      "description": "Permite excluir usuários."
-    },
-    "business_add_member": {
-      "label": "Criar colaborador",
-      "description": "Permite criar colaboradores."
-    },
-    "business_change_member": {
-      "label": "Editar colaborador",
-      "description": "Permite editar colaboradores."
-    },
-    "business_delete_member": {
-      "label": "Excluir colaborador",
-      "description": "Permite excluir colaboradores."
-    },
-    "add_group": {
-      "label": "Criar grupo",
-      "description": "Permite criar grupos."
-    },
-    "change_group": {
-      "label": "Editar grupo",
-      "description": "Permite editar grupos."
-    },
-    "delete_group": {
-      "label": "Excluir grupo",
-      "description": "Permite excluir grupos."
     },
     "add_bank": {
       "label": "Criar conta bancária",
@@ -462,10 +422,6 @@
         "name": "Funções",
         "description": "Alterações de funções de membros que não são proprietários."
       },
-      "user-accounts": {
-        "name": "Contas de utilizador (legado)",
-        "description": "Códigos legados de contas de utilizador mantidos por compatibilidade."
-      },
       "permission-groups": {
         "name": "Grupos de permissões",
         "description": "Lista, definições, atribuições e ciclo de vida dos grupos."
@@ -584,13 +540,11 @@
       "edit": "Editar",
       "delete": "Eliminar",
       "configure": "Configurar",
-      "manage": "Gerir acesso",
-      "legacy": "Legado"
+      "manage": "Gerir acesso"
     },
     "badges": {
       "sensitive": "Sensível",
       "administrative": "Administrativa",
-      "legacy": "Legado",
       "planUnavailable": "Indisponível no plano",
       "nonDelegable": "Não delegável",
       "missingDependency": "Dependência em falta"

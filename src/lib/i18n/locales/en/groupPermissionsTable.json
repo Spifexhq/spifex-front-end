@@ -65,10 +65,6 @@
       "label": "Permissions (data)",
       "description": "Can view the permissions catalog."
     },
-    "view_user": {
-      "label": "Users (data)",
-      "description": "Can view users data."
-    },
     "business_view_member": {
       "label": "Members (data)",
       "description": "Can view members data."
@@ -152,42 +148,6 @@
     "delete_statement": {
       "label": "Delete statement",
       "description": "Allows deleting bank statements."
-    },
-    "add_user": {
-      "label": "Create user",
-      "description": "Allows creating users."
-    },
-    "change_user": {
-      "label": "Edit user",
-      "description": "Allows editing users."
-    },
-    "delete_user": {
-      "label": "Delete user",
-      "description": "Allows deleting users."
-    },
-    "business_add_member": {
-      "label": "Create member",
-      "description": "Allows creating members."
-    },
-    "business_change_member": {
-      "label": "Edit member",
-      "description": "Allows editing members."
-    },
-    "business_delete_member": {
-      "label": "Delete member",
-      "description": "Allows deleting members."
-    },
-    "add_group": {
-      "label": "Create group",
-      "description": "Allows creating groups."
-    },
-    "change_group": {
-      "label": "Edit group",
-      "description": "Allows editing groups."
-    },
-    "delete_group": {
-      "label": "Delete group",
-      "description": "Allows deleting groups."
     },
     "add_bank": {
       "label": "Create bank account",
@@ -462,10 +422,6 @@
         "name": "Roles",
         "description": "Non-owner membership role changes."
       },
-      "user-accounts": {
-        "name": "User Accounts (Legacy)",
-        "description": "Legacy user-account codes retained for compatibility."
-      },
       "permission-groups": {
         "name": "Permission Groups",
         "description": "Group list, group settings, assignments and group lifecycle."
@@ -584,13 +540,11 @@
       "edit": "Edit",
       "delete": "Delete",
       "configure": "Configure",
-      "manage": "Manage access",
-      "legacy": "Legacy"
+      "manage": "Manage access"
     },
     "badges": {
       "sensitive": "Sensitive",
       "administrative": "Administrative",
-      "legacy": "Legacy",
       "planUnavailable": "Plan unavailable",
       "nonDelegable": "Non-delegable",
       "missingDependency": "Missing dependency"

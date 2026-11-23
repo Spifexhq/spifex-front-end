@@ -546,11 +546,6 @@ const PermissionExplorer: React.FC<Props> = ({
                                           {t("explorer.badges.administrative", { defaultValue: "Administrative" })}
                                         </span>
                                       )}
-                                      {action.legacy && (
-                                        <span className="rounded-full border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] text-gray-600">
-                                          {t("explorer.badges.legacy", { defaultValue: "Legacy" })}
-                                        </span>
-                                      )}
                                       {unavailable && (
                                         <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-800">
                                           {t("explorer.badges.planUnavailable", { defaultValue: "Plan unavailable" })}

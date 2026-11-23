@@ -40,8 +40,6 @@ export const PERSONAL_PERMISSION = {
 export type PersonalPermission = typeof PERSONAL_PERMISSION[keyof typeof PERSONAL_PERMISSION];
 
 const legacyPermissionMap: Record<string, PersonalPermission> = {
-  view_personal_overview: PERSONAL_PERMISSION.overview,
-  view_personal_reports: PERSONAL_PERMISSION.reports,
   view_personal_settings_page: PERSONAL_PERMISSION.settings,
   // The shared Security & Privacy page uses the Business permission code;
   // Personal workspaces authorize it through the broader Personal settings grant.
@@ -61,26 +59,12 @@ const legacyPermissionMap: Record<string, PersonalPermission> = {
   add_cash_flow_entries: PERSONAL_PERMISSION.addTransaction,
   change_cash_flow_entries: PERSONAL_PERMISSION.changeTransaction,
   delete_cash_flow_entries: PERSONAL_PERMISSION.deleteTransaction,
-  delete_transference: PERSONAL_PERMISSION.deleteTransfer,
   add_settled_entries: PERSONAL_PERMISSION.settleTransaction,
   delete_settled_entries: PERSONAL_PERMISSION.reverseSettlement,
   add_transference: PERSONAL_PERMISSION.addTransfer,
   add_bank: PERSONAL_PERMISSION.addBankAccount,
   change_bank: PERSONAL_PERMISSION.changeBankAccount,
   delete_bank: PERSONAL_PERMISSION.deleteBankAccount,
-  view_personal_category: PERSONAL_PERMISSION.categories,
-  add_personal_category: PERSONAL_PERMISSION.addCategory,
-  change_personal_category: PERSONAL_PERMISSION.changeCategory,
-  delete_personal_category: PERSONAL_PERMISSION.deleteCategory,
-  view_personal_budget: PERSONAL_PERMISSION.budgets,
-  add_personal_budget: PERSONAL_PERMISSION.addBudget,
-  change_personal_budget: PERSONAL_PERMISSION.changeBudget,
-  delete_personal_budget: PERSONAL_PERMISSION.deleteBudget,
-  view_personal_goal: PERSONAL_PERMISSION.goals,
-  add_personal_goal: PERSONAL_PERMISSION.addGoal,
-  change_personal_goal: PERSONAL_PERMISSION.changeGoal,
-  delete_personal_goal: PERSONAL_PERMISSION.deleteGoal,
-  add_entry_attachment: PERSONAL_PERMISSION.addTransactionAttachment,
 };
 
 export function resolvePersonalPermission(code: string): PersonalPermission | undefined {

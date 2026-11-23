@@ -74,7 +74,6 @@ export function permissionIcons(code: string): LucideIcon {
   if (code === "view_limits_and_usage") return Gauge;
   if (code === "view_statement") return FileText;
 
-  if (code === "view_user") return User;
   if (code === "business_view_member") return Users;
   if (code === "view_effective_access") return Eye;
   if (code === "view_group") return Users;

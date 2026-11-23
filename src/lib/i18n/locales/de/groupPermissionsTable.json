@@ -65,10 +65,6 @@
       "label": "Berechtigungen (Daten)",
       "description": "Erlaubt das Anzeigen des Berechtigungskatalogs."
     },
-    "view_user": {
-      "label": "Benutzer (Daten)",
-      "description": "Erlaubt das Anzeigen von Benutzerdaten."
-    },
     "business_view_member": {
       "label": "Mitglieder (Daten)",
       "description": "Erlaubt das Anzeigen von Mitgliederdaten."
@@ -152,42 +148,6 @@
     "delete_statement": {
       "label": "Kontoauszug löschen",
       "description": "Erlaubt das Löschen von Kontoauszügen."
-    },
-    "add_user": {
-      "label": "Benutzer erstellen",
-      "description": "Erlaubt das Erstellen von Benutzern."
-    },
-    "change_user": {
-      "label": "Benutzer bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Benutzern."
-    },
-    "delete_user": {
-      "label": "Benutzer löschen",
-      "description": "Erlaubt das Löschen von Benutzern."
-    },
-    "business_add_member": {
-      "label": "Mitglied erstellen",
-      "description": "Erlaubt das Erstellen von Mitgliedern."
-    },
-    "business_change_member": {
-      "label": "Mitglied bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Mitgliedern."
-    },
-    "business_delete_member": {
-      "label": "Mitglied löschen",
-      "description": "Erlaubt das Löschen von Mitgliedern."
-    },
-    "add_group": {
-      "label": "Gruppe erstellen",
-      "description": "Erlaubt das Erstellen von Gruppen."
-    },
-    "change_group": {
-      "label": "Gruppe bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Gruppen."
-    },
-    "delete_group": {
-      "label": "Gruppe löschen",
-      "description": "Erlaubt das Löschen von Gruppen."
     },
     "add_bank": {
       "label": "Bankkonto erstellen",
@@ -462,10 +422,6 @@
         "name": "Rollen",
         "description": "Rollenänderungen für Nicht-Eigentümer."
       },
-      "user-accounts": {
-        "name": "Benutzerkonten (Legacy)",
-        "description": "Legacy-Benutzerkontocodes aus Kompatibilitätsgründen."
-      },
       "permission-groups": {
         "name": "Berechtigungsgruppen",
         "description": "Gruppenliste, Einstellungen, Zuweisungen und Gruppenlebenszyklus."
@@ -584,13 +540,11 @@
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "configure": "Konfigurieren",
-      "manage": "Zugriff verwalten",
-      "legacy": "Veraltet"
+      "manage": "Zugriff verwalten"
     },
     "badges": {
       "sensitive": "Sensibel",
       "administrative": "Administrativ",
-      "legacy": "Veraltet",
       "planUnavailable": "Im Tarif nicht verfügbar",
       "nonDelegable": "Nicht delegierbar",
       "missingDependency": "Fehlende Abhängigkeit"

@@ -65,10 +65,6 @@
       "label": "Permissions (données)",
       "description": "Permet de voir le catalogue des permissions."
     },
-    "view_user": {
-      "label": "Utilisateurs (données)",
-      "description": "Permet de voir les données des utilisateurs."
-    },
     "business_view_member": {
       "label": "Membres (données)",
       "description": "Permet de voir les données des membres."
@@ -152,42 +148,6 @@
     "delete_statement": {
       "label": "Supprimer un relevé",
       "description": "Permet de supprimer des relevés bancaires."
-    },
-    "add_user": {
-      "label": "Créer un utilisateur",
-      "description": "Permet de créer des utilisateurs."
-    },
-    "change_user": {
-      "label": "Modifier un utilisateur",
-      "description": "Permet de modifier des utilisateurs."
-    },
-    "delete_user": {
-      "label": "Supprimer un utilisateur",
-      "description": "Permet de supprimer des utilisateurs."
-    },
-    "business_add_member": {
-      "label": "Créer un membre",
-      "description": "Permet de créer des membres."
-    },
-    "business_change_member": {
-      "label": "Modifier un membre",
-      "description": "Permet de modifier des membres."
-    },
-    "business_delete_member": {
-      "label": "Supprimer un membre",
-      "description": "Permet de supprimer des membres."
-    },
-    "add_group": {
-      "label": "Créer un groupe",
-      "description": "Permet de créer des groupes."
-    },
-    "change_group": {
-      "label": "Modifier un groupe",
-      "description": "Permet de modifier des groupes."
-    },
-    "delete_group": {
-      "label": "Supprimer un groupe",
-      "description": "Permet de supprimer des groupes."
     },
     "add_bank": {
       "label": "Créer un compte bancaire",
@@ -462,10 +422,6 @@
         "name": "Rôles",
         "description": "Modification des rôles hors propriétaire."
       },
-      "user-accounts": {
-        "name": "Comptes utilisateur (hérités)",
-        "description": "Codes hérités de comptes utilisateur conservés pour compatibilité."
-      },
       "permission-groups": {
         "name": "Groupes de permissions",
         "description": "Liste, paramètres, affectations et cycle de vie des groupes."
@@ -584,13 +540,11 @@
       "edit": "Modifier",
       "delete": "Supprimer",
       "configure": "Configurer",
-      "manage": "Gérer l’accès",
-      "legacy": "Hérité"
+      "manage": "Gérer l’accès"
     },
     "badges": {
       "sensitive": "Sensible",
       "administrative": "Administratif",
-      "legacy": "Hérité",
       "planUnavailable": "Indisponible dans le forfait",
       "nonDelegable": "Non délégable",
       "missingDependency": "Dépendance manquante"
