@@ -100,6 +100,44 @@ export function quotaErrorMessage(cause: unknown): string | null {
   return message;
 }
 
+export function quotaIssueMessage(issue: QuotaIssue): string | null {
+  return quotaErrorMessage({
+    code: issue.code,
+    limit: issue.limit,
+    remaining: issue.remaining,
+    reset_at: issue.resetAt,
+  });
+}
+
+/**
+ * The global quota warning is the single surface for quota failures. Page-level
+ * error snackbars reproduce the same string, so remember the text and let
+ * Snackbar drop the duplicate instead of showing the same message twice.
+ */
+const recentQuotaMessages = new Map<string, number>();
+const QUOTA_MESSAGE_TTL_MS = 5000;
+
+export function rememberQuotaMessage(message: string | null | undefined): void {
+  if (!message) return;
+  const now = Date.now();
+  recentQuotaMessages.set(message, now);
+  if (recentQuotaMessages.size > 8) {
+    for (const [text, at] of recentQuotaMessages) {
+      if (now - at > QUOTA_MESSAGE_TTL_MS) recentQuotaMessages.delete(text);
+    }
+  }
+}
+
+export function isRecentQuotaMessage(message: string): boolean {
+  const at = recentQuotaMessages.get(message);
+  if (!at) return false;
+  if (Date.now() - at > QUOTA_MESSAGE_TTL_MS) {
+    recentQuotaMessages.delete(message);
+    return false;
+  }
+  return true;
+}
+
 export const QUOTA_WARNING_EVENT = "spifex:quota-warning";
 let lastQuotaKey = "", lastQuotaAt = 0;
 export function notifyQuotaError(cause: unknown): void {

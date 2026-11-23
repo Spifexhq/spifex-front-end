@@ -21,6 +21,7 @@
     "members": "Employees",
     "groups": "Groups",
     "billing": "Plan & billing",
+    "limits": "Limits & usage",
     "formats": "Formats",
     "currency": "Currency",
     "banks": "Banks",

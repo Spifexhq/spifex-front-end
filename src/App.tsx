@@ -8,6 +8,7 @@ import './App.css';
 import { RequestsProvider } from '@/app/providers/RequestsProvider';
 import { AuthProvider } from '@/app/authentication/AuthProvider';
 import { FeedbackStackProvider } from '@/shared/ui/FeedbackStack';
+import { UsageToastHost } from '@/shared/ui/UsageToast';
 import { FORMATS_CHANGED_EVENT } from '@/lib/formatEvents';
 
 export const App = () => {
@@ -28,6 +29,7 @@ export const App = () => {
         <FeedbackStackProvider>
           <div>
             <QuotaWarning />
+            <UsageToastHost />
             {content}
           </div>
         </FeedbackStackProvider>

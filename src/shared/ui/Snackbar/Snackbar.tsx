@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { apiErrorMessage } from "@/lib/apiErrorMessage";
+import { apiErrorMessage, isRecentQuotaMessage } from "@/lib/apiErrorMessage";
 import { useSnackbarLifecycle } from "./useSnackbarLifecycle";
 import { useFeedbackStack } from "@/shared/ui/FeedbackStack";
 import type { SnackbarProps } from "./Snackbar.types";
@@ -15,18 +15,33 @@ const tones = {
   info: { icon: Info, color: "bg-slate-100 text-slate-600 ring-slate-200/60" },
 };
 
-export default function Snackbar({ open, notificationKey, autoHideDuration = 5000, onClose, message, severity = "info", children, anchor = { vertical: "bottom", horizontal: "center" }, transitionDuration = 180, pauseOnHover = true, persistOnError = true, dismissOnClick = false, showCloseButton = true, maxWidthClassName = "max-w-md", className = "" }: SnackbarProps) {
+export default function Snackbar({ open, notificationKey, autoHideDuration = 4400, onClose, message, severity = "info", children, anchor = { vertical: "bottom", horizontal: "center" }, transitionDuration = 180, pauseOnHover = true, persistOnError = true, dismissOnClick = false, showCloseButton = true, maxWidthClassName = "max-w-md", className = "" }: SnackbarProps) {
   const { t } = useTranslation("common");
   const reduced = useReducedMotion();
   const stack = useFeedbackStack();
   const inStack = Boolean(stack) && anchor.vertical === "bottom";
   const content = children ?? (isValidElement(message) || Array.isArray(message) || typeof message === "number" ? message : apiErrorMessage(message, t("notifications.genericError")));
+  const suppressed =
+    children == null &&
+    severity === "error" &&
+    typeof content === "string" &&
+    isRecentQuotaMessage(content);
   const identity = notificationKey ?? message ?? children;
   const duration = persistOnError && severity === "error" ? null : autoHideDuration;
   const lifecycle = useSnackbarLifecycle(open, identity, duration, onClose);
   const pauseSnackbar = lifecycle.pause;
   const [rendered, setRendered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const suppressedRef = useRef(false);
+  useEffect(() => {
+    if (!suppressed) {
+      suppressedRef.current = false;
+      return;
+    }
+    if (suppressedRef.current) return;
+    suppressedRef.current = true;
+    onClose();
+  }, [onClose, suppressed]);
   useEffect(() => {
     if (lifecycle.visible) { setRendered(true); return; }
     const timer = setTimeout(() => setRendered(false), reduced ? 0 : transitionDuration);
@@ -53,13 +68,14 @@ export default function Snackbar({ open, notificationKey, autoHideDuration = 500
   const tone = tones[displayed.severity], Icon = tone.icon;
   const horizontal = anchor.horizontal === "center" ? "left-1/2 -translate-x-1/2" : anchor.horizontal === "left" ? "left-4" : "right-4";
   if (typeof document === "undefined") return null;
+  if (suppressed) return null;
   if (!rendered) return null;
   const wrapperClass = inStack
     ? `pointer-events-none w-[calc(100vw-2rem)] ${maxWidthClassName}`
     : `pointer-events-none fixed z-[15000] w-[calc(100vw_-_2rem)] ${maxWidthClassName} ${horizontal} ${anchor.vertical === "top" ? "top-[max(1rem,env(safe-area-inset-top))]" : "bottom-[max(1rem,env(safe-area-inset-bottom))]"}`;
   return createPortal(<div className={wrapperClass}>
     <AnimatePresence initial={false}>
-      {lifecycle.visible && <motion.div ref={cardRef} key="notification" initial={{ opacity: 0, y: anchor.vertical === "top" ? -8 : 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: anchor.vertical === "top" ? -6 : 6 }} transition={{ duration: reduced ? 0 : transitionDuration / 1000 }}
+      {lifecycle.visible && <motion.div ref={cardRef} key="notification" initial={{ opacity: 0, y: anchor.vertical === "top" ? -12 : 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: anchor.vertical === "top" ? -8 : 8, scale: 0.98, transition: reduced ? { duration: 0 } : { duration: 0.16, ease: [0.4, 0, 1, 1] } }} transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 480, damping: 34, mass: 0.7 }}
         onMouseEnter={() => { if (pauseOnHover) lifecycle.pause("hover", true); }} onMouseLeave={() => lifecycle.pause("hover", false)}
         onClick={dismissOnClick ? lifecycle.dismiss : undefined}
         className={`pointer-events-auto ${displayed.custom ? "" : "flex items-start gap-3 rounded-xl border border-white/80 bg-white/95 p-3.5 text-slate-800 shadow-[0_8px_32px_-8px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-slate-900/10 supports-[backdrop-filter]:bg-white/80 supports-[backdrop-filter]:backdrop-blur-xl supports-[backdrop-filter]:backdrop-saturate-150"} ${className}`}>

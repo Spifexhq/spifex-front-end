@@ -1,5 +1,6 @@
 import { resourceTags, mutationTags, stableParams, cacheFresh } from "../cache/httpCachePolicy";
 import { normalizeApiError, notifyQuotaError } from "../../lib/apiErrorMessage";
+import { notifyUsageChange, parseUsageHeader, USAGE_HEADER } from "../../lib/usageEvents";
 import { getAuthGeneration } from "../authentication/authGeneration";
 /* -----------------------------------------------------------------------------
  * File: src/lib/http.ts
@@ -658,6 +659,8 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) {
       const affected = mutationTags(ep);
       if (affected) invalidateHttpResources(affected); else clearHttpCaches();
+      const usage = res.headers?.[USAGE_HEADER];
+      if (usage) notifyUsageChange(parseUsageHeader(usage));
     }
     const body = res.data;
 

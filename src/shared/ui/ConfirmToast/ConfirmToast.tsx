@@ -96,10 +96,10 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
         role="alertdialog"
         aria-describedby={descriptionId}
         aria-label={text}
-        initial={{ opacity: 0, y: reduced ? 0 : 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: reduced ? 0 : 5 }}
-        transition={{ duration: reduced ? 0 : .15, ease: "easeOut" }}
+        initial={{ opacity: 0, y: reduced ? 0 : 10, scale: reduced ? 1 : 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: reduced ? 0 : 6, scale: reduced ? 1 : 0.98, transition: reduced ? { duration: 0 } : { duration: 0.16, ease: [0.4, 0, 1, 1] } }}
+        transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 480, damping: 34, mass: 0.7 }}
         onAnimationComplete={() => {
           if (!visibleRef.current || busy) return;
           if (bodyCollapsed) toggleRef.current?.focus({ preventScroll: true });
