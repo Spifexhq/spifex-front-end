@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useAppShell } from "@/contexts/AppShellContext";
 import React, { useCallback, useEffect, useState } from "react";
 import { PermissionMiddleware } from "@/middlewares";
+import { useAuthContext } from "@/hooks/useAuth";
 
 import SidebarDesktop from "./Sidebar.desktop";
 import SidebarMobile from "./Sidebar.mobile";
@@ -43,6 +44,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   onEntryModalClose,
 }) => {
   const shell = useAppShell();
+  const { organization: authOrg } = useAuthContext();
+  const workspace = authOrg?.organization;
+  const orgCurrency = (workspace?.currency || "EUR").toUpperCase();
+  const multiCurrencyEnabled = Boolean(workspace?.multi_currency_enabled);
 
   const isOpen = shell ? !shell.collapsed : providedOpen;
   const toggleSidebar = shell?.toggleCollapsed ?? providedToggle;
@@ -171,6 +176,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           type={entryType ?? "credit"}
           initialEntry={entryInitial}
           isLoadingEntry={entryLoading}
+          orgCurrency={orgCurrency}
+          multiCurrencyEnabled={multiCurrencyEnabled}
           onSave={handleEntrySave}
         />
       </PermissionMiddleware>

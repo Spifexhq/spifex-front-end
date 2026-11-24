@@ -82,7 +82,17 @@ export interface GetBanksTableResponse {
   balance_currency?: string | null;
   mixed_currencies?: boolean;
   can_view_balance?: boolean;
+  /** Workspace base/reporting currency for the base-equivalent total. */
+  base_currency?: string | null;
+  /** Base-equivalent total; null when a required rate is missing. */
+  total_base_balance?: string | null;
+  /** Native totals grouped by currency code. */
+  totals_by_currency?: Record<string, string>;
+  rate_date?: string | null;
+  rate_is_stale?: boolean;
+  rates_missing?: string[];
   banks: BankAccountTableRow[];
   count: number;
-  total_consolidated_balance: string;
+  /** Native total for a single-currency selection; null when currencies mix. */
+  total_consolidated_balance: string | null;
 }

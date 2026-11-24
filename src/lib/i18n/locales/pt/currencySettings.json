@@ -1,34 +1,58 @@
 {
-  "title": "Moeda da Organização",
+  "title": "Moeda da OrganizaÃ§Ã£o",
+  "permissionRequired": "Você não tem permissão para alterar o modo de moeda.",
+  "currencyLocked": "A moeda base estÃ¡ bloqueada porque jÃ¡ existem registros financeiros.",
   "header": {
-    "settings": "Configurações",
-    "title": "Moeda padrão da organização"
+    "settings": "ConfiguraÃ§Ãµes",
+    "title": "Moeda padrÃ£o da organizaÃ§Ã£o"
   },
   "section": {
-    "currency": "Moeda"
+    "currency": "Moeda",
+    "mode": "Modo de moeda"
   },
   "field": {
     "current": "Moeda atual",
     "currency": "Nova moeda",
-    "password": "Senha atual"
+    "password": "Senha atual",
+    "mode": "Multimoeda"
+  },
+  "mode": {
+    "single": "Moeda Ãºnica",
+    "multi": "Multimoeda",
+    "singleHint": "Todas as contas e registros usam a moeda do workspace.",
+    "multiHint": "As contas podem usar outras moedas; os relatÃ³rios continuam na moeda do workspace.",
+    "alreadySingle": "O workspace jÃ¡ usa uma moeda Ãºnica.",
+    "blocked": "DesativaÃ§Ã£o bloqueada por registros existentes: {{blockers}}."
+  },
+  "blockers": {
+    "foreign_accounts": "contas em outra moeda"
   },
   "btn": {
     "change": "Alterar moeda",
     "cancel": "Cancelar",
-    "save": "Salvar"
+    "save": "Salvar",
+    "enableMulti": "Ativar multimoeda",
+    "disableMulti": "Desativar multimoeda"
   },
   "btnLabel": {
     "currency": "Selecionar moeda"
   },
   "modal": {
-    "title": "Alterar moeda da organização",
-    "close": "Fechar"
+    "title": "Alterar moeda da organizaÃ§Ã£o",
+    "close": "Fechar",
+    "enableModeTitle": "Ativar multimoeda",
+    "disableModeTitle": "Desativar multimoeda",
+    "enableModeBody": "VocÃª poderÃ¡ criar contas em outras moedas. Valores e histÃ³rico existentes permanecem inalterados.",
+    "disableModeBody": "SÃ³ Ã© possÃ­vel voltar para moeda Ãºnica quando nenhum registro usar outra moeda."
   },
   "toast": {
     "success": "Moeda atualizada com sucesso.",
-    "updateError": "Não foi possível atualizar a moeda.",
+    "updateError": "NÃ£o foi possÃ­vel atualizar a moeda.",
     "noSelection": "Selecione uma moeda para continuar.",
     "missingPassword": "Informe sua senha atual para alterar a moeda.",
-    "invalidPassword": "Senha incorreta."
+    "invalidPassword": "Senha incorreta.",
+    "modeEnabled": "Multimoeda ativada.",
+    "modeDisabled": "Multimoeda desativada.",
+    "modeError": "NÃ£o foi possÃ­vel atualizar o modo de moeda."
   }
 }

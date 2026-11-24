@@ -145,13 +145,17 @@ export default function Overview() {
 
     const blob = new Blob(
       [
-        exportSeries(data.series, [
-          t("date"),
-          t("received"),
-          t("paid"),
-          t("net"),
-          t("transactions"),
-        ]),
+        exportSeries(
+          data.series,
+          [
+            t("date"),
+            t("received"),
+            t("paid"),
+            t("net"),
+            t("transactions"),
+          ],
+          data.base_currency ?? data.currency
+        ),
       ],
       { type: "text/csv;charset=utf-8" }
     );

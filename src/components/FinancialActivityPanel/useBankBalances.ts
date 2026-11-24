@@ -25,7 +25,7 @@ function toKey(v: unknown) {
   return String(v ?? "");
 }
 
-type State = { hasLoaded?: boolean; history?: number[]; currency?: string | null; mixed?: boolean; canViewBalance?: boolean; banks: BankAccountTableRow[]; count: number; total: number; loading: boolean; error: string | null };
+type State = { hasLoaded?: boolean; history?: number[]; currency?: string | null; mixed?: boolean; mixedHasBaseTotal?: boolean; baseCurrency?: string | null; canViewBalance?: boolean; banks: BankAccountTableRow[]; count: number; total: number; totalsByCurrency?: Record<string, string>; rateDate?: string | null; ratesMissing?: string[]; loading: boolean; error: string | null };
 export function useBankBalances(selectedBankIds: string[] | undefined, refreshKey: number, enabled: boolean, personal = false) {
  const { t } = useTranslation("banksTable");
   const ids = useMemo(() => {
@@ -57,7 +57,12 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
         let history: number[] | undefined;
         let currency: string | null | undefined;
         let mixed: boolean | undefined;
+        let mixedHasBaseTotal = false;
+        let baseCurrency: string | null | undefined;
         let canViewBalance: boolean | undefined;
+        let totalsByCurrency: Record<string, string> | undefined;
+        let rateDate: string | null | undefined;
+        let ratesMissing: string[] | undefined;
 
         if (personal) {
           // Personal workspaces must use their scoped API. The Business banking
@@ -83,7 +88,16 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
           count = visible.length;
           total = visible.reduce((sum, account) => sum + Number(account.consolidated_balance ?? account.balance ?? 0), 0);
           currency = banks[0]?.currency ?? null;
-          mixed = false;
+          const groups = new Map<string, number>();
+          for (const row of banks) {
+            const code = String(row.currency || "").toUpperCase();
+            if (!code) continue;
+            groups.set(code, (groups.get(code) ?? 0) + Number(row.consolidated_balance ?? 0));
+          }
+          mixed = groups.size > 1;
+          totalsByCurrency = Object.fromEntries(
+            Array.from(groups.entries()).map(([code, value]) => [code, value.toFixed(2)])
+          );
           canViewBalance = true;
         } else {
           const res: ApiSuccess<GetBanksTableResponse> = await api.getBanksTable({
@@ -95,11 +109,17 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
           const payload = res.data;
           banks = Array.isArray(payload?.banks) ? payload.banks : [];
           count = Number(payload?.count ?? banks.length) || banks.length;
-          const totalN = Number(String(payload?.total_consolidated_balance ?? "0"));
+          mixed = payload?.mixed_currencies === true;
+          baseCurrency = payload?.base_currency ?? null;
+          totalsByCurrency = payload?.totals_by_currency;
+          rateDate = payload?.rate_date ?? null;
+          ratesMissing = payload?.rates_missing;
+          mixedHasBaseTotal = mixed && payload?.total_base_balance != null;
+          const rawTotal = mixed ? payload?.total_base_balance : payload?.total_consolidated_balance;
+          const totalN = rawTotal == null ? NaN : Number(String(rawTotal));
           total = Number.isFinite(totalN) ? totalN : 0;
           history = payload.balance_history?.map(point => Number(point.value));
-          currency = payload.balance_currency;
-          mixed = payload.mixed_currencies;
+          currency = mixed && mixedHasBaseTotal ? baseCurrency : payload.balance_currency;
           canViewBalance = payload.can_view_balance;
         }
 
@@ -111,6 +131,11 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
           history,
           currency,
           mixed,
+          mixedHasBaseTotal,
+          baseCurrency,
+          totalsByCurrency,
+          rateDate,
+          ratesMissing,
           canViewBalance,
           count,
           total,
@@ -139,7 +164,14 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
     [state.banks],
   );
 
-  const totalFmt = useMemo(() => state.mixed ? t("mixedCurrencies") : formatCurrency(Number(state.total || 0), state.currency || undefined), [state.total, state.mixed, state.currency, t]);
+  const totalFmt = useMemo(() => {
+    if (state.mixed) {
+      return state.mixedHasBaseTotal
+        ? formatCurrency(Number(state.total || 0), state.baseCurrency || undefined)
+        : t("mixedCurrencies");
+    }
+    return formatCurrency(Number(state.total || 0), state.currency || undefined);
+  }, [state.total, state.mixed, state.mixedHasBaseTotal, state.baseCurrency, state.currency, t]);
 
 
  return { state, ids, sorted, totalFmt, retryBanks: () => setRetryKey(key => key + 1) };

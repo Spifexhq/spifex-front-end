@@ -49,12 +49,14 @@
     "cancel": "Cancel",
     "save": "Save",
     "retry": "Try again",
-    "selectAccountType": "Select account type"
+    "selectAccountType": "Select account type",
+    "selectCurrency": "Select currency"
   },
 
   "field": {
     "institution": "Bank / institution",
     "accountType": "Account type",
+    "currency": "Currency",
     "branch": "Branch",
     "accountNumber": "Account number",
     "iban": "IBAN",

@@ -170,7 +170,7 @@ export default function PersonalCollectionWorkspace({ collection, settings = fal
     <PersonalRecordPreview collection={collection} record={preview} currency={workspace?.currency} readOnly={readOnly || !canEdit} onClose={() => setPreview(null)} onEdit={edit} onSettle={() => {}} onContribute={row => { if (collection === "goals" && canEdit) setDialog({ kind: "contribute", record: row }); }}/>
     {dialog?.kind === "categories"
       ? <PersonalCategorySidePanel key={`categories:${dialog.record?.id || "new"}`} record={dialog.record} onClose={() => setDialog(null)} onSaved={refresh}/>
-      : dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}`} kind={dialog.kind} record={dialog.record} currency={workspace?.currency || "EUR"} onClose={() => setDialog(null)} onSaved={refresh}/>}
+      : dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}`} kind={dialog.kind} record={dialog.record} currency={workspace?.currency || "EUR"} multiCurrencyEnabled={Boolean(workspace?.multi_currency_enabled)} onClose={() => setDialog(null)} onSaved={refresh}/>}
     <CategoryImportLanguageDialog open={importOpen} busy={importingDefaults} onClose={() => { if (!importingDefaults) setImportOpen(false); }} onConfirm={language => void importDefaults(language)} />
   </div>;
 }

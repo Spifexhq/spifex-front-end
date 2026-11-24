@@ -96,6 +96,7 @@ function PersonalLayoutContent() {
       kind={actionDialog.kind}
       transactionKind={actionDialog.kind === "transactions" ? actionDialog.transactionKind : undefined}
       currency={currency}
+      multiCurrencyEnabled={Boolean(workspace?.multi_currency_enabled)}
       onClose={() => setActionDialog(null)}
       onSaved={() => { setActionDialog(null); notifyPersonalFinanceChanged(); }}
     />}

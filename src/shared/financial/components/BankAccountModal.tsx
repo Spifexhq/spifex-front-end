@@ -13,6 +13,8 @@ import Checkbox from "@/shared/ui/Checkbox";
 import { Select } from "src/shared/ui/Select";
 
 import type { AddBankRequest, BankAccount, EditBankRequest } from "@/models/settings/banking";
+import type { CurrencyOption } from "@/lib/currency/currencies";
+import { getCurrencies } from "@/lib/currency/currencies";
 
 /* ----------------------------- Constants/Types ---------------------------- */
 
@@ -24,6 +26,7 @@ type Mode = "create" | "edit";
 type BankForm = {
   institution: string;
   account_type: AccountType;
+  currency: string;
   branch: string;
   account_number: string;
   iban: string;
@@ -35,10 +38,11 @@ function isAccountType(v: unknown): v is AccountType {
   return ACCOUNT_TYPE_VALUES.includes(v as AccountType);
 }
 
-function buildEmptyForm(): BankForm {
+function buildEmptyForm(currency = ""): BankForm {
   return {
     institution: "",
     account_type: "checking",
+    currency,
     branch: "",
     account_number: "",
     iban: "",
@@ -57,6 +61,7 @@ function normalizeComparable(form: BankForm) {
   return {
     institution: trim(form.institution),
     account_type: isAccountType(form.account_type) ? form.account_type : "checking",
+    currency: trim(form.currency).toUpperCase(),
     branch: trim(form.branch),
     account_number: trim(form.account_number),
     iban: trim(form.iban),
@@ -88,6 +93,11 @@ export type BankAccountModalProps = {
   mode: Mode;
   bank?: BankAccount | null;
   orgCurrency: string;
+  /**
+   * When the workspace is in multi-currency mode and foreign writes are
+   * allowed, the user may pick another currency for the account.
+   */
+  allowForeignCurrency?: boolean;
   onClose: () => void;
   onNotify?: (
     snack: { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null
@@ -105,16 +115,17 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
   mode,
   bank,
   orgCurrency,
+  allowForeignCurrency = false,
   onClose,
   onNotify,
   onSaved,
   apiAdapter,
 }) => {
-  const { t } = useTranslation("bankSettings");
+  const { t, i18n } = useTranslation("bankSettings");
 
   const bankId = bank?.id ?? null;
 
-  const [formData, setFormData] = useState<BankForm>(buildEmptyForm());
+  const [formData, setFormData] = useState<BankForm>(() => buildEmptyForm(orgCurrency));
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -133,6 +144,14 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
     [t]
   );
 
+  const currencyOptions = useMemo<CurrencyOption[]>(
+    () =>
+      allowForeignCurrency
+        ? getCurrencies(i18n.language || "en")
+        : [{ value: orgCurrency, label: orgCurrency } as CurrencyOption],
+    [allowForeignCurrency, i18n.language, orgCurrency]
+  );
+
   const title = mode === "create" ? t("modal.createTitle") : t("modal.editTitle");
   const effectiveBusy = isSubmitting || isDetailLoading;
 
@@ -149,13 +168,13 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
   }, [effectiveBusy, formData.institution, formData.account_type]);
 
   const hardReset = useCallback(() => {
-    setFormData(buildEmptyForm());
+    setFormData(buildEmptyForm(orgCurrency));
     setIsDetailLoading(false);
     setIsSubmitting(false);
     setShowCloseConfirm(false);
     setWarning(null);
-    baselineRef.current = JSON.stringify(normalizeComparable(buildEmptyForm()));
-  }, []);
+    baselineRef.current = JSON.stringify(normalizeComparable(buildEmptyForm(orgCurrency)));
+  }, [orgCurrency]);
 
   const handleClose = useCallback(() => {
     hardReset();
@@ -205,6 +224,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
         const next: BankForm = {
           institution: detail.institution ?? "",
           account_type: isAccountType(detail.account_type) ? (detail.account_type as AccountType) : "checking",
+          currency: (detail.currency ?? orgCurrency).toUpperCase(),
           branch: detail.branch ?? "",
           account_number: detail.account_number ?? "",
           iban: detail.iban ?? "",
@@ -221,6 +241,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
         const fallback: BankForm = {
           institution: bank?.institution ?? "",
           account_type: isAccountType(bank?.account_type) ? (bank!.account_type as AccountType) : "checking",
+          currency: (bank?.currency ?? orgCurrency).toUpperCase(),
           branch: bank?.branch ?? "",
           account_number: bank?.account_number ?? "",
           iban: bank?.iban ?? "",
@@ -240,7 +261,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
     return () => {
       alive = false;
     };
-  }, [isOpen, mode, bankId, bank, hardReset, onNotify, t, apiAdapter]);
+  }, [isOpen, mode, bankId, bank, orgCurrency, hardReset, onNotify, t, apiAdapter]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -287,7 +308,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
       const payload = {
         institution,
         account_type: formData.account_type,
-        currency: orgCurrency,
+        currency: (formData.currency || orgCurrency).toUpperCase(),
         branch: (formData.branch ?? "").trim(),
         account_number: (formData.account_number ?? "").trim(),
         iban: (formData.iban ?? "").trim(),
@@ -365,6 +386,28 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                   disabled={effectiveBusy}
                 />
 
+                {allowForeignCurrency ? (
+                  <Select<CurrencyOption>
+                    label={t("field.currency")}
+                    items={currencyOptions}
+                    selected={currencyOptions.filter(
+                      (o) => o.value === (formData.currency || orgCurrency).toUpperCase()
+                    )}
+                    onChange={(items) => {
+                      const code = items[0]?.value;
+                      if (!code) return;
+                      setFormData((p) => ({ ...p, currency: code }));
+                    }}
+                    getItemKey={(i) => i.value}
+                    getItemLabel={(i) => i.label}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel={t("btn.selectCurrency")}
+                    customStyles={{ maxHeight: "240px" }}
+                    disabled={effectiveBusy}
+                  />
+                ) : null}
+
                 <Input
                   kind="text"
                   label={t("field.branch")}
@@ -400,7 +443,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                     setFormData((p) => ({ ...p, initial_balance: nextMajor || "0.00" }))
                   }
                   display="currency"
-                  currency={orgCurrency}
+                  currency={formData.currency || orgCurrency}
                   disabled={effectiveBusy}
                   zeroAsEmpty
                 />

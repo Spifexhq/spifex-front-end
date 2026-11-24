@@ -1,34 +1,58 @@
 {
   "title": "Devise de l'Organisation",
+  "permissionRequired": "Vous n'avez pas l'autorisation de modifier le mode de devise.",
+  "currencyLocked": "La devise de base est verrouillée car des enregistrements financiers existent déjà.",
   "header": {
     "settings": "Paramètres",
     "title": "Devise par défaut de l'organisation"
   },
   "section": {
-    "currency": "Devise"
+    "currency": "Devise",
+    "mode": "Mode de devise"
   },
   "field": {
     "current": "Devise actuelle",
     "currency": "Nouvelle devise",
-    "password": "Mot de passe actuel"
+    "password": "Mot de passe actuel",
+    "mode": "Multi-devises"
+  },
+  "mode": {
+    "single": "Devise unique",
+    "multi": "Multi-devises",
+    "singleHint": "Tous les comptes et enregistrements utilisent la devise de l'espace de travail.",
+    "multiHint": "Les comptes peuvent utiliser d'autres devises ; le reporting reste dans la devise de l'espace de travail.",
+    "alreadySingle": "L'espace de travail utilise déjà une devise unique.",
+    "blocked": "Désactivation bloquée par des enregistrements existants : {{blockers}}."
+  },
+  "blockers": {
+    "foreign_accounts": "comptes dans une autre devise"
   },
   "btn": {
     "change": "Changer de devise",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "enableMulti": "Activer le multi-devises",
+    "disableMulti": "Désactiver le multi-devises"
   },
   "btnLabel": {
     "currency": "Sélectionner une devise"
   },
   "modal": {
     "title": "Changer la devise de l'organisation",
-    "close": "Fermer"
+    "close": "Fermer",
+    "enableModeTitle": "Activer le multi-devises",
+    "disableModeTitle": "Désactiver le multi-devises",
+    "enableModeBody": "Vous pourrez créer des comptes dans d'autres devises. Les montants et l'historique existants restent inchangés.",
+    "disableModeBody": "Le retour à une devise unique n'est possible que si aucun enregistrement n'utilise une autre devise."
   },
   "toast": {
     "success": "Devise mise à jour avec succès.",
     "updateError": "Impossible de mettre à jour la devise.",
     "noSelection": "Veuillez sélectionner une devise pour continuer.",
     "missingPassword": "Veuillez saisir votre mot de passe actuel pour changer la devise.",
-    "invalidPassword": "Mot de passe incorrect."
+    "invalidPassword": "Mot de passe incorrect.",
+    "modeEnabled": "Multi-devises activé.",
+    "modeDisabled": "Multi-devises désactivé.",
+    "modeError": "Impossible de mettre à jour le mode de devise."
   }
 }

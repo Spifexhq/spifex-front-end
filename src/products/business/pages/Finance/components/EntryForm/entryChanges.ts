@@ -19,6 +19,7 @@ export function getEntryChanges(entry: Entry, form: FormData): Partial<EditEntry
   if ((entry.document_type || "") !== form.details.documentType) changes.document_type = form.details.documentType || null;
   if (!entryFinancialLocked(entry)) {
     if (decimal(entry.amount) !== decimal(form.details.amount)) changes.amount = form.details.amount;
+    if (form.details.currency && (entry.currency || "") !== form.details.currency) changes.currency = form.details.currency;
     if ((entry.cashflow_category || "") !== form.details.cashflowCategory) changes.cashflow_category = form.details.cashflowCategory || null;
     if ((entry.project || "") !== form.costCenters.projects) changes.project = form.costCenters.projects || null;
     if ((entry.entity || "") !== form.entities.entity) changes.entity = form.entities.entity || null;
@@ -38,5 +39,5 @@ export function getEntryChanges(entry: Entry, form: FormData): Partial<EditEntry
   return changes;
 }
 export function touchesFinancialFields(changes: Partial<EditEntryRequest>) {
-  return ["amount", "cashflow_category", "project", "entity", "departments", "items"].some(key => key in changes);
+  return ["amount", "currency", "cashflow_category", "project", "entity", "departments", "items"].some(key => key in changes);
 }

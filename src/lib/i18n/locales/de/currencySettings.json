@@ -1,34 +1,58 @@
 {
-  "title": "Währung der Organisation",
+  "title": "WÃ¤hrung der Organisation",
+  "permissionRequired": "Sie haben keine Berechtigung, den Währungsmodus zu ändern.",
+  "currencyLocked": "Die BasiswÃ¤hrung ist gesperrt, weil bereits FinanzdatensÃ¤tze vorhanden sind.",
   "header": {
     "settings": "Einstellungen",
-    "title": "Standardwährung der Organisation"
+    "title": "StandardwÃ¤hrung der Organisation"
   },
   "section": {
-    "currency": "Währung"
+    "currency": "WÃ¤hrung",
+    "mode": "WÃ¤hrungsmodus"
   },
   "field": {
-    "current": "Aktuelle Währung",
-    "currency": "Neue Währung",
-    "password": "Aktuelles Passwort"
+    "current": "Aktuelle WÃ¤hrung",
+    "currency": "Neue WÃ¤hrung",
+    "password": "Aktuelles Passwort",
+    "mode": "Mehrere WÃ¤hrungen"
+  },
+  "mode": {
+    "single": "Eine WÃ¤hrung",
+    "multi": "Mehrere WÃ¤hrungen",
+    "singleHint": "Alle Konten und DatensÃ¤tze verwenden die Workspace-WÃ¤hrung.",
+    "multiHint": "Konten kÃ¶nnen andere WÃ¤hrungen verwenden; die Berichterstattung bleibt in der Workspace-WÃ¤hrung.",
+    "alreadySingle": "Der Workspace verwendet bereits eine einzige WÃ¤hrung.",
+    "blocked": "Deaktivierung durch vorhandene DatensÃ¤tze blockiert: {{blockers}}."
+  },
+  "blockers": {
+    "foreign_accounts": "Konten in einer anderen WÃ¤hrung"
   },
   "btn": {
-    "change": "Währung ändern",
+    "change": "WÃ¤hrung Ã¤ndern",
     "cancel": "Abbrechen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "enableMulti": "Mehrere WÃ¤hrungen aktivieren",
+    "disableMulti": "Mehrere WÃ¤hrungen deaktivieren"
   },
   "btnLabel": {
-    "currency": "Währung auswählen"
+    "currency": "WÃ¤hrung auswÃ¤hlen"
   },
   "modal": {
-    "title": "Währung der Organisation ändern",
-    "close": "Schließen"
+    "title": "WÃ¤hrung der Organisation Ã¤ndern",
+    "close": "SchlieÃŸen",
+    "enableModeTitle": "Mehrere WÃ¤hrungen aktivieren",
+    "disableModeTitle": "Mehrere WÃ¤hrungen deaktivieren",
+    "enableModeBody": "Sie kÃ¶nnen anschlieÃŸend Konten in anderen WÃ¤hrungen anlegen. Bestehende BetrÃ¤ge und VerlÃ¤ufe bleiben unverÃ¤ndert.",
+    "disableModeBody": "Eine RÃ¼ckkehr zu einer einzigen WÃ¤hrung ist nur mÃ¶glich, wenn keine DatensÃ¤tze eine andere WÃ¤hrung verwenden."
   },
   "toast": {
-    "success": "Währung erfolgreich aktualisiert.",
-    "updateError": "Die Währung konnte nicht aktualisiert werden.",
-    "noSelection": "Bitte wählen Sie eine Währung aus, um fortzufahren.",
-    "missingPassword": "Bitte geben Sie Ihr aktuelles Passwort ein, um die Währung zu ändern.",
-    "invalidPassword": "Falsches Passwort."
+    "success": "WÃ¤hrung erfolgreich aktualisiert.",
+    "updateError": "Die WÃ¤hrung konnte nicht aktualisiert werden.",
+    "noSelection": "Bitte wÃ¤hlen Sie eine WÃ¤hrung aus, um fortzufahren.",
+    "missingPassword": "Bitte geben Sie Ihr aktuelles Passwort ein, um die WÃ¤hrung zu Ã¤ndern.",
+    "invalidPassword": "Falsches Passwort.",
+    "modeEnabled": "Mehrere WÃ¤hrungen aktiviert.",
+    "modeDisabled": "Mehrere WÃ¤hrungen deaktiviert.",
+    "modeError": "Der WÃ¤hrungsmodus konnte nicht aktualisiert werden."
   }
 }

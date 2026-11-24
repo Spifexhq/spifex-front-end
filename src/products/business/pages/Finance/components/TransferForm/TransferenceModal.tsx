@@ -12,6 +12,7 @@ import { Select } from "src/shared/ui/Select";
 import { formatCurrency } from "@/lib";
 
 import type { BankAccount } from "@/models/settings/banking";
+import type { CashflowCategory } from "@/models/settings/categories";
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -25,6 +26,10 @@ type FormState = {
   source_bank: string;
   dest_bank: string;
   description: string;
+  destination_amount: string;
+  exchange_rate: string;
+  fee: string;
+  fee_category: string;
 };
 
 const buildInitialForm = (): FormState => ({
@@ -33,6 +38,10 @@ const buildInitialForm = (): FormState => ({
   source_bank: "",
   dest_bank: "",
   description: "",
+  destination_amount: "",
+  exchange_rate: "",
+  fee: "",
+  fee_category: "",
 });
 
 const sortBanksByInstitution = (items: BankAccount[]) =>
@@ -51,6 +60,10 @@ function normalizeComparable(raw: FormState) {
     source_bank: trim(raw.source_bank),
     dest_bank: trim(raw.dest_bank),
     description: trim(raw.description),
+    destination_amount: trim(raw.destination_amount),
+    exchange_rate: trim(raw.exchange_rate),
+    fee: trim(raw.fee),
+    fee_category: trim(raw.fee_category),
   };
 }
 
@@ -76,6 +89,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   const [banksError, setBanksError] = useState(false);
   const [bankAttempt, setBankAttempt] = useState(0);
   const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [feeCategories, setFeeCategories] = useState<CashflowCategory[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -123,20 +137,43 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     [sortedBanks, formData.source_bank]
   );
 
+  const isCrossCurrency = Boolean(
+    selectedOut?.currency &&
+      selectedIn?.currency &&
+      selectedOut.currency.toUpperCase() !== selectedIn.currency.toUpperCase()
+  );
+  const feeValue = Number(formData.fee || 0);
+
   const isValid = useMemo(() => {
     const hasAmount = formData.amount > "";
     const n = Number(formData.amount);
-
-    return (
+    const baseValid =
       hasAmount &&
       Number.isFinite(n) &&
       n > 0 &&
       !!formData.date &&
       !!formData.source_bank &&
       !!formData.dest_bank &&
-      formData.source_bank !== formData.dest_bank
-    );
-  }, [formData.amount, formData.date, formData.source_bank, formData.dest_bank]);
+      formData.source_bank !== formData.dest_bank;
+    if (!baseValid) return false;
+    if (isCrossCurrency && !formData.destination_amount && !formData.exchange_rate) {
+      return false;
+    }
+    const fee = Number(formData.fee || 0);
+    if (Number.isFinite(fee) && fee > 0 && !formData.fee_category) return false;
+    if (formData.fee && (!Number.isFinite(fee) || fee < 0)) return false;
+    return true;
+  }, [
+    formData.amount,
+    formData.date,
+    formData.source_bank,
+    formData.dest_bank,
+    formData.destination_amount,
+    formData.exchange_rate,
+    formData.fee,
+    formData.fee_category,
+    isCrossCurrency,
+  ]);
 
   const isDirty = useMemo(() => {
     if (!isOpen) return false;
@@ -223,6 +260,22 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     return () => { alive = false; };
   }, [isOpen, bankAttempt]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    let alive = true;
+    api
+      .getCashflowCategories({ is_active: "true", tx_type_hint: "debit" })
+      .then((items) => {
+        if (alive) setFeeCategories(Array.isArray(items) ? items : []);
+      })
+      .catch(() => {
+        if (alive) setFeeCategories([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isOpen]);
+
   const handleBankChange = useCallback(
     (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
       const id = selected[0]?.id ?? "";
@@ -252,6 +305,24 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
           description: formData.description || "",
           source_bank: formData.source_bank,
           dest_bank: formData.dest_bank,
+          ...(isCrossCurrency
+            ? {
+                ...(formData.destination_amount
+                  ? { destination_amount: formData.destination_amount }
+                  : {}),
+                ...(formData.exchange_rate
+                  ? { exchange_rate: formData.exchange_rate }
+                  : {}),
+              }
+            : {}),
+          ...(Number(formData.fee || 0) > 0
+            ? {
+                fee: formData.fee,
+                ...(formData.fee_category
+                  ? { fee_category: formData.fee_category }
+                  : {}),
+              }
+            : {}),
         });
 
         onSave();
@@ -266,7 +337,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         setIsSubmitting(false);
       }
     },
-    [closeModal, formData, isSubmitting, isValid, loadingBanks, banksError, onSave, t]
+    [closeModal, formData, isSubmitting, isValid, loadingBanks, banksError, onSave, t, isCrossCurrency]
   );
 
   return (
@@ -380,6 +451,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 id="amount-input"
                 value={formData.amount}
                 onValueChange={(next: string) => setField("amount", next)}
+                currency={selectedOut?.currency}
                 aria-label={t("fields.amount")}
                 zeroAsEmpty
               />
@@ -432,6 +504,49 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 buttonLabel={t("placeholders.selectBank")}
                 customStyles={{ maxHeight: "180px" }}
               />
+
+              {isCrossCurrency && (
+                <>
+                  <Input
+                    kind="amount"
+                    label={t("fields.destinationAmount", { defaultValue: "Destination amount" })}
+                    value={formData.destination_amount}
+                    onValueChange={(next: string) => setField("destination_amount", next)}
+                    currency={selectedIn?.currency}
+                    zeroAsEmpty
+                  />
+                  <Input
+                    kind="text"
+                    label={t("fields.exchangeRate", { defaultValue: "Exchange rate" })}
+                    value={formData.exchange_rate}
+                    onChange={(e) => setField("exchange_rate", e.target.value)}
+                    placeholder={t("placeholders.exchangeRate", { defaultValue: "Destination per source unit" })}
+                  />
+                </>
+              )}
+
+              <Input
+                kind="amount"
+                label={t("fields.fee", { defaultValue: "Fee (optional)" })}
+                value={formData.fee}
+                onValueChange={(next: string) => setField("fee", next)}
+                currency={selectedOut?.currency}
+                zeroAsEmpty
+              />
+
+              {feeValue > 0 && (
+                <Select<CashflowCategory>
+                  label={t("fields.feeCategory", { defaultValue: "Fee category" })}
+                  items={feeCategories}
+                  selected={feeCategories.filter((item) => item.id === formData.fee_category)}
+                  onChange={(items) => setField("fee_category", items[0]?.id ?? "")}
+                  getItemKey={(item) => item.id}
+                  getItemLabel={(item) => (item.code ? `${item.code} — ${item.name}` : item.name)}
+                  singleSelect
+                  buttonLabel={t("placeholders.selectFeeCategory", { defaultValue: "Select fee category" })}
+                  customStyles={{ maxHeight: "220px" }}
+                />
+              )}
 
               {showSameBankWarning && (
                 <p className="md:col-span-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">

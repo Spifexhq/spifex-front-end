@@ -1,8 +1,11 @@
 import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 
 import Input from "@/shared/ui/Input";
 import { Select } from "src/shared/ui/Select";
+import type { CurrencyOption } from "@/lib/currency/currencies";
+import { getCurrencies } from "@/lib/currency/currencies";
 
 import type { FormData } from "./types";
 import type { CashflowCategory } from "@/models/settings/categories";
@@ -26,6 +29,9 @@ type Props = {
 
   isFinancialLocked: boolean;
   attachmentsSlot?: React.ReactNode;
+
+  orgCurrency: string;
+  multiCurrencyEnabled: boolean;
 };
 
 const DetailsTab: React.FC<Props> = ({
@@ -39,7 +45,14 @@ const DetailsTab: React.FC<Props> = ({
   documentTypes,
   isFinancialLocked,
   attachmentsSlot,
+  orgCurrency,
+  multiCurrencyEnabled,
 }) => {
+  const { i18n } = useTranslation();
+  const currencyOptions = useMemo<CurrencyOption[]>(
+    () => getCurrencies(i18n.language || "en"),
+    [i18n.language]
+  );
   const selectedCategories = useMemo(() => {
     const id = String((formData.details as Record<string, unknown>).cashflowCategory || "");
     if (!id) return [];
@@ -132,6 +145,32 @@ const DetailsTab: React.FC<Props> = ({
         onValueChange={handleDueDateChange}
       />
 
+      {multiCurrencyEnabled ? (
+        <Select<CurrencyOption>
+          label={t("entriesModal:details.currency", { defaultValue: "Currency" })}
+          items={currencyOptions}
+          selected={currencyOptions.filter(
+            (option) =>
+              option.value ===
+              (formData.details.currency || orgCurrency).toUpperCase()
+          )}
+          onChange={(items) => {
+            const code = items[0]?.value;
+            if (!code) return;
+            setFormData((p) => ({ ...p, details: { ...p.details, currency: code } }));
+          }}
+          getItemKey={(option) => option.value}
+          getItemLabel={(option) => option.label}
+          singleSelect
+          hideCheckboxes
+          buttonLabel={t("entriesModal:details.currencyBtn", {
+            defaultValue: "Select currency",
+          })}
+          customStyles={{ maxHeight: "240px" }}
+          disabled={isFinancialLocked}
+        />
+      ) : null}
+
       <Input
         kind="amount"
         ref={amountRef}
@@ -139,6 +178,7 @@ const DetailsTab: React.FC<Props> = ({
         label={t("entriesModal:details.amount")}
         value={formData.details.amount}
         onValueChange={handleAmountChange}
+        currency={formData.details.currency || orgCurrency}
         disabled={isFinancialLocked}
         zeroAsEmpty
       />

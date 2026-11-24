@@ -49,12 +49,14 @@
     "cancel": "Abbrechen",
     "save": "Speichern",
     "retry": "Erneut versuchen",
-    "selectAccountType": "Kontotyp auswählen"
+    "selectAccountType": "Kontotyp auswählen",
+    "selectCurrency": "Währung auswählen"
   },
 
   "field": {
     "institution": "Bank / Institut",
     "accountType": "Kontotyp",
+    "currency": "Währung",
     "branch": "Filiale",
     "accountNumber": "Kontonummer",
     "iban": "IBAN",

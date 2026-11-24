@@ -21,15 +21,19 @@ export const loadBusinessForecast: ForecastLoader = async (window, filters) => {
 
   const payload = overview.data;
   const bankPayload = (banks as ApiSuccess<GetBanksTableResponse> | null)?.data;
+  const mixed = bankPayload?.mixed_currencies === true;
+  const rawTotal = mixed
+    ? bankPayload?.total_base_balance
+    : bankPayload?.total_consolidated_balance;
+  const total = rawTotal == null ? NaN : Number(String(rawTotal));
   const blocked =
     !bankPayload ||
     bankPayload.can_view_balance === false ||
-    bankPayload.mixed_currencies === true;
-  const total = Number(String(bankPayload?.total_consolidated_balance ?? "0"));
+    !Number.isFinite(total);
 
   return {
     buckets: Array.isArray(payload.series) ? payload.series : [],
-    currency: payload.currency ?? null,
-    opening: blocked || !Number.isFinite(total) ? null : total,
+    currency: (mixed ? bankPayload?.base_currency : payload.currency) ?? payload.currency ?? null,
+    opening: blocked ? null : total,
   };
 };

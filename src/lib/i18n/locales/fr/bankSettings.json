@@ -49,12 +49,14 @@
     "cancel": "Annuler",
     "save": "Enregistrer",
     "retry": "Réessayer",
-    "selectAccountType": "Sélectionner le type de compte"
+    "selectAccountType": "Sélectionner le type de compte",
+    "selectCurrency": "Sélectionner une devise"
   },
 
   "field": {
     "institution": "Banque / établissement",
     "accountType": "Type de compte",
+    "currency": "Devise",
     "branch": "Agence",
     "accountNumber": "Numéro de compte",
     "iban": "IBAN",

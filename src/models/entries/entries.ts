@@ -41,6 +41,13 @@ export interface Entry {
 
   amount: string;
   open_amount?: string;
+  currency?: string;
+  base_currency?: string;
+  base_amount?: string;
+  base_open_amount?: string;
+  exchange_rate?: string;
+  rate_date?: string | null;
+  rate_source?: string;
   document_type?: string | null;
   settled_count?: number;
   financial_locked?: boolean;
@@ -80,6 +87,7 @@ export interface EntryPayloadBase {
 
   amount: string;
   tx_type: EntryTxTypeLabel;
+  currency?: string;
 
   installment_count?: number | null;
   installment_index?: number | null;

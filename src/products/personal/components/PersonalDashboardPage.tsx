@@ -151,7 +151,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
       t("paid", { ns: "overview" }),
       t("net", { ns: "overview" }),
       t("transactions", { ns: "overview" }),
-    ])], { type: "text/csv;charset=utf-8" });
+    ], data.base_currency ?? data.currency)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

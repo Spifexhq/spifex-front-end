@@ -2,6 +2,7 @@
 import i18n from "@/lib/i18n";
 import { LanguageCookie, NumberFormatCookie } from "@/lib/cookies";
 import store, { type RootState } from "@/redux/store";
+import { currencyDigits } from "./digits";
 
 export type NumberFormatCode = "EU" | "US";
 
@@ -155,8 +156,8 @@ export function toCanonicalMajorString(
 const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
 const numberFormatterCache = new Map<string, Intl.NumberFormat>();
 
-function getCurrencyFormatter(locale: string, currency: string) {
-  const key = `${locale}|${currency}`;
+function getCurrencyFormatter(locale: string, currency: string, digits: number) {
+  const key = `${locale}|${currency}|${digits}`;
   const cached = currencyFormatterCache.get(key);
   if (cached) return cached;
 
@@ -164,24 +165,25 @@ function getCurrencyFormatter(locale: string, currency: string) {
     style: "currency",
     currency,
     currencyDisplay: "symbol",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   });
 
   currencyFormatterCache.set(key, nf);
   return nf;
 }
 
-function getNumberFormatter(locale: string) {
-  const cached = numberFormatterCache.get(locale);
+function getNumberFormatter(locale: string, digits = 2) {
+  const key = `${locale}|${digits}`;
+  const cached = numberFormatterCache.get(key);
   if (cached) return cached;
 
   const nf = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   });
 
-  numberFormatterCache.set(locale, nf);
+  numberFormatterCache.set(key, nf);
   return nf;
 }
 
@@ -205,9 +207,10 @@ export function formatCurrency(amount: string | number, currency?: string): stri
   const currencyLocale = getCurrencyLocale();
   const numberLocale = getNumberLocale();
   const effectiveCurrency = getEffectiveCurrency(currency);
+  const digits = currencyDigits(effectiveCurrency);
 
-  const currencyFormatter = getCurrencyFormatter(currencyLocale, effectiveCurrency);
-  const numberFormatter = getNumberFormatter(numberLocale);
+  const currencyFormatter = getCurrencyFormatter(currencyLocale, effectiveCurrency, digits);
+  const numberFormatter = getNumberFormatter(numberLocale, digits);
 
   const parts = currencyFormatter.formatToParts(canonical);
   const numericText = numberFormatter.format(Math.abs(canonical));
@@ -279,7 +282,11 @@ export function formatCompactCurrency(amount: number, currency?: string): string
   }
 
   const locale = getNumberLocale();
-  const exact = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(scaled);
+  const digits = currencyDigits(currency);
+  const exact = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(scaled);
   const short = new Intl.NumberFormat(locale, {
     minimumFractionDigits: step.digits,
     maximumFractionDigits: step.digits,

@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { formatCurrency } from "@/lib";
 import type { AddBankRequest, BankAccount, EditBankRequest } from "@/models/settings/banking";
 import { personalApi } from "@/products/personal/services/api";
+import { api } from "@/core/api/requests";
 import type { PersonalAccount } from "@/products/personal/types";
 import { readonlyWorkspace } from "@/products/personal/services/personalData";
 import BankAccountModal from "@/shared/financial/components/BankAccountModal";
@@ -63,6 +64,29 @@ export default function PersonalBankAccountsPage() {
   const access = usePersonalAccess();
   const workspace = organization?.organization;
   const currency = (workspace?.currency || "EUR").toUpperCase();
+  const [allowForeignCurrency, setAllowForeignCurrency] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .getOrgCurrency()
+      .then((resp) => {
+        if (!alive) return;
+        const data = (resp.data ?? {}) as {
+          multi_currency_enabled?: boolean;
+          foreign_writes_allowed?: boolean;
+        };
+        setAllowForeignCurrency(
+          Boolean(data.multi_currency_enabled) && data.foreign_writes_allowed !== false
+        );
+      })
+      .catch(() => {
+        if (alive) setAllowForeignCurrency(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const readOnly = readonlyWorkspace(workspace?.lifecycle);
   const canView = access.can(PERSONAL_PERMISSION.bankAccounts);
   const canEdit = !readOnly && access.can(PERSONAL_PERMISSION.changeBankAccount);
@@ -124,9 +148,9 @@ export default function PersonalBankAccountsPage() {
     { key: "account_number", label: bankT("preview.fields.account_number"), render: account => account.account_number || "" },
     { key: "iban", label: bankT("preview.fields.iban"), render: account => account.iban || "" },
     { key: "currency", label: bankT("preview.fields.currency"), render: account => account.currency },
-    { key: "initial_balance", label: bankT("preview.fields.initial_balance"), render: account => formatCurrency(account.initial_balance, currency) },
-    { key: "current_balance", label: bankT("preview.fields.current_balance"), render: account => formatCurrency(account.current_balance, currency) },
-    { key: "consolidated_balance", label: bankT("preview.fields.consolidated_balance"), render: account => formatCurrency(account.consolidated_balance || account.balance, currency) },
+    { key: "initial_balance", label: bankT("preview.fields.initial_balance"), render: account => formatCurrency(account.initial_balance, account.currency || currency) },
+    { key: "current_balance", label: bankT("preview.fields.current_balance"), render: account => formatCurrency(account.current_balance, account.currency || currency) },
+    { key: "consolidated_balance", label: bankT("preview.fields.consolidated_balance"), render: account => formatCurrency(account.consolidated_balance || account.balance, account.currency || currency) },
     { key: "is_active", label: bankT("preview.fields.is_active"), render: account => personalT(account.is_active ? "active" : "inactive") },
   ], [bankT, currency, personalT]);
 
@@ -197,6 +221,7 @@ export default function PersonalBankAccountsPage() {
       mode={modal.mode}
       bank={modal.bank}
       orgCurrency={currency}
+      allowForeignCurrency={allowForeignCurrency}
       apiAdapter={apiAdapter}
       onClose={() => setModal(null)}
       onNotify={setNotice}

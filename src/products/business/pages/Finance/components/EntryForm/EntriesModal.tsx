@@ -86,13 +86,14 @@ const ENTITY_TYPE_OPTIONS_BASE: Array<{ id: number; label: string; value: Entity
   { id: 10, label: "entriesModal:entities.types.other", value: "other" },
 ];
 
-function getEmptyFormData(): FormData {
+function getEmptyFormData(currency = ""): FormData {
   return {
     details: {
       dueDate: toLocalISODate(new Date()),
       description: "",
       observation: "",
       amount: "",
+      currency,
       cashflowCategory: "",
       documentType: "",
       notes: "",
@@ -166,6 +167,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   onSave,
   initialEntry: providedEntry,
   isLoadingEntry,
+  orgCurrency = "",
+  multiCurrencyEnabled = false,
 }) => {
   const { t } = useTranslation(["entriesModal", "financeEntries"]);
   const [sourceAttempt, setSourceAttempt] = useState(0);
@@ -213,7 +216,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   }, [docTypes, t]);
 
   const [activeTab, setActiveTab] = useState<Tab>("details");
-  const [formData, setFormData] = useState<FormData>(getEmptyFormData);
+  const [formData, setFormData] = useState<FormData>(() => getEmptyFormData(orgCurrency));
 
   const descriptionRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
@@ -288,12 +291,12 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   }, [formData, initialEntry, pendingAttachments]);
 
   const resetInternalState = useCallback(() => {
-    setFormData(getEmptyFormData());
+    setFormData(getEmptyFormData(orgCurrency));
     setActiveTab("details");
     setWarning(null);
     setShowCloseConfirm(false);
     setPendingAttachments([]);
-  }, []);
+  }, [orgCurrency]);
 
   const handleClose = useCallback(() => {
     resetInternalState();
@@ -350,6 +353,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         description: ie.description ?? "",
         observation: ie.observation ?? "",
         amount: ie.amount ?? "",
+        currency: ie.currency ?? orgCurrency,
         cashflowCategory: ie.cashflow_category || "",
         documentType: ie.document_type || "",
         notes: ie.notes ?? "",
@@ -371,7 +375,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         weekend: weekendNum === 1 ? 1 : weekendNum === -1 ? -1 : "",
       },
     });
-  }, [isOpen, initialEntry]);
+  }, [isOpen, initialEntry, orgCurrency]);
 
   const validateAll = useCallback((): {
     ok: boolean;
@@ -613,6 +617,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             observation: formData.details.observation || "",
             notes: formData.details.notes || "",
             amount: formData.details.amount || "",
+            currency: formData.details.currency || orgCurrency,
             tx_type: type,
 
             cashflow_category: formData.details.cashflowCategory,
@@ -708,6 +713,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       pendingAttachments,
       handleClose,
       onSave,
+      orgCurrency,
     ]
   );
 
@@ -830,6 +836,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             documentTypes={DOCUMENT_TYPES}
             isFinancialLocked={isFinancialLocked}
             attachmentsSlot={attachmentsSlot}
+            orgCurrency={orgCurrency}
+            multiCurrencyEnabled={multiCurrencyEnabled}
           />
         );
 
@@ -908,7 +916,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
               <p className="text-xs text-gray-600 hidden md:block">
                 {formData.details.amount > "" ? (
                   <>
-                    {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount)}</b>
+                    {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount, formData.details.currency || orgCurrency)}</b>
                   </>
                 ) : (
                   <>{t("entriesModal:footer.enterValue")}</>

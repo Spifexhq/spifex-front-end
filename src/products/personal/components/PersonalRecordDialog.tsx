@@ -1,6 +1,6 @@
 import TransactionAttachments from "./TransactionAttachments";
 import PendingAttachments, { type PendingAttachment } from "@/shared/financial/components/PendingAttachments";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
@@ -17,19 +17,22 @@ import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { PersonalAccount, PersonalCategory, PersonalCollection, PersonalRecord, PersonalTransaction } from "@/products/personal/types";
 import type { RecurrenceEntry } from "@/models/entries/entries";
 import { allPersonal, today } from "../services/personalData";
+import type { CurrencyOption } from "@/lib/currency/currencies";
+import { getCurrencies } from "@/lib/currency/currencies";
 
 type DialogKind = Exclude<PersonalCollection, "accounts" | "transfers"> | "settle" | "contribute" | "transfer";
-type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; transactionKind?: "income" | "expense"; onClose(): void; onSaved(): void; onEditRelated?(id: string): Promise<void> };
+type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; multiCurrencyEnabled?: boolean; transactionKind?: "income" | "expense"; onClose(): void; onSaved(): void; onEditRelated?(id: string): Promise<void> };
 const SERIES_PAGE_SIZE = 10;
 const ATTACHMENT_LIMITS = { maxFiles: 10, maxBytes: 10 * 1024 * 1024 };
 
-export default function PersonalRecordDialog({ kind, record, currency, transactionKind, onClose, onSaved, onEditRelated }: Props) {
-  const { t } = useTranslation(["personal", "entriesModal"]);
+export default function PersonalRecordDialog({ kind, record, currency, multiCurrencyEnabled = false, transactionKind, onClose, onSaved, onEditRelated }: Props) {
+  const { t, i18n } = useTranslation(["personal", "entriesModal"]);
   const editLocked = kind === "transactions" && !!record && "status" in record && record.status !== "pending";
   const [form, setForm] = useState<Record<string, string>>(() => ({
     name: "", description: "", amount: kind === "settle" && record && "open_amount" in record ? record.open_amount : "",
     kind: transactionKind || "expense", due_date: today(), value_date: today(), month: today().slice(0, 7) + "-01",
     category_id: "", bank_id: "", notes: "",
+    currency: (record && "currency" in record && record.currency) || currency,
     limit: "", target: "", target_date: "", recurrence_enabled: "false", installment_count: "2", interval_months: "1", weekend_action: "0",
     ...(kind === "settle" || kind === "contribute" ? {} : Object.fromEntries(Object.entries(record || {}).map(([key, value]) => [key, value == null ? "" : String(value)]))),
   }));
@@ -50,6 +53,10 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
   const createdRef = useRef<string[] | null>(null);
   const key = useRef(crypto.randomUUID());
   const lock = useRef(false);
+  const currencyOptions = useMemo<CurrencyOption[]>(
+    () => getCurrencies(i18n.language || "en"),
+    [i18n.language]
+  );
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -134,7 +141,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
 
   const update = (name: string, value: string) => setForm(previous => ({ ...previous, [name]: value }));
   const text = (name: string, required = true) => <Input key={name} kind="text" label={t(name)} value={form[name] || ""} required={required} maxLength={name === "notes" ? 500 : 120} disabled={busy} onChange={event => update(name, event.target.value)} />;
-  const amount = (name: string, required = true) => <Input key={name} kind="amount" allowNegative={name === "initial_balance" || kind === "contribute"} currency={currency} label={t(name)} value={form[name] || ""} required={required} disabled={busy} onValueChange={(value: string) => update(name, value)} />;
+  const amount = (name: string, required = true) => <Input key={name} kind="amount" allowNegative={name === "initial_balance" || kind === "contribute"} currency={kind === "transactions" ? form.currency || currency : currency} label={t(name)} value={form[name] || ""} required={required} disabled={busy} onValueChange={(value: string) => update(name, value)} />;
   const date = (name: string, required = true) => <Input key={name} kind="date" label={t(name)} value={form[name] || ""} required={required} disabled={busy} onValueChange={(value: string) => update(name, value)} />;
   const options = (name: string, values: { id: string; name: string }[], optional = false) => {
     const items = optional ? [{ id: "", name: t(name === "category_id" ? "allCategories" : "choose") }, ...values] : values;
@@ -157,6 +164,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
         if (kind === "transactions") payload = {
           description: form.description, notes: form.notes,
           ...(!editLocked ? { amount: form.amount, kind: form.kind, due_date: form.due_date, category_id: form.category_id || null } : {}),
+          ...(multiCurrencyEnabled ? { currency: form.currency || currency } : {}),
           ...(!record ? {
             installment_count: form.recurrence_enabled === "true" ? Number(form.installment_count) : 1,
             interval_months: Number(form.interval_months),
@@ -178,6 +186,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
             data.amount = form.amount;
             data.due_date = form.due_date;
             if (form.category_id) data.cashflow_category = form.category_id;
+            if (multiCurrencyEnabled) data.currency = form.currency || currency;
           }
           await personalApi.editRecurrence(record.id, {
             ids: [record.id, ...selectedSeries],
@@ -225,7 +234,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
       {activeTab === "details" && <>
         {kind === "transactions" && <>
           <div className="sm:col-span-2">{text("description")}</div>
-          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind))}</>}
+          {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{multiCurrencyEnabled && <Select<CurrencyOption> label={t("currency")} items={currencyOptions} selected={currencyOptions.filter(option => option.value === (form.currency || currency).toUpperCase())} onChange={items => items[0] && update("currency", items[0].value)} getItemKey={option => option.value} getItemLabel={option => option.label} singleSelect hideCheckboxes buttonLabel={t("currency")} disabled={busy} />}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind))}</>}
           <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id} editable/> : kind === "transactions" ? <PendingAttachments
             files={pendingAttachments}
             maxFiles={ATTACHMENT_LIMITS.maxFiles}

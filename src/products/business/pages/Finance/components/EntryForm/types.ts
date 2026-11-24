@@ -8,6 +8,7 @@ export interface FormData {
       description: string;
       observation: string;
       amount: string;
+      currency: string;
       cashflowCategory: string;
       documentType: string;
       notes: string;
@@ -42,6 +43,8 @@ export interface FormData {
     type: ModalType;
     initialEntry?: Entry | null;
     isLoadingEntry?: boolean;
+    orgCurrency?: string;
+    multiCurrencyEnabled?: boolean;
   }
   
   export type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';

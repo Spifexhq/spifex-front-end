@@ -1,34 +1,58 @@
 {
   "title": "Organization Currency",
+  "permissionRequired": "You do not have permission to change the currency mode.",
+  "currencyLocked": "The base currency is locked because financial records already exist.",
   "header": {
     "settings": "Settings",
     "title": "Default organization currency"
   },
   "section": {
-    "currency": "Currency"
+    "currency": "Currency",
+    "mode": "Currency mode"
   },
   "field": {
     "current": "Current currency",
     "currency": "New currency",
-    "password": "Current password"
+    "password": "Current password",
+    "mode": "Multi-currency"
+  },
+  "mode": {
+    "single": "Single currency",
+    "multi": "Multi-currency",
+    "singleHint": "All accounts and records use the workspace currency.",
+    "multiHint": "Accounts can use other currencies; reporting stays in the workspace currency.",
+    "alreadySingle": "The workspace already uses a single currency.",
+    "blocked": "Disable blocked by existing records: {{blockers}}."
+  },
+  "blockers": {
+    "foreign_accounts": "accounts in another currency"
   },
   "btn": {
     "change": "Change currency",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "enableMulti": "Enable multi-currency",
+    "disableMulti": "Disable multi-currency"
   },
   "btnLabel": {
     "currency": "Select currency"
   },
   "modal": {
     "title": "Change organization currency",
-    "close": "Close"
+    "close": "Close",
+    "enableModeTitle": "Enable multi-currency",
+    "disableModeTitle": "Disable multi-currency",
+    "enableModeBody": "You can then create accounts in other currencies. Existing amounts and history stay unchanged.",
+    "disableModeBody": "You can only return to a single currency when no records use another currency."
   },
   "toast": {
     "success": "Currency updated successfully.",
     "updateError": "Could not update the currency.",
     "noSelection": "Please select a currency to continue.",
     "missingPassword": "Please enter your current password to change the currency.",
-    "invalidPassword": "Wrong password."
+    "invalidPassword": "Wrong password.",
+    "modeEnabled": "Multi-currency enabled.",
+    "modeDisabled": "Multi-currency disabled.",
+    "modeError": "Could not update the currency mode."
   }
 }

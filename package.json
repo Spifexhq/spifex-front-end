@@ -17,6 +17,7 @@
     "lint:a11y": "eslint src",
     "check:accounting-i18n": "node scripts/check-accounting-translations.mjs",
     "test:permissions": "esbuild scripts/permission-ux.test.ts --bundle --platform=node --format=esm --outfile=.tmp/permission-ux.test.mjs && node --test .tmp/permission-ux.test.mjs",
+    "test:currency": "esbuild scripts/currency-digits.test.ts --bundle --platform=node --format=esm --outfile=.tmp/currency-digits.test.mjs && node --test .tmp/currency-digits.test.mjs",
     "test:i18n": "node --test scripts/locale-coverage.test.mjs scripts/locale-encoding.test.mjs"
   },
   "dependencies": {

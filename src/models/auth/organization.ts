@@ -32,6 +32,7 @@ export interface Organization extends ProductWorkspaceFields {
   owner: Owner;
 
   currency?: string | null;
+  multi_currency_enabled?: boolean;
   ledger_profile?: OrgLedgerProfile | null;
 }
 
@@ -39,6 +40,7 @@ export interface OrganizationSummary extends ProductWorkspaceFields {
   id: string;
   name: string;
   currency: string;
+  multi_currency_enabled?: boolean;
   ledger_mode?: OrgLedgerMode | null;
 }
 
@@ -46,10 +48,18 @@ export interface OrganizationSummary extends ProductWorkspaceFields {
 
 export interface OrgCurrencyResponse {
   currency: string | null;
+  multi_currency_enabled: boolean;
+  can_enable_multi_currency: boolean;
+  can_disable_multi_currency: boolean;
+  disable_blockers: Record<string, number>;
+  can_change?: boolean;
+  can_manage?: boolean;
+  reason?: string | null;
 }
 
 export interface UpdateOrgCurrencyRequest {
-  currency: string;
+  currency?: string;
+  multi_currency_enabled?: boolean;
   current_password: string;
 }
 

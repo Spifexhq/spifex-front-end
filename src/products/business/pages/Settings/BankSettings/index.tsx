@@ -109,6 +109,30 @@ const BankSettings: React.FC = () => {
   }, [isOwner, permissions]);
 
   const orgCurrency = useMemo(() => safeCurrency(authOrg?.organization?.currency), [authOrg]);
+  const [allowForeignCurrency, setAllowForeignCurrency] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .getOrgCurrency()
+      .then((resp) => {
+        if (!alive) return;
+        const data = (resp.data ?? {}) as {
+          multi_currency_enabled?: boolean;
+          foreign_writes_allowed?: boolean;
+        };
+        setAllowForeignCurrency(
+          Boolean(data.multi_currency_enabled) && data.foreign_writes_allowed !== false
+        );
+      })
+      .catch(() => {
+        if (alive) setAllowForeignCurrency(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const bankApiAdapter = useMemo(() => ({
     getBank: (id: string) => api.getBank(id),
     addBank: (payload: Parameters<typeof api.addBank>[0]) => api.addBank(payload),
@@ -658,6 +682,7 @@ const BankSettings: React.FC = () => {
             mode={modalMode}
             bank={editingBank}
             orgCurrency={orgCurrency}
+            allowForeignCurrency={allowForeignCurrency}
             apiAdapter={bankApiAdapter}
             onClose={closeModal}
             onNotify={(s) => setSnack(s)}
