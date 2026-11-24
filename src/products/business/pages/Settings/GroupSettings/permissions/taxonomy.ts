@@ -159,6 +159,12 @@ export const PERMISSION_TAXONOMY: PermissionModule[] = [
         ],
       },
       {
+        id: 'financial-modules', name: 'Financial Modules', description: 'Enable or disable optional Accounting and Profit or Loss modules.',
+        actions: [
+          { code: 'manage_financial_modules', kind: 'configure', administrative: true },
+        ],
+      },
+      {
         id: 'departments', name: 'Departments', description: 'Department settings and department records.',
         actions: [
           { code: 'view_department_settings_page', kind: 'page' },
@@ -286,6 +292,7 @@ export const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
   'change_organization_profile': ['view_organization_settings_page'],
   'change_organization_currency': ['view_currency_settings_page'],
   'change_organization_ledger_profile': ['view_organization_settings_page', 'view_ledger_accounts_page'],
+  'manage_financial_modules': ['view_organization_settings_page'],
   'manage_billing_subscription': ['view_billing_page'],
   'manage_billing_payment_methods': ['view_billing_page'],
   'view_integrations': ['view_ai_connections'],
