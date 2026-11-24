@@ -4,7 +4,7 @@ import ProductPrefixGuard from "@/app/routing/ProductPrefixGuard";
 const SettingsLayout = lazy(() => import("../layouts/SettingsLayout").then(module => ({ default: module.SettingsLayout })));
 const AccountingLayout = lazy(() => import("../layouts/AccountingLayout").then(module => ({ default: module.AccountingLayout })));
 const InventoryLayout = lazy(() => import("../layouts/InventoryLayout"));
-import { PermissionMiddleware } from "@/middlewares";
+import { PermissionMiddleware, FinancialModuleMiddleware } from "@/middlewares";
 const Help = lazy(() => import("@/pages/Help"));
 const Overview = lazy(() => import("@/products/business/pages/Overview"));
 const CashFlow = lazy(() => import("@/products/business/pages/Finance/CashFlow"));
@@ -64,7 +64,7 @@ const businessChildren: RouteObject[] = [
             },
             {
                 path: 'accounting/*',
-                element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/b/settings"><AccountingLayout><Accounting /></AccountingLayout></PermissionMiddleware>,
+                element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/b/settings"><FinancialModuleMiddleware module="accounting"><AccountingLayout><Accounting /></AccountingLayout></FinancialModuleMiddleware></PermissionMiddleware>,
             },
             {
                 path: 'inventory/*',

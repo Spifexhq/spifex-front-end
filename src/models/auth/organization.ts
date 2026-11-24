@@ -1,6 +1,12 @@
 export type ProductCategory = "business" | "personal";
 export type WorkspaceLifecycle = "active" | "legacy" | "deletion_pending" | "deleted";
-export interface ProductWorkspaceFields { product_category?: ProductCategory; lifecycle?: WorkspaceLifecycle; legacy_since?: string | null; scheduled_deletion_at?: string | null; replacement_workspace_id?: string | null; selected_plan_code?: string | null; }
+export interface FinancialFeatures {
+  accounting_enabled: boolean;
+  pnl_enabled: boolean;
+  pnl_source_mode: "cash_settled" | "cash_committed" | "ledger";
+}
+
+export interface ProductWorkspaceFields { product_category?: ProductCategory; lifecycle?: WorkspaceLifecycle; legacy_since?: string | null; scheduled_deletion_at?: string | null; replacement_workspace_id?: string | null; selected_plan_code?: string | null; financial_features?: FinancialFeatures | null; }
 
 // src/models/auth/organization.ts
 

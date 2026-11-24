@@ -3,5 +3,6 @@ export { AuthMiddleware } from "./auth/AuthMiddleware";
 export { LocaleProfileMiddleware } from "./auth/LocaleProfileMiddleware";
 export { OwnerMiddleware } from "./auth/OwnerMiddleware";
 export { PermissionMiddleware } from "./auth/PermissionMiddleware";
+export { FinancialModuleMiddleware } from "./auth/FinancialModuleMiddleware";
 export { SubscriptionMiddleware } from "./auth/SubscriptionMiddleware";
 export { default as GuestOnlyMiddleware } from "./auth/GuestOnlyMiddleware";

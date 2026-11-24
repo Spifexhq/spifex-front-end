@@ -18,6 +18,7 @@ import {
   Boxes,
 } from "lucide-react";
 import { PermissionMiddleware } from "@/middlewares";
+import { useAuthContext } from "@/hooks/useAuth";
 
 import type { ModalType } from "@/products/business/pages/Finance/components/EntryForm/types";
 import type { SidebarMode } from "./Sidebar";
@@ -43,6 +44,10 @@ export default function SidebarNavigation({
 }: SidebarNavigationProps) {
   const { t } = useTranslation(["sidebar", "navbar"]);
   const collapsed = !mobile && !isOpen;
+  const { organization } = useAuthContext();
+  const accountingEnabled = Boolean(
+    organization?.organization?.financial_features?.accounting_enabled
+  );
 
   const run = (action: () => void) => {
     if (mobile && isOpen) toggleSidebar();
@@ -132,6 +137,7 @@ export default function SidebarNavigation({
                 label: t("accountingSettings:section.title"),
                 Icon: BookOpen,
                 permission: "view_ledger_accounts_page",
+                module: "accounting" as const,
               },
               {
                 to: "/b/inventory",
@@ -139,7 +145,7 @@ export default function SidebarNavigation({
                 Icon: Boxes,
                 permission: ["view_inventory", "view_inventory_settings_page"],
               },
-            ].map(({ to, label, Icon, permission }) => {
+            ].filter((item) => !("module" in item) || item.module !== "accounting" || accountingEnabled).map(({ to, label, Icon, permission }) => {
               const item = (
                 <SidebarTooltip label={label} collapsed={collapsed}>
                   <NavLink

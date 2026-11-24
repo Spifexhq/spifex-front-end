@@ -33,6 +33,7 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
     const navigate = useNavigate();
     const auth = useAuthContext();
     const workspace = auth.organization?.organization;
+    const accountingEnabled = Boolean(workspace?.financial_features?.accounting_enabled);
     const canEditAttachments = (!workspace?.lifecycle || workspace.lifecycle === "active") && (auth.isOwner || auth.isSuperUser || auth.permissions.includes("change_cash_flow_entries"));
     const [details, setDetails] = useState<Details | null>(null), [loading, setLoading] = useState(false), [error, setError] = useState(""), [accountingError, setAccountingError] = useState(""), [retry, setRetry] = useState(0);
     const [reverting, setReverting] = useState(false);
@@ -48,10 +49,10 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
         void (async () => {
             try {
                 const full = isSettlement(entry) ? entry : { ...entry, ...(await api.getEntry(entry.id)).data };
-                const [readiness, category, project, entity] = await Promise.allSettled([api.getEntryAccountingReadiness(sourceEntryId(entry)), full.cashflow_category ? api.getCashflowCategory(full.cashflow_category) : Promise.resolve(null), full.project ? api.getProject(full.project) : Promise.resolve(null), full.entity ? api.getEntity(full.entity) : Promise.resolve(null)]);
+                const [readiness, category, project, entity] = await Promise.allSettled([accountingEnabled ? api.getEntryAccountingReadiness(sourceEntryId(entry)) : Promise.resolve(null), full.cashflow_category ? api.getCashflowCategory(full.cashflow_category) : Promise.resolve(null), full.project ? api.getProject(full.project) : Promise.resolve(null), full.entity ? api.getEntity(full.entity) : Promise.resolve(null)]);
                 if (!alive)
                     return;
-                const accounting = readiness.status === "fulfilled" ? readiness.value.data.accounting : !isSettlement(full) ? full.accounting || undefined : undefined;
+                const accounting = readiness.status === "fulfilled" && readiness.value ? readiness.value.data.accounting : !isSettlement(full) ? full.accounting || undefined : undefined;
                 if (readiness.status === "rejected")
                     setAccountingError(t("accountingLoadError"));
                 setDetails({ entry: full, accounting, category: category.status === "fulfilled" ? category.value?.data.name : full.cashflow_category ? t("unavailable") : undefined, project: project.status === "fulfilled" ? project.value?.data.name : full.project ? t("unavailable") : undefined, entity: entity.status === "fulfilled" ? entity.value?.data.full_name || undefined : full.entity ? t("unavailable") : undefined });
@@ -66,7 +67,7 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
             }
         })();
         return () => { alive = false; };
-    }, [entry, key, retry, t]);
+    }, [entry, key, retry, t, accountingEnabled]);
     const currentDetails = details && entry && entryId(details.entry) === entryId(entry) ? details : null;
     const shown = currentDetails?.entry || entry;
     const accounting = currentDetails?.accounting;
@@ -94,13 +95,13 @@ export default function EntryPreview({ entry, onClose, onEdit, onSettle, onRever
             ]}/>
    {!!shown.departments?.length && <section><h3 className="text-xs font-semibold text-gray-900">{t("departments")}</h3><SidePanelDetails fields={shown.departments.map(item => ({ label: item.name, value: `${item.percent}%` }))}/></section>}
    {!!shown.items?.length && <section><h3 className="text-xs font-semibold text-gray-900">{t("inventory")}</h3><SidePanelDetails fields={shown.items.map(item => ({ label: item.name, value: item.quantity }))}/></section>}
-   <section className="border-t border-gray-200 pt-5"><h3 className="text-xs font-semibold text-gray-900">{t("accounting")}</h3>
+   {accountingEnabled && <section className="border-t border-gray-200 pt-5"><h3 className="text-xs font-semibold text-gray-900">{t("accounting")}</h3>
     {accountingError && <div role="status" className="mt-3 flex items-center justify-between gap-2 text-xs text-amber-700"><p>{accountingError}</p><Button size="xs" variant="secondary" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div>}
     {accounting && <><p className="mt-3 flex items-center gap-2 text-xs font-medium text-gray-800"><span className={`h-2 w-2 rounded-full ${status ? accountingColors[status] : "bg-gray-300"}`}/>{status ? t(`statuses.${status}`) : "—"}</p>{accounting.message && <p className="mt-2 text-xs leading-5 text-gray-500">{accounting.message}</p>}<SidePanelDetails fields={[
                     { label: t("mapping"), value: accounting.ledger_account_name || "—" }, { label: t("policy"), value: typeof accounting.policy_configured === "boolean" ? t(accounting.policy_configured ? "configured" : "missing") : t("unknown") }, { label: t("bankMapping"), value: typeof accounting.bank_mapping_configured === "boolean" ? t(accounting.bank_mapping_configured ? "configured" : "missing") : t("unknown") }, { label: t("book"), value: accounting.book_code || "—" }, { label: t("journal"), value: accounting.linked_journal ? journalDisplayId(accounting.linked_journal) : "-" },
                 ]}/>{accounting.next_action && <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3"><h4 className="text-xs font-medium text-gray-800">{t("nextAction")}</h4><p className="mt-1 text-xs leading-5 text-gray-500">{accounting.next_action}</p></div>}</>}
     <Button variant="secondary" size="sm" className="mt-4" onClick={() => navigate("/b/accounting/overview")}>{t("openAccounting")}</Button>
-   </section>
+   </section>}
    <EntryAttachments key={`attachments-${sourceEntryId(shown)}`} entryId={sourceEntryId(shown)} namespace="financeEntries" api={entryAttachmentApi} editable={canEditAttachments} onChanged={onChanged}/>
   </div>}
  </SidePanel>;

@@ -151,7 +151,10 @@ const OnboardingPage: React.FC = () => {
   const { t, i18n } = useTranslation("onboarding");
   const navigate = useNavigate();
   const reduced = useReducedMotion();
-  const { permissions, isOwner } = useAuthContext();
+  const { permissions, isOwner, organization } = useAuthContext();
+  const accountingEnabled = Boolean(
+    organization?.organization?.financial_features?.accounting_enabled
+  );
 
   const [loading, setLoading] = useState(true);
   const [savingPersonal, setSavingPersonal] = useState(false);
@@ -188,9 +191,10 @@ const OnboardingPage: React.FC = () => {
   const canViewPersonal = isOwner || permissions.includes("view_personal_settings_page");
   const canViewOrganization = isOwner || permissions.includes("view_organization_settings_page");
   const canUseAccounting =
-    isOwner ||
-    (permissions.includes("view_ledger_accounts_page") &&
-      (permissions.includes("add_ledger_account") || permissions.includes("change_ledger_account")));
+    accountingEnabled &&
+    (isOwner ||
+      (permissions.includes("view_ledger_accounts_page") &&
+        (permissions.includes("add_ledger_account") || permissions.includes("change_ledger_account"))));
 
   const loadAll = useCallback(async () => {
     const tasks: Promise<unknown>[] = [api.getConfigurationStatus()];
