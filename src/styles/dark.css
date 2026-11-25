@@ -257,6 +257,26 @@ html.dark [class*="hover:bg-indigo-50"]:hover {
   background-color: #14263a !important;
 }
 
+html.dark [class*="focus:bg-gray-50"]:focus,
+html.dark [class*="focus:bg-gray-100"]:focus,
+html.dark [class*="focus-visible:bg-gray-100"]:focus-visible {
+  background-color: var(--dm-surface-3) !important;
+}
+
+html.dark [class*="disabled:bg-gray-100"]:disabled {
+  background-color: #141a22 !important;
+}
+
+/* Soften skeleton shimmer so it does not flash white bands on dark surfaces. */
+html.dark [class*="bg-[linear-gradient(90deg,transparent,rgba(255,255,255"] {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  ) !important;
+}
+
 html.dark [class*="hover:text-gray-900"]:hover,
 html.dark [class*="hover:text-slate-900"]:hover {
   color: var(--dm-text-strong) !important;
