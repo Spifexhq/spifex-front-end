@@ -55,7 +55,7 @@ export default function SwitchControl({
         }`}
       >
         <span
-          className={`size-4 rounded-full bg-white shadow-sm transition-transform duration-150 motion-reduce:transition-none ${
+          className={`switch-knob size-4 rounded-full bg-white shadow-sm transition-transform duration-150 motion-reduce:transition-none ${
             checked ? "translate-x-[17px]" : "translate-x-px"
           }`}
         />

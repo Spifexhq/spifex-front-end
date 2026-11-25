@@ -54,18 +54,24 @@ html.dark .bg-gray-50,
 html.dark .bg-slate-50,
 html.dark .bg-stone-50,
 html.dark .bg-neutral-50,
-html.dark .bg-zinc-50 {
+html.dark .bg-zinc-50,
+html.dark [class*="bg-gray-50/"],
+html.dark [class*="bg-slate-50/"] {
   background-color: #121821 !important;
 }
 
 html.dark .bg-gray-100,
 html.dark .bg-slate-100,
-html.dark .bg-neutral-100 {
+html.dark .bg-neutral-100,
+html.dark [class*="bg-gray-100/"],
+html.dark [class*="bg-slate-100/"] {
   background-color: #18212b !important;
 }
 
 html.dark .bg-gray-200,
-html.dark .bg-slate-200 {
+html.dark .bg-slate-200,
+html.dark [class*="bg-gray-200/"],
+html.dark [class*="bg-slate-200/"] {
   background-color: #26313f !important;
 }
 
@@ -178,13 +184,19 @@ html.dark .border-neutral-100 {
 
 html.dark .border-gray-200,
 html.dark .border-slate-200,
-html.dark .border-white {
+html.dark .border-white,
+html.dark [class*="border-white/"] {
   border-color: var(--dm-border) !important;
 }
 
 html.dark .border-gray-300,
 html.dark .border-slate-300 {
   border-color: #364252 !important;
+}
+
+html.dark [class*="border-gray-200/"],
+html.dark [class*="border-slate-200/"] {
+  border-color: var(--dm-border) !important;
 }
 
 html.dark [class*="border-[#e"] {
@@ -238,6 +250,11 @@ html.dark .settings-row.settings-row-static:hover {
   background-color: transparent !important;
 }
 
+/* Switch knobs stay white for contrast on the accent track. */
+html.dark .switch-knob {
+  background-color: #ffffff !important;
+}
+
 /* ---------------------------------- Forms --------------------------------- */
 
 html.dark input:not([type="checkbox"]):not([type="radio"]),
@@ -282,8 +299,33 @@ html.dark tbody tr:hover {
   background-color: #1c2430 !important;
 }
 
+html.dark [role="option"]:hover {
+  background-color: var(--dm-surface-3) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark [role="option"][aria-selected="true"] {
+  background-color: var(--dm-surface-2) !important;
+  color: var(--dm-text-strong) !important;
+}
+
 html.dark .settings-surface th {
   background-color: var(--dm-surface-2) !important;
+}
+
+/* Primary buttons invert on dark surfaces so they remain the strongest action. */
+html.dark [data-ui="button"].bg-gray-900 {
+  background-color: var(--dm-text-strong) !important;
+  color: #0e1218 !important;
+  border-color: transparent !important;
+}
+
+html.dark [data-ui="button"].bg-gray-900:hover {
+  background-color: #ffffff !important;
+}
+
+html.dark [data-ui="button"].bg-gray-900:active {
+  background-color: #d6dde7 !important;
 }
 
 /* ------------------------------ Tinted states ----------------------------- */
@@ -291,6 +333,17 @@ html.dark .settings-surface th {
 html.dark .bg-amber-50,
 html.dark [class*="bg-amber-50/"] {
   background-color: #35270f !important;
+}
+
+html.dark .bg-indigo-50,
+html.dark [class*="bg-indigo-50/"],
+html.dark .bg-blue-50,
+html.dark .bg-sky-50 {
+  background-color: #14263a !important;
+}
+
+html.dark .divide-amber-100 > :not(:last-child) {
+  border-color: #63481f !important;
 }
 
 html.dark .border-amber-200 {
