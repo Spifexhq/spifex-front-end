@@ -50,7 +50,7 @@ const Row = ({
   disabled?: boolean;
 }) => (
   <div
-    className={`flex items-center justify-between px-4 py-2.5  settings-row ${
+    className={`settings-row settings-row-static flex items-center justify-between px-4 py-2.5 ${
       disabled ? "opacity-70 pointer-events-none" : ""
     }`}
   >
