@@ -73,6 +73,7 @@
     "confirm": "Bestätigen",
     "saved": "Finanzmodule aktualisiert.",
     "loadError": "Finanzmodule konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
     "saveError": "Finanzmodule konnten nicht aktualisiert werden."
   },
   "report": {
@@ -143,6 +144,7 @@
     "templateApplied": "Vorlage angewendet.",
     "sourceSaved": "Berichtsquelle aktualisiert.",
     "loadError": "Konfiguration konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
     "saveError": "Konfiguration konnte nicht gespeichert werden."
   }
 }

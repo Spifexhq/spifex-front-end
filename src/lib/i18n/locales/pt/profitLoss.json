@@ -73,6 +73,7 @@
     "confirm": "Confirmar",
     "saved": "Módulos financeiros atualizados.",
     "loadError": "Não foi possível carregar os módulos financeiros.",
+    "retry": "Tentar novamente",
     "saveError": "Não foi possível atualizar os módulos financeiros."
   },
   "report": {
@@ -143,6 +144,7 @@
     "templateApplied": "Modelo aplicado.",
     "sourceSaved": "Fonte do relatório atualizada.",
     "loadError": "Não foi possível carregar a configuração.",
+    "retry": "Tentar novamente",
     "saveError": "Não foi possível guardar a configuração."
   }
 }

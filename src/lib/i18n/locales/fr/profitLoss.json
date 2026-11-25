@@ -73,6 +73,7 @@
     "confirm": "Confirmer",
     "saved": "Modules financiers mis à jour.",
     "loadError": "Impossible de charger les modules financiers.",
+    "retry": "Réessayer",
     "saveError": "Impossible de mettre à jour les modules financiers."
   },
   "report": {
@@ -143,6 +144,7 @@
     "templateApplied": "Modèle appliqué.",
     "sourceSaved": "Source du rapport mise à jour.",
     "loadError": "Impossible de charger la configuration.",
+    "retry": "Réessayer",
     "saveError": "Impossible d'enregistrer la configuration."
   }
 }

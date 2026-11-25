@@ -73,6 +73,7 @@
     "confirm": "Confirm",
     "saved": "Financial modules updated.",
     "loadError": "Could not load financial modules.",
+    "retry": "Try again",
     "saveError": "Could not update financial modules."
   },
   "report": {
@@ -143,6 +144,7 @@
     "templateApplied": "Template applied.",
     "sourceSaved": "Report source updated.",
     "loadError": "Could not load the configuration.",
+    "retry": "Try again",
     "saveError": "Could not save the configuration."
   }
 }

@@ -78,7 +78,26 @@ export default function FinancialModulesSettings() {
     }
   };
 
-  if (loading || !features) return <TopProgress active variant="center" />;
+  if (loading && !features) return <TopProgress active variant="center" />;
+
+  if (!features) {
+    return (
+      <div className="mx-auto w-full max-w-[980px] space-y-4">
+        <Card padding="compact" className="space-y-3">
+          <p className="text-[13px] text-gray-800">{t("modules.loadError")}</p>
+          <Button variant="secondary" onClick={() => void load()}>
+            {t("modules.retry")}
+          </Button>
+        </Card>
+        <Snackbar
+          open={snack != null}
+          message={snack?.message}
+          severity={snack?.severity}
+          onClose={() => setSnack(null)}
+        />
+      </div>
+    );
+  }
 
   const accounting = features.accounting;
   const pnl = features.pnl;
