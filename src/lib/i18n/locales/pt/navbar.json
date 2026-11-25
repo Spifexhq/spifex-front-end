@@ -16,6 +16,10 @@
     "cta": "Concluir configuração"
   },
   "header": "Cabeçalho da página",
+  "theme": {
+    "toDark": "Mudar para modo escuro",
+    "toLight": "Mudar para modo claro"
+  },
   "notifications": {
     "title": "Notificações",
     "list": "Notificações recentes",

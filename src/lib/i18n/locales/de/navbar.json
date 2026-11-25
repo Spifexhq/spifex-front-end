@@ -16,6 +16,10 @@
     "cta": "Einrichtung abschließen"
   },
   "header": "Seitenkopf",
+  "theme": {
+    "toDark": "Zum Dunkelmodus wechseln",
+    "toLight": "Zum Hellmodus wechseln"
+  },
   "notifications": {
     "title": "Benachrichtigungen",
     "list": "Letzte Benachrichtigungen",

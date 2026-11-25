@@ -19,6 +19,7 @@ import {
   tickIndices,
   valueAt,
 } from "./geometry";
+import { useTheme } from "@/theme/ThemeProvider";
 import { FORECAST_RANGES, type ForecastFilters, type ForecastLoader, type RangeKey } from "./types";
 import { useForecast } from "./useForecast";
 
@@ -99,6 +100,13 @@ export function CashFlowTrendView({
   const pastClipId = `${gradientId}-past`;
   const futureClipId = `${gradientId}-future`;
   const reduced = useReducedMotion() ?? false;
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const gridStroke = isDark ? "#e8ebf0" : "#0f172a";
+  const gridOpacity = isDark ? 0.08 : 0.05;
+  const hoverStroke = isDark ? "#e8ebf0" : "#0F172A";
+  const hoverOpacity = isDark ? 0.18 : 0.14;
+  const markerFill = isDark ? "#161d26" : "#fff";
 
   const locale = i18n.resolvedLanguage || i18n.language || "en";
   const monthDay = useMemo(() => new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }), [locale]);
@@ -389,8 +397,8 @@ export function CashFlowTrendView({
                           x2={innerWidth}
                           y1={y}
                           y2={y}
-                          stroke="#0f172a"
-                          strokeOpacity={0.05}
+                          stroke={gridStroke}
+                          strokeOpacity={gridOpacity}
                           strokeWidth={1}
                         />
                         <text
@@ -477,8 +485,8 @@ export function CashFlowTrendView({
                         initial={false}
                         y1={0}
                         y2={HEIGHT}
-                        stroke="#0F172A"
-                        strokeOpacity={0.14}
+                        stroke={hoverStroke}
+                        strokeOpacity={hoverOpacity}
                         strokeWidth={1}
                         animate={{ x1: hoveredX - AXIS_LEFT, x2: hoveredX - AXIS_LEFT }}
                         transition={reduced ? { duration: 0 } : HOVER_SPRING}
@@ -487,7 +495,7 @@ export function CashFlowTrendView({
                         <motion.circle
                           key={marker.key}
                           r={4}
-                          fill="#fff"
+                          fill={markerFill}
                           stroke={marker.color}
                           strokeWidth={2}
                           initial={false}

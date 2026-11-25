@@ -15,6 +15,8 @@ import {
 } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@/theme/ThemeProvider";
 
 import { api } from "@/core/api/requests";
 import { validateEmailFormat, validatePassword, useAutoCountry } from "@/lib";
@@ -65,6 +67,9 @@ const emailProviders: Record<string, string> = {
 
 const SignUp = () => {
   const { t, i18n } = useTranslation("signUp");
+  const { t: tNavbar } = useTranslation("navbar");
+  const { theme, toggleTheme } = useTheme();
+  const themeLabel = theme === "dark" ? tNavbar("theme.toLight") : tNavbar("theme.toDark");
   const [searchParams] = useSearchParams();
 
   const [category, setCategory] = useState<ProductCategory | null>(null);
@@ -493,7 +498,7 @@ const SignUp = () => {
           alt={t("backgroundAlt")}
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#f5e9df]/95 via-[#edcfb9]/95 to-[#ba8065]/95" /><AuthStory />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f5e9df]/95 via-[#edcfb9]/95 to-[#ba8065]/95 dark:from-[#241a15]/95 dark:via-[#2a1c16]/95 dark:to-[#3a241a]/95" /><AuthStory />
       </div>
 
       {/* Right section */}
@@ -506,9 +511,10 @@ const SignUp = () => {
             <img
               src={logoBlack}
               alt="Spifex logo"
-              className="h-7 w-auto sm:h-8"
+              className="h-7 w-auto dark:invert sm:h-8"
             />
           </a>
+          <button type="button" onClick={toggleTheme} className="grid h-9 w-9 place-items-center rounded-md p-0 text-black/60 transition-colors hover:bg-black/5 hover:text-black dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white" aria-label={themeLabel} title={themeLabel} aria-pressed={theme === "dark"}>{theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}</button>
         </header>
 
         <main className="flex-1 flex items-center justify-center">

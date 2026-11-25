@@ -16,6 +16,10 @@
     "cta": "Terminer la configuration"
   },
   "header": "En-tête de page",
+  "theme": {
+    "toDark": "Passer en mode sombre",
+    "toLight": "Passer en mode clair"
+  },
   "notifications": {
     "title": "Notifications",
     "list": "Notifications récentes",

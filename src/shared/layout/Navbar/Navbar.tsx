@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, AlertTriangle, PanelsTopLeft, ChevronRight } from "lucide-react";
+import { Menu, AlertTriangle, PanelsTopLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/theme/ThemeProvider";
 import { useAppShell } from "@/contexts/AppShellContext";
 import NotificationsMenu from "@/shared/layout/NotificationsMenu";
 import type { ConfigurationStatus } from "@/models/auth/configuration";
@@ -12,6 +13,8 @@ export default function Navbar({ showOnboardingWarning = false }: NavbarProps) {
   const { pathname } = useLocation();
   const breadcrumbs = getPageBreadcrumbs(pathname);
   const shell = useAppShell();
+  const { theme, toggleTheme } = useTheme();
+  const themeLabel = theme === "dark" ? t("navbar:theme.toLight") : t("navbar:theme.toDark");
   return <header className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 sm:px-6" aria-label={t("navbar:header")}>
     <div className="flex min-w-0 items-center gap-3">
       <button type="button" className="grid h-11 w-11 place-items-center rounded-md p-0 text-gray-500 hover:bg-gray-50 md:hidden" onClick={shell?.toggleMobile} aria-label={t("navbar:actions.open")} aria-expanded={shell?.mobileOpen ?? false}><Menu size={18} aria-hidden="true" /></button>
@@ -27,6 +30,16 @@ export default function Navbar({ showOnboardingWarning = false }: NavbarProps) {
     </div>
     <div className="flex shrink-0 items-center gap-2">
       {showOnboardingWarning && <Link to="/b/onboarding" title={t("navbar:links.cta")} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-900 hover:bg-amber-100 md:min-h-0"><AlertTriangle size={15} aria-hidden="true" /><span className="hidden sm:inline">{t("navbar:links.cta")}</span></Link>}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="grid h-9 w-9 place-items-center rounded-md p-0 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+        aria-label={themeLabel}
+        title={themeLabel}
+        aria-pressed={theme === "dark"}
+      >
+        {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+      </button>
       <NotificationsMenu manageTo="/b/settings/notifications" />
     </div>
   </header>;
