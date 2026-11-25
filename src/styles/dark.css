@@ -346,6 +346,20 @@ html.dark .settings-row.settings-row-static:hover {
   background-color: transparent !important;
 }
 
+html.dark .settings-filter:hover {
+  border-color: #46536a !important;
+}
+
+html.dark .settings-filter[data-active] {
+  background-color: var(--dm-surface-2) !important;
+  border-color: #46536a !important;
+}
+
+html.dark .settings-clear-filters:hover {
+  background-color: var(--dm-surface-3) !important;
+  color: var(--dm-text) !important;
+}
+
 /* Switch knobs stay white for contrast on the accent track. */
 html.dark .switch-knob {
   background-color: #ffffff !important;
