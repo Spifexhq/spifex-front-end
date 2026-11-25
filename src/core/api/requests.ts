@@ -24,6 +24,15 @@ import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsReque
 import type { ConfigurationStatus } from "@/models/auth/configuration";
 import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest, OrgLedgerProfileResponse,
   UpdateOrgLedgerProfileRequest } from '@/models/auth/organization';
+import type {
+  FinancialFeaturesResponse,
+  PnlConfig,
+  PnlFinalizeResponse,
+  PnlReportResponse,
+  PnlSource,
+  PnlTreatment,
+  UpdateFinancialFeaturesRequest,
+} from '@/models/finance/profitLoss';
 import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
 import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, CreateCustomerPortalSessionRequest,
   CreateCustomerPortalSessionResponse, 
@@ -290,6 +299,66 @@ export const api = {
 
   updateOrgLedgerProfile: (payload: UpdateOrgLedgerProfileRequest) =>
     request<OrgLedgerProfileResponse>('organizations/current/ledger-profile/', 'PUT', payload),
+
+  /* --- Financial modules --- */
+  getFinancialFeatures: () =>
+    request<FinancialFeaturesResponse>('organizations/current/financial-features/', 'GET'),
+
+  updateFinancialFeatures: (payload: UpdateFinancialFeaturesRequest) =>
+    request<FinancialFeaturesResponse>('organizations/current/financial-features/', 'PUT', payload),
+
+  getProfitLossConfig: () =>
+    request<PnlConfig>('business/profit-loss/config/', 'GET'),
+
+  updateProfitLossSettings: (payload: {
+    template_code?: string;
+    source_mode?: PnlSource;
+    acknowledge_ledger_source?: boolean;
+    current_password: string;
+  }) => request<PnlConfig>('business/profit-loss/config/settings/', 'PUT', payload),
+
+  applyProfitLossTemplate: (payload: {
+    template_code: string;
+    replace_existing?: boolean;
+    current_password: string;
+  }) => request<PnlConfig>('business/profit-loss/config/apply-template/', 'POST', payload),
+
+  updateProfitLossCategoryMappings: (payload: {
+    mappings: Array<{
+      category_id: string;
+      treatment: PnlTreatment;
+      line?: string | null;
+      effective_from?: string;
+    }>;
+    current_password: string;
+  }) => request<PnlConfig>('business/profit-loss/mappings/categories/', 'PUT', payload),
+
+  getProfitLossReport: (params: {
+    period_start: string;
+    period_end: string;
+    source?: PnlSource;
+    book?: string;
+    compare?: 'previous_period' | 'previous_year';
+  }) => request<PnlReportResponse>('business/profit-loss/report/', 'GET', params),
+
+  exportProfitLoss: (params: {
+    period_start: string;
+    period_end: string;
+    source?: PnlSource;
+    book?: string;
+    filename: string;
+  }) => {
+    const { filename, ...query } = params;
+    return downloadFile('business/profit-loss/report/export/', query, filename);
+  },
+
+  finalizeProfitLossPeriod: (payload: {
+    period_start: string;
+    period_end: string;
+    source?: PnlSource;
+    book?: string;
+    current_password: string;
+  }) => request<PnlFinalizeResponse>('business/profit-loss/periods/finalize/', 'POST', payload),
 
   /* --- Entitlements --- */
   getEntitlementLimits:() =>

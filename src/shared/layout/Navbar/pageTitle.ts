@@ -1,4 +1,4 @@
-const settingsPages = new Set(["personal", "organization-settings", "workspaces", "billing", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
+const settingsPages = new Set(["personal", "organization-settings", "workspaces", "billing", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications", "financial-modules"]);
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", "chart-of-accounts": "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", periods: "periods" };
 const inventoryPages: Record<string, string> = { overview: "overview", items: "items", stock: "stock", locations: "locations" };
 
@@ -17,6 +17,9 @@ export function getPageTitleKey(pathname: string): string {
   }
   if (root === "inventory") {
     return `inventory:nav.${inventoryPages[page || "overview"] || "overview"}`;
+  }
+  if (root === "pnl") {
+    return page === "configuration" ? "profitLoss:nav.configuration" : "profitLoss:nav.title";
   }
   if (root === "settings") {
     if (page === "ledger-accounts") return "accountingSettings:nav.chart";

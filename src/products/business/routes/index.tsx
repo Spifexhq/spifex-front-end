@@ -15,6 +15,7 @@ const Billing = lazy(() => import("@/products/business/pages/Settings/Billing"))
 const LimitsAndUsage = lazy(() => import("@/features/account-settings/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
 const OrganizationSettings = lazy(() => import("@/products/business/pages/Settings/OrganizationSettings"));
+const FinancialModulesSettings = lazy(() => import("@/products/business/pages/Settings/FinancialModules"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const DepartmentSettings = lazy(() => import("@/products/business/pages/Settings/DepartmentSettings"));
 const BankSettings = lazy(() => import("@/products/business/pages/Settings/BankSettings"));
@@ -24,6 +25,8 @@ const MemberSettings = lazy(() => import("@/products/business/pages/Settings/Mem
 const GroupSettings = lazy(() => import("@/products/business/pages/Settings/GroupSettings"));
 const CategorySettings = lazy(() => import("@/products/business/pages/Settings/CategorySettings"));
 const Accounting = lazy(() => import("@/products/business/pages/Accounting"));
+const ProfitLoss = lazy(() => import("@/products/business/pages/ProfitLoss"));
+const ProfitLossConfiguration = lazy(() => import("@/products/business/pages/ProfitLoss/Configuration"));
 const Inventory = lazy(() => import("@/products/business/pages/Inventory"));
 const BankImports = lazy(() => import("@/products/business/pages/Finance/BankImports"));
 const NotificationSettings = lazy(() => import("@/features/account-settings/pages/NotificationSettings"));
@@ -62,9 +65,17 @@ const businessChildren: RouteObject[] = [
                     </PermissionMiddleware>
                 )
             },
-            {
+                {
                 path: 'accounting/*',
                 element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/b/settings"><FinancialModuleMiddleware module="accounting"><AccountingLayout><Accounting /></AccountingLayout></FinancialModuleMiddleware></PermissionMiddleware>,
+            },
+            {
+                path: 'pnl',
+                element: <PermissionMiddleware codeName="view_profit_loss_page" behavior="redirect" redirectTo="/b/settings"><FinancialModuleMiddleware module="pnl"><ProfitLoss /></FinancialModuleMiddleware></PermissionMiddleware>,
+            },
+            {
+                path: 'pnl/configuration',
+                element: <PermissionMiddleware codeName="view_profit_loss_page" behavior="redirect" redirectTo="/b/settings"><FinancialModuleMiddleware module="pnl"><ProfitLossConfiguration /></FinancialModuleMiddleware></PermissionMiddleware>,
             },
             {
                 path: 'inventory/*',
@@ -100,6 +111,14 @@ const businessChildren: RouteObject[] = [
                     element: (
                     <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/b/settings'}>
                         <OrganizationSettings />
+                    </PermissionMiddleware>
+                    ),
+                },
+                {
+                    path: 'financial-modules',
+                    element: (
+                    <PermissionMiddleware codeName="manage_financial_modules" behavior="redirect" redirectTo={'/b/settings'}>
+                        <FinancialModulesSettings />
                     </PermissionMiddleware>
                     ),
                 },

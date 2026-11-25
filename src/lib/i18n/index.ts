@@ -10,6 +10,10 @@ import enFinanceEntries from "./locales/en/financeEntries.json";
 import ptFinanceEntries from "./locales/pt/financeEntries.json";
 import frFinanceEntries from "./locales/fr/financeEntries.json";
 import deFinanceEntries from "./locales/de/financeEntries.json";
+import enProfitLoss from "./locales/en/profitLoss.json";
+import ptProfitLoss from "./locales/pt/profitLoss.json";
+import frProfitLoss from "./locales/fr/profitLoss.json";
+import deProfitLoss from "./locales/de/profitLoss.json";
 // src/lib/i18n/index.tsx
 import i18n, { type Resource } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -376,6 +380,7 @@ const NAMESPACES = [
 
   "cashFlow",
   "settled",
+  "profitLoss",
 
   "select",
 
@@ -453,6 +458,7 @@ const resources: Resource = {
     settled: ptSettled,
 
     financeEntries: ptFinanceEntries,
+    profitLoss: ptProfitLoss,
     select: ptSelect,
 
     filterBar: ptFilterBar,
@@ -524,6 +530,7 @@ const resources: Resource = {
     settled: enSettled,
 
     financeEntries: enFinanceEntries,
+    profitLoss: enProfitLoss,
     select: enSelect,
 
     filterBar: enFilterBar,
@@ -595,6 +602,7 @@ const resources: Resource = {
     settled: frSettled,
 
     financeEntries: frFinanceEntries,
+    profitLoss: frProfitLoss,
     select: frSelect,
 
     filterBar: frFilterBar,
@@ -666,6 +674,7 @@ const resources: Resource = {
     settled: deSettled,
 
     financeEntries: deFinanceEntries,
+    profitLoss: deProfitLoss,
     select: deSelect,
 
     filterBar: deFilterBar,

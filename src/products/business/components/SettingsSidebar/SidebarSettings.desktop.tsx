@@ -37,6 +37,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         id: "org",
         items: [
           { id: "organization-settings", icon: "building", label: t("items.organization-settings"), permission: "view_organization_settings_page" },
+          { id: "financial-modules", icon: "layers", label: t("items.financial-modules"), permission: "manage_financial_modules" },
           { id: "billing", icon: "layers", label: t("items.billing"), permission: "view_billing_page" },
           { id: "limits", icon: "limits", label: t("items.limits"), permission: "view_limits_and_usage_page" },
         ],

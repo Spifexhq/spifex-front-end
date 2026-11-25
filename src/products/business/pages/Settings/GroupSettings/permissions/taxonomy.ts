@@ -103,6 +103,25 @@ export const PERMISSION_TAXONOMY: PermissionModule[] = [
     ],
   },
   {
+    id: 'profit-loss', name: 'Profit or Loss', description: 'Management Profit or Loss reporting, templates and category mapping.',
+    features: [
+      {
+        id: 'profit-loss-report', name: 'Profit or Loss Report', description: 'Report page and read access.',
+        actions: [
+          { code: 'view_profit_loss_page', kind: 'page' },
+          { code: 'view_profit_loss', kind: 'view' },
+          { code: 'export_profit_loss', kind: 'view' },
+        ],
+      },
+      {
+        id: 'profit-loss-configuration', name: 'Profit or Loss Configuration', description: 'Templates, source selection and category classification.',
+        actions: [
+          { code: 'change_profit_loss_config', kind: 'configure', administrative: true },
+        ],
+      },
+    ],
+  },
+  {
     id: 'team', name: 'Team & Access', description: 'Members, roles, groups, the permission catalog and effective access.',
     features: [
       {
@@ -293,6 +312,9 @@ export const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
   'change_organization_currency': ['view_currency_settings_page'],
   'change_organization_ledger_profile': ['view_organization_settings_page', 'view_ledger_accounts_page'],
   'manage_financial_modules': ['view_organization_settings_page'],
+  'view_profit_loss': ['view_profit_loss_page'],
+  'export_profit_loss': ['view_profit_loss_page'],
+  'change_profit_loss_config': ['view_profit_loss_page'],
   'manage_billing_subscription': ['view_billing_page'],
   'manage_billing_payment_methods': ['view_billing_page'],
   'view_integrations': ['view_ai_connections'],

@@ -16,6 +16,7 @@ import {
   Wallet,
   CircleCheck,
   Boxes,
+  TrendingUp,
 } from "lucide-react";
 import { PermissionMiddleware } from "@/middlewares";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -47,6 +48,9 @@ export default function SidebarNavigation({
   const { organization } = useAuthContext();
   const accountingEnabled = Boolean(
     organization?.organization?.financial_features?.accounting_enabled
+  );
+  const pnlEnabled = Boolean(
+    organization?.organization?.financial_features?.pnl_enabled
   );
 
   const run = (action: () => void) => {
@@ -140,12 +144,19 @@ export default function SidebarNavigation({
                 module: "accounting" as const,
               },
               {
+                to: "/b/pnl",
+                label: t("profitLoss:nav.title"),
+                Icon: TrendingUp,
+                permission: "view_profit_loss_page",
+                module: "pnl" as const,
+              },
+              {
                 to: "/b/inventory",
                 label: t("inventory:section.title"),
                 Icon: Boxes,
                 permission: ["view_inventory", "view_inventory_settings_page"],
               },
-            ].filter((item) => !("module" in item) || item.module !== "accounting" || accountingEnabled).map(({ to, label, Icon, permission }) => {
+            ].filter((item) => !("module" in item) || (item.module === "accounting" ? accountingEnabled : pnlEnabled)).map(({ to, label, Icon, permission }) => {
               const item = (
                 <SidebarTooltip label={label} collapsed={collapsed}>
                   <NavLink
