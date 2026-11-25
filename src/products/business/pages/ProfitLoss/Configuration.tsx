@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { api } from "@/core/api/requests";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import type { PnlConfig, PnlSource, PnlTreatment } from "@/models/finance/profitLoss";
+import type { AccountingBook } from "@/models/settings/accounting";
+import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
 import Button from "@/shared/ui/Button";
 import Card from "@/shared/ui/Card";
 import Input from "@/shared/ui/Input";
@@ -85,6 +87,11 @@ export default function ProfitLossConfiguration() {
   const [template, setTemplate] = useState("generic");
   const [sourceMode, setSourceMode] = useState<PnlSource>("cash_settled");
   const [acknowledgeLedger, setAcknowledgeLedger] = useState(false);
+  const [books, setBooks] = useState<AccountingBook[]>([]);
+  const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
+  const [bookId, setBookId] = useState("");
+  const [accountDraft, setAccountDraft] = useState<Record<string, string>>({});
+  const [dirtyAccounts, setDirtyAccounts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
@@ -112,6 +119,55 @@ export default function ProfitLossConfiguration() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!config?.accounting_enabled) {
+      setBooks([]);
+      setAccounts([]);
+      return;
+    }
+    let alive = true;
+    void (async () => {
+      try {
+        const [booksResponse, accountsResponse] = await Promise.all([
+          api.getAccountingBooks(),
+          api.getLedgerAccounts({ active: "true", account_type: "posting", page_size: 500 }),
+        ]);
+        if (!alive) return;
+        const bookList = Array.isArray(booksResponse.data)
+          ? booksResponse.data
+          : (booksResponse.data as { results?: AccountingBook[] }).results ?? [];
+        const accountList = Array.isArray(accountsResponse.data)
+          ? accountsResponse.data
+          : (accountsResponse.data as { results?: LedgerAccount[] }).results ?? [];
+        setBooks(bookList);
+        setAccounts(
+          accountList.filter(
+            (account) => account.statement_section === "income" || account.statement_section === "expense"
+          )
+        );
+        const primary = bookList.find((book) => book.is_primary && book.is_active) ?? bookList[0];
+        setBookId(primary?.id ?? "");
+      } catch (cause) {
+        setSnack({ message: apiErrorMessage(cause, t("config.saveError")), severity: "error" });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [config?.accounting_enabled, t]);
+
+  useEffect(() => {
+    if (!config || !bookId) return;
+    const draft: Record<string, string> = {};
+    for (const mapping of config.account_mappings) {
+      if (mapping.book_id === bookId && mapping.ledger_account_id) {
+        draft[mapping.ledger_account_id] = mapping.line;
+      }
+    }
+    setAccountDraft(draft);
+    setDirtyAccounts(new Set());
+  }, [bookId, config]);
 
   const lineOptions = useMemo(() => {
     if (!config) return {} as Record<string, Array<{ code: string; name: string }>>;
@@ -182,6 +238,31 @@ export default function ProfitLossConfiguration() {
       applyConfig(response.data);
       setPassword("");
       setSnack({ message: t("config.sourceSaved"), severity: "success" });
+    } catch (cause) {
+      setSnack({ message: apiErrorMessage(cause, t("config.saveError")), severity: "error" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveLedgerMappings = async () => {
+    const changed = Object.entries(accountDraft).filter(
+      ([accountId, line]) => dirtyAccounts.has(accountId) && line
+    );
+    if (!bookId || !changed.length) return;
+    setBusy(true);
+    try {
+      const response = await api.updateProfitLossAccountMappings({
+        book_id: bookId,
+        mappings: changed.map(([accountId, line]) => ({
+          ledger_account_id: accountId,
+          line,
+        })),
+        current_password: password,
+      });
+      applyConfig(response.data);
+      setPassword("");
+      setSnack({ message: t("config.savedLedger"), severity: "success" });
     } catch (cause) {
       setSnack({ message: apiErrorMessage(cause, t("config.saveError")), severity: "error" });
     } finally {
@@ -332,6 +413,88 @@ export default function ProfitLossConfiguration() {
           <p className="text-xs text-gray-500">{t("config.ledgerUnavailable")}</p>
         )}
       </Card>
+
+      {config.accounting_enabled && (
+        <Card padding="compact" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-gray-900">{t("config.ledgerTitle")}</h2>
+            <select
+              className="h-8 rounded-md border border-gray-300 bg-white px-2 text-[12px]"
+              value={bookId}
+              onChange={(event) => setBookId(event.target.value)}
+            >
+              {books.map((book) => (
+                <option key={book.id} value={book.id}>
+                  {book.code} · {book.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-xs leading-5 text-gray-600">{t("config.ledgerHint")}</p>
+          <div className="max-h-[420px] overflow-auto rounded-md border border-gray-200">
+            <table className="w-full text-[13px]">
+              <thead className="sticky top-0 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                <tr>
+                  <th className="px-3 py-2">{t("config.ledgerAccount")}</th>
+                  <th className="px-3 py-2">{t("config.ledgerLine")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map((account) => (
+                  <tr key={account.id} className="border-t border-gray-100">
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-gray-900">
+                        {account.code} · {account.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {account.statement_section}
+                        {account.report_group ? ` · ${account.report_group}` : ""}
+                      </p>
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[12px]"
+                        value={accountDraft[account.id] ?? ""}
+                        onChange={(event) => {
+                          const line = event.target.value;
+                          setAccountDraft((current) => ({ ...current, [account.id]: line }));
+                          setDirtyAccounts((current) => new Set(current).add(account.id));
+                        }}
+                      >
+                        <option value="">{t("config.chooseLine")}</option>
+                        {config.lines
+                          .filter((line) => !line.is_subtotal)
+                          .map((line) => (
+                            <option key={line.code} value={line.code}>
+                              {line.name}
+                            </option>
+                          ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+                {accounts.length === 0 && (
+                  <tr>
+                    <td className="px-3 py-4 text-xs text-gray-500" colSpan={2}>
+                      {t("config.noLedgerAccounts")}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => void saveLedgerMappings()}
+              isLoading={busy}
+              disabled={!password || dirtyAccounts.size === 0}
+            >
+              {t("config.saveLedger", { count: dirtyAccounts.size })}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <Card padding="compact" className="space-y-3">
         <h2 className="text-sm font-semibold text-gray-900">{t("config.passwordTitle")}</h2>

@@ -20,7 +20,9 @@
     "unmapped_accounts": "{{count}} contas do razão não estão associadas a uma linha.",
     "excluded_from_profit": "{{count}} categorias estão excluídas do resultado por configuração.",
     "provisional_period": "Este período inclui hoje ou datas futuras e pode mudar.",
-    "ledger_source_available": "A contabilidade está operacional. Reveja as associações do razão antes de usar o razão como fonte."
+    "ledger_source_available": "A contabilidade está operacional. Reveja as associações do razão antes de usar o razão como fonte.",
+    "source_transition": "Este período é anterior à ativação da contabilidade e mantém a base de caixa simplificada.",
+    "pending_accounting_postings": "{{count}} movimentos de caixa aguardam contabilização e ficam fora deste relatório."
   },
   "treatments": {
     "operating_revenue": "Receita operacional",
@@ -130,6 +132,13 @@
     "saveMappings": "Guardar {{count}} alterações",
     "passwordHint": "As alterações têm data de vigência e aumentam a versão de associação.",
     "savedMappings": "Classificações guardadas.",
+    "ledgerTitle": "Associação de contas do razão",
+    "ledgerHint": "Associe contas de rendimento e gasto às linhas do resultado para a fonte do razão. Contas não associadas são apresentadas como avisos.",
+    "ledgerAccount": "Conta",
+    "ledgerLine": "Linha",
+    "saveLedger": "Guardar {{count}} associações",
+    "savedLedger": "Associações do razão guardadas.",
+    "noLedgerAccounts": "Não foram encontradas contas de rendimento ou gasto neste espaço.",
     "templateApplied": "Modelo aplicado.",
     "sourceSaved": "Fonte do relatório atualizada.",
     "loadError": "Não foi possível carregar a configuração.",

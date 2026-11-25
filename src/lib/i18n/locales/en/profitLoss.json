@@ -20,7 +20,9 @@
     "unmapped_accounts": "{{count}} ledger accounts are not mapped to a line.",
     "excluded_from_profit": "{{count}} categories are excluded from profit by configuration.",
     "provisional_period": "This period includes today or future dates and may change.",
-    "ledger_source_available": "Accounting is operational. Review ledger mappings before using the ledger as the source."
+    "ledger_source_available": "Accounting is operational. Review ledger mappings before using the ledger as the source.",
+    "source_transition": "This period predates accounting activation and remains on the simplified cash basis.",
+    "pending_accounting_postings": "{{count}} cash-flow rows are still waiting for accounting and are excluded from this report."
   },
   "treatments": {
     "operating_revenue": "Operating revenue",
@@ -130,6 +132,13 @@
     "saveMappings": "Save {{count}} changes",
     "passwordHint": "Changes are effective-dated and increase the mapping version.",
     "savedMappings": "Category classifications saved.",
+    "ledgerTitle": "Ledger account mapping",
+    "ledgerHint": "Map income and expense accounts to Profit or Loss lines for the ledger source. Unmapped accounts are disclosed as warnings.",
+    "ledgerAccount": "Account",
+    "ledgerLine": "Line",
+    "saveLedger": "Save {{count}} mappings",
+    "savedLedger": "Ledger mappings saved.",
+    "noLedgerAccounts": "No income or expense accounts were found for this workspace.",
     "templateApplied": "Template applied.",
     "sourceSaved": "Report source updated.",
     "loadError": "Could not load the configuration.",

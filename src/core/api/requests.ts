@@ -333,6 +333,17 @@ export const api = {
     current_password: string;
   }) => request<PnlConfig>('business/profit-loss/mappings/categories/', 'PUT', payload),
 
+  updateProfitLossAccountMappings: (payload: {
+    book_id: string;
+    mappings: Array<{
+      ledger_account_id?: string | null;
+      report_group?: string | null;
+      line: string;
+      effective_from?: string;
+    }>;
+    current_password: string;
+  }) => request<PnlConfig>('business/profit-loss/mappings/accounts/', 'PUT', payload),
+
   getProfitLossReport: (params: {
     period_start: string;
     period_end: string;

@@ -20,7 +20,9 @@
     "unmapped_accounts": "{{count}} Hauptbuchkonten sind keiner Zeile zugeordnet.",
     "excluded_from_profit": "{{count}} Kategorien sind per Konfiguration vom Ergebnis ausgeschlossen.",
     "provisional_period": "Dieser Zeitraum enthält heute oder zukünftige Daten und kann sich ändern.",
-    "ledger_source_available": "Die Buchhaltung ist betriebsbereit. Prüfen Sie die Hauptbuchzuordnungen, bevor Sie das Hauptbuch als Quelle verwenden."
+    "ledger_source_available": "Die Buchhaltung ist betriebsbereit. Prüfen Sie die Hauptbuchzuordnungen, bevor Sie das Hauptbuch als Quelle verwenden.",
+    "source_transition": "Dieser Zeitraum liegt vor der Buchhaltungsaktivierung und bleibt auf der vereinfachten Zahlungsbasis.",
+    "pending_accounting_postings": "{{count}} Cashflow-Vorgänge warten auf eine Buchung und sind nicht in diesem Bericht enthalten."
   },
   "treatments": {
     "operating_revenue": "Betriebliche Erlöse",
@@ -130,6 +132,13 @@
     "saveMappings": "{{count}} Änderungen speichern",
     "passwordHint": "Änderungen gelten ab Datum und erhöhen die Zuordnungsversion.",
     "savedMappings": "Klassifizierungen gespeichert.",
+    "ledgerTitle": "Hauptbuchkonten-Zuordnung",
+    "ledgerHint": "Ordnen Sie Ertrags- und Aufwandskonten den GuV-Zeilen für die Hauptbuchquelle zu. Nicht zugeordnete Konten werden gemeldet.",
+    "ledgerAccount": "Konto",
+    "ledgerLine": "Zeile",
+    "saveLedger": "{{count}} Zuordnungen speichern",
+    "savedLedger": "Hauptbuchzuordnungen gespeichert.",
+    "noLedgerAccounts": "Für diesen Workspace wurden keine Ertrags- oder Aufwandskonten gefunden.",
     "templateApplied": "Vorlage angewendet.",
     "sourceSaved": "Berichtsquelle aktualisiert.",
     "loadError": "Konfiguration konnte nicht geladen werden.",

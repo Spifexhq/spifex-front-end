@@ -20,7 +20,9 @@
     "unmapped_accounts": "{{count}} comptes du grand livre ne sont associés à aucune ligne.",
     "excluded_from_profit": "{{count}} catégories sont exclues du résultat par configuration.",
     "provisional_period": "Cette période inclut aujourd'hui ou des dates futures et peut changer.",
-    "ledger_source_available": "La comptabilité est opérationnelle. Vérifiez les associations du grand livre avant de l'utiliser comme source."
+    "ledger_source_available": "La comptabilité est opérationnelle. Vérifiez les associations du grand livre avant de l'utiliser comme source.",
+    "source_transition": "Cette période précède l'activation de la comptabilité et reste sur la base caisse simplifiée.",
+    "pending_accounting_postings": "{{count}} flux de trésorerie attendent une comptabilisation et sont exclus de ce rapport."
   },
   "treatments": {
     "operating_revenue": "Produits d'exploitation",
@@ -130,6 +132,13 @@
     "saveMappings": "Enregistrer {{count}} modifications",
     "passwordHint": "Les modifications sont datées et augmentent la version d'association.",
     "savedMappings": "Classifications enregistrées.",
+    "ledgerTitle": "Association des comptes du grand livre",
+    "ledgerHint": "Associez les comptes de produits et de charges aux lignes du résultat pour la source grand livre. Les comptes non associés sont signalés.",
+    "ledgerAccount": "Compte",
+    "ledgerLine": "Ligne",
+    "saveLedger": "Enregistrer {{count}} associations",
+    "savedLedger": "Associations du grand livre enregistrées.",
+    "noLedgerAccounts": "Aucun compte de produit ou de charge trouvé pour cet espace.",
     "templateApplied": "Modèle appliqué.",
     "sourceSaved": "Source du rapport mise à jour.",
     "loadError": "Impossible de charger la configuration.",
