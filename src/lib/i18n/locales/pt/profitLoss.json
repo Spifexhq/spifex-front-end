@@ -94,6 +94,7 @@
     "amount": "Valor",
     "previous": "Anterior",
     "subtotals": "Subtotais",
+    "sectionTotal": "Total {{label}}",
     "warnings": "Avisos",
     "finalizeTitle": "Finalizar período",
     "finalizeHint": "Finalizar guarda uma cópia imutável para que alterações futuras não reescrevam este período.",

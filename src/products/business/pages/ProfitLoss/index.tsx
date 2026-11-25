@@ -285,6 +285,7 @@ function FragmentRows({
   total: string;
   showPrevious: boolean;
 }) {
+  const { t } = useTranslation("profitLoss");
   return (
     <>
       <tr className="bg-gray-50">
@@ -304,7 +305,7 @@ function FragmentRows({
         </tr>
       ))}
       <tr className="border-b border-gray-200">
-        <td className="px-5 py-2 font-medium text-gray-900">Total {label.toLowerCase()}</td>
+        <td className="px-5 py-2 font-medium text-gray-900">{t("report.sectionTotal", { label })}</td>
         <td className="px-5 py-2 text-right font-medium tabular-nums text-gray-900">{formatCurrency(Number(total))}</td>
         {showPrevious && <td />}
       </tr>

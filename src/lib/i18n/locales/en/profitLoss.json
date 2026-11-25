@@ -94,6 +94,7 @@
     "amount": "Amount",
     "previous": "Previous",
     "subtotals": "Subtotals",
+    "sectionTotal": "Total {{label}}",
     "warnings": "Warnings",
     "finalizeTitle": "Finalize period",
     "finalizeHint": "Finalizing stores an immutable snapshot so later mapping changes cannot rewrite this period.",

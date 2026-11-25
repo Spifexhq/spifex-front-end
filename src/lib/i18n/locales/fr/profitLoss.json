@@ -94,6 +94,7 @@
     "amount": "Montant",
     "previous": "Précédent",
     "subtotals": "Sous-totaux",
+    "sectionTotal": "Total {{label}}",
     "warnings": "Avertissements",
     "finalizeTitle": "Finaliser la période",
     "finalizeHint": "La finalisation stocke un instantané immuable afin que les modifications futures ne réécrivent pas cette période.",

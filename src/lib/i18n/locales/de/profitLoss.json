@@ -94,6 +94,7 @@
     "amount": "Betrag",
     "previous": "Vorher",
     "subtotals": "Zwischensummen",
+    "sectionTotal": "Summe {{label}}",
     "warnings": "Hinweise",
     "finalizeTitle": "Zeitraum finalisieren",
     "finalizeHint": "Die Finalisierung speichert einen unveränderlichen Schnappschuss, damit spätere Zuordnungsänderungen diesen Zeitraum nicht umschreiben.",

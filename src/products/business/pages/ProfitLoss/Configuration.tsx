@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "@/core/api/requests";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
+import { useAuthContext } from "@/hooks/useAuth";
 import type { PnlConfig, PnlSource, PnlTreatment } from "@/models/finance/profitLoss";
 import type { AccountingBook } from "@/models/settings/accounting";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
@@ -80,6 +81,9 @@ function toRows(config: PnlConfig): Row[] {
 
 export default function ProfitLossConfiguration() {
   const { t } = useTranslation("profitLoss");
+  const { permissions, isOwner, isSuperUser } = useAuthContext();
+  const canViewLedger =
+    isOwner || isSuperUser || permissions.includes("view_ledger_account");
   const [config, setConfig] = useState<PnlConfig | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [dirty, setDirty] = useState<Set<string>>(new Set());
@@ -121,7 +125,7 @@ export default function ProfitLossConfiguration() {
   }, [load]);
 
   useEffect(() => {
-    if (!config?.accounting_enabled) {
+    if (!config?.accounting_enabled || !canViewLedger) {
       setBooks([]);
       setAccounts([]);
       return;
@@ -155,7 +159,7 @@ export default function ProfitLossConfiguration() {
     return () => {
       alive = false;
     };
-  }, [config?.accounting_enabled, t]);
+  }, [config?.accounting_enabled, canViewLedger, t]);
 
   useEffect(() => {
     if (!config || !bookId) return;
@@ -414,7 +418,7 @@ export default function ProfitLossConfiguration() {
         )}
       </Card>
 
-      {config.accounting_enabled && (
+      {config.accounting_enabled && canViewLedger && (
         <Card padding="compact" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-gray-900">{t("config.ledgerTitle")}</h2>
