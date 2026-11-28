@@ -57,7 +57,6 @@
     "institution": "Bank / Institut",
     "accountType": "Kontotyp",
     "currency": "Währung",
-    "currencyLocked": "Die Währung wird durch die Währungseinstellungen des Arbeitsbereichs festgelegt.",
     "branch": "Filiale",
     "accountNumber": "Kontonummer",
     "iban": "IBAN",

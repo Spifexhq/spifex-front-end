@@ -145,11 +145,8 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
   );
 
   const currencyOptions = useMemo<CurrencyOption[]>(
-    () =>
-      allowForeignCurrency
-        ? getCurrencies(i18n.language || "en")
-        : [{ value: orgCurrency, label: orgCurrency } as CurrencyOption],
-    [allowForeignCurrency, i18n.language, orgCurrency]
+    () => getCurrencies(i18n.language || "en"),
+    [i18n.language]
   );
 
   const title = mode === "create" ? t("modal.createTitle") : t("modal.editTitle");
@@ -386,39 +383,27 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                   disabled={effectiveBusy}
                 />
 
-                {allowForeignCurrency ? (
-                  <Select<CurrencyOption>
-                    label={t("field.currency")}
-                    items={currencyOptions}
-                    selected={currencyOptions.filter(
-                      (o) => o.value === (formData.currency || orgCurrency).toUpperCase()
-                    )}
-                    onChange={(items) => {
-                      const code = items[0]?.value;
-                      if (!code) return;
-                      setFormData((p) => ({ ...p, currency: code }));
-                    }}
-                    getItemKey={(i) => i.value}
-                    getItemLabel={(i) => i.label}
-                    singleSelect
-                    hideCheckboxes
-                    buttonLabel={t("btn.selectCurrency")}
-                    customStyles={{ maxHeight: "240px" }}
-                    disabled={effectiveBusy}
-                  />
-                ) : (
-                  <div className="space-y-1">
-                    <Input
-                      kind="text"
-                      label={t("field.currency")}
-                      name="currency"
-                      value={(formData.currency || orgCurrency).toUpperCase()}
-                      disabled
-                      readOnly
-                    />
-                    <p className="text-[11px] leading-4 text-gray-500">{t("field.currencyLocked")}</p>
-                  </div>
-                )}
+                <Select<CurrencyOption>
+                  label={t("field.currency")}
+                  items={currencyOptions}
+                  selected={currencyOptions.filter(
+                    (o) => o.value === (formData.currency || orgCurrency).toUpperCase()
+                  )}
+                  onChange={(items) => {
+                    if (!allowForeignCurrency) return;
+                    const code = items[0]?.value;
+                    if (!code) return;
+                    setFormData((p) => ({ ...p, currency: code }));
+                  }}
+                  getItemKey={(i) => i.value}
+                  getItemLabel={(i) => i.label}
+                  singleSelect
+                  hideCheckboxes
+                  clearOnClickOutside={false}
+                  buttonLabel={t("btn.selectCurrency")}
+                  customStyles={{ maxHeight: "260px" }}
+                  disabled={effectiveBusy || !allowForeignCurrency}
+                />
 
                 <Input
                   kind="text"

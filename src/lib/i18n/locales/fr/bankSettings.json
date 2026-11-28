@@ -57,7 +57,6 @@
     "institution": "Banque / établissement",
     "accountType": "Type de compte",
     "currency": "Devise",
-    "currencyLocked": "La devise est fixée par les paramètres de devise de l'espace de travail.",
     "branch": "Agence",
     "accountNumber": "Numéro de compte",
     "iban": "IBAN",

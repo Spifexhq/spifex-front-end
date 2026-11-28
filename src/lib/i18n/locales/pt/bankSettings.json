@@ -57,7 +57,6 @@
     "institution": "Banco / instituição",
     "accountType": "Tipo de conta",
     "currency": "Moeda",
-    "currencyLocked": "A moeda é definida pelas configurações de moeda do workspace.",
     "branch": "Agência",
     "accountNumber": "Número da conta",
     "iban": "IBAN",
