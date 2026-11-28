@@ -11,5 +11,5 @@ export const workspaceApi = {
   primary: () => request<{workspace_id: string | null}>("organizations/workspaces/primary/", "GET"),
   setPrimary: (workspace_id: string | null) => request<{workspace_id: string | null}>("organizations/workspaces/primary/", "PUT", {workspace_id}),
   catalog: (product_category: ProductCategory, country_code?: string) => request<{product_category:ProductCategory;billing_currency:string;plans:ProductPlan[]}>("billing/catalog/", "GET", {product_category,country_code}),
-  checkout: (plan_code: string, country_code: string, billing_interval: string, organizationId?: string) => request<{url:string}>("billing/checkout-session/", "POST", {plan_code,country_code,billing_interval}, {organizationId}),
+  checkout: (plan_code: string, country_code: string, billing_interval: string, organizationId?: string, theme?: "light" | "dark") => request<{url:string}>("billing/checkout-session/", "POST", {plan_code,country_code,billing_interval,theme}, {organizationId}),
 };

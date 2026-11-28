@@ -45,6 +45,7 @@ export interface GetSubscriptionStatusResponse {
 export interface CreateCheckoutSessionRequest {
   plan_code: PlanCode;
   country_code?: string;
+  theme?: "light" | "dark";
 }
 
 export interface CreateCheckoutSessionResponse {

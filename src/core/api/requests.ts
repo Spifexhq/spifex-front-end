@@ -379,10 +379,11 @@ export const api = {
   getSubscriptionStatus: () =>
     request<GetSubscriptionStatusResponse>("billing/subscription/", "GET"),
 
-  createCheckoutSession: (plan_code: PlanCode, country_code?: string) =>
+  createCheckoutSession: (plan_code: PlanCode, country_code?: string, theme?: "light" | "dark") =>
     request<CreateCheckoutSessionResponse>("billing/checkout-session/", "POST", {
       plan_code,
       country_code,
+      theme,
     } satisfies CreateCheckoutSessionRequest),
 
   createCustomerPortalSession: (planChange?: { plan_code: string; country_code?: string; billing_interval?: "month" | "year" }) =>

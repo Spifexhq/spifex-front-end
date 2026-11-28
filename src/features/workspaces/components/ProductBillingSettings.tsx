@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "@/hooks/useAuth";
+import { useTheme } from "@/theme/ThemeProvider";
 import { api } from "@/core/api/requests";
 import { workspaceApi } from "@/features/workspaces/services/api";
 import type { ProductPlan } from "@/features/workspaces/types";
@@ -19,6 +20,7 @@ const dateLabel = (value: string | null | undefined, locale: string) => value ? 
 export default function ProductBillingSettings() {
   const { t, i18n } = useTranslation(["subscription", "personal"]);
   const auth = useAuthContext();
+  const { theme } = useTheme();
   const organization = auth.organization?.organization;
   const category: ProductCategory = organization?.product_category || "business";
   const [plans, setPlans] = useState<ProductPlan[]>([]);
@@ -60,7 +62,7 @@ export default function ProductBillingSettings() {
     const price = plan.prices.find(item => item.currency === billing.currency);
     if (!price) return;
     setBusy(true); setError("");
-    try { const response = await workspaceApi.checkout(plan.code, billing.country, price.billing_interval); if (!response.data.url) throw new Error(t("errors.noRedirect")); window.location.assign(response.data.url); }
+    try { const response = await workspaceApi.checkout(plan.code, billing.country, price.billing_interval, undefined, theme); if (!response.data.url) throw new Error(t("errors.noRedirect")); window.location.assign(response.data.url); }
     catch (cause) { setError(apiErrorMessage(cause, t("errors.checkout"))); setBusy(false); }
   };
   const portal = async (plan?: ProductPlan, selectedPrice?: ProductPlan["prices"][number]) => {
