@@ -57,6 +57,7 @@
     "institution": "Bank / institution",
     "accountType": "Account type",
     "currency": "Currency",
+    "currencyLocked": "Currency is fixed by the workspace currency settings.",
     "branch": "Branch",
     "accountNumber": "Account number",
     "iban": "IBAN",

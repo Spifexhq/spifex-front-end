@@ -406,7 +406,19 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                     customStyles={{ maxHeight: "240px" }}
                     disabled={effectiveBusy}
                   />
-                ) : null}
+                ) : (
+                  <div className="space-y-1">
+                    <Input
+                      kind="text"
+                      label={t("field.currency")}
+                      name="currency"
+                      value={(formData.currency || orgCurrency).toUpperCase()}
+                      disabled
+                      readOnly
+                    />
+                    <p className="text-[11px] leading-4 text-gray-500">{t("field.currencyLocked")}</p>
+                  </div>
+                )}
 
                 <Input
                   kind="text"
