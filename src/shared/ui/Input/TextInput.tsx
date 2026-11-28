@@ -228,9 +228,9 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
               tabIndex={-1}
             >
               {isPasswordVisible ? (
-                <img src={notVisible} alt="" width={sz.pwIcon.w} height={sz.pwIcon.h} />
+                <img src={notVisible} alt="" width={sz.pwIcon.w} height={sz.pwIcon.h} className="dark:invert" />
               ) : (
-                <img src={visible} alt="" width={sz.pwIcon.w} height={sz.pwIcon.h} />
+                <img src={visible} alt="" width={sz.pwIcon.w} height={sz.pwIcon.h} className="dark:invert" />
               )}
             </button>
           )}

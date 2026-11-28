@@ -39,9 +39,13 @@ html.dark ::selection {
 
 /* ---------------------------------- Surfaces ------------------------------ */
 
-html.dark .app-shell,
-html.dark .settings-surface {
+html.dark .app-shell {
   background-color: var(--dm-bg) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark .settings-surface {
+  background-color: var(--dm-surface) !important;
   color: var(--dm-text) !important;
 }
 
@@ -83,7 +87,7 @@ html.dark .bg-gray-300 {
 html.dark [class*="bg-[#f7f8fa]"],
 html.dark [class*="bg-[#f4f6f8]"],
 html.dark [class*="bg-[#eef2f7]"] {
-  background-color: var(--dm-bg) !important;
+  background-color: var(--dm-surface) !important;
 }
 
 html.dark [class*="bg-[#fafbfc]"],
